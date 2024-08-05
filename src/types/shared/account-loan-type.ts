@@ -1,0 +1,23 @@
+export type AccountLoanType = {
+  id: string;
+  TransactionTrackingRef: string;
+  createAccountTrackingReference: string;
+  LoanProductCode: string;
+  CustomerID: string;
+  LinkedAccountNumber: string;
+  CollateralDetails: string;
+  CollateralType: string;
+  ComputationMode: string;
+  Tenure: string;
+  Moratorium: string;
+  InterestAccrualCommencementDate: string;
+  Amount: string;
+  InterestRate: string;
+  PrincipalPaymentFrequency: string;
+  InterestPaymentFrequency: string;
+  loanAccountStatus: string;
+  accountMessage: string;
+  createdAt: string;
+  updatedAt: string;
+  loanloanId: string;
+};
