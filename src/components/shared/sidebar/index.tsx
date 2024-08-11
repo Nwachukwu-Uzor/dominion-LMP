@@ -23,7 +23,7 @@ import { toast } from "react-toastify";
 import { LogOutIcon } from "lucide-react";
 import { useUser } from "@/hooks";
 import {
-  IoNotificationsCircleOutline /**IoSettings **/,
+  IoNotificationsCircleOutline /**, IoSettings , **/
 } from "react-icons/io5";
 
 type Props = {
@@ -148,7 +148,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
             open ? "w-fit" : "w-full"
           } h-8`}
         >
-          <NavLink to={"/dashboard"}>
+          <NavLink to={"/"}>
             <img
               src={logo}
               className={`p-1 w-full rounded cursor-pointer mx-auto ${

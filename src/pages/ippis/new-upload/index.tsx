@@ -219,11 +219,10 @@ const NewIPPIS = () => {
 
   return (
     <Container>
-      <PageTitle title="New IPPIS Upload" />
+      <PageTitle title="New IPPIS Data Upload" />
       <Card className="rounded-sm">
         <p className="text-sm font-medium">
-          Create bulk notification by uploading a formatted .CSV sheet <br />{" "}
-          <br />
+          Upload IPPIS records in the approved CSV format. <br /> <br />
           <span className="font-light">
             <strong>Note: </strong> You can only upload{" "}
             <strong className="font-black">{MAX_IPPIS_RECORD_COUNT}</strong>{" "}
@@ -234,11 +233,11 @@ const NewIPPIS = () => {
         <a
           href={sampleUploadFile}
           download
-          className="my-1 text-[#7E21CF] font-bold"
+          className="my-2 text-sm text-[#7E21CF] font-semibold"
         >
           Download Sample CSV
         </a>
-        <div className="max-w-[400px]">
+        <div>
           <div
             className={`${dragging ? "opacity-60 bg-gray-500 rounded-lg" : ""}`}
             onDrop={handleDrop}
@@ -248,7 +247,7 @@ const NewIPPIS = () => {
           >
             <label
               htmlFor="bulk-file"
-              className={`mt-4 border-2 border-dashed border-[#A8A8A8] flex flex-col items-center justify-center gap-[10px] p-4 py-10 lg:py-6 lg:p-6 rounded-lg cursor-pointer`}
+              className={`mt-4 border-2 border-dashed border-[#A8A8A8] flex flex-col items-center justify-center gap-[10px] p-4 py-10 lg:py-6 min-h-[30vh] lg:p-6 rounded-lg cursor-pointer`}
             >
               <p className="flex items-center justify-center h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full bg-gray-200 active:scale-95 duration-150">
                 <MdOutlineCloudUpload className="text-3xl" />

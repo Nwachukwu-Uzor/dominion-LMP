@@ -422,7 +422,7 @@ const RequestDetails = () => {
               </article>
               <article className="mt-4">
                 <h3 className="text-sm font-semibold text-gray-400 py-1 border-b border-b-gray-400">
-                  Documents
+                  DOCUMENTS
                 </h3>
                 <div className="mt-2">
                   <h2 className="text-gray-400 text-sm font-medium">NIN: </h2>
@@ -434,8 +434,8 @@ const RequestDetails = () => {
                   )}
                 </div>
                 <div className="mt-2">
-                  <h2 className="text-gray-400 text-sm font-medium">
-                    Signature:{" "}
+                  <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
+                    SIGNATURE:{" "}
                   </h2>
                   {accountInfo?.profile?.CustomerSignature && (
                     <FileViewer
@@ -444,23 +444,25 @@ const RequestDetails = () => {
                     />
                   )}
                 </div>
-                <div className="mt-2">
-                  <h2 className="text-gray-400 text-sm font-medium">
-                    Other Documents:{" "}
-                  </h2>
-                  {accountInfo?.profile?.otherDocument && (
-                    <FileViewer url={accountInfo?.profile?.otherDocument} />
-                  )}
-                </div>
+                {accountInfo?.profile?.otherDocument && (
+                  <div className="mt-2">
+                    <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
+                      OTHER DOCUMENTS:{" "}
+                    </h2>
+                    {accountInfo?.profile?.otherDocument && (
+                      <FileViewer url={accountInfo?.profile?.otherDocument} />
+                    )}
+                  </div>
+                )}
                 {stage?.trim()?.toUpperCase() ===
                   accountInfo?.stage?.trim()?.toUpperCase() &&
                   (accountInfo?.stage?.toUpperCase() ===
                     VALID_STAGES.REVIEWER ||
                     accountInfo?.stage?.toUpperCase() ===
                       VALID_STAGES.AUTHORIZER) && (
-                    <div className="mt-2">
-                      <h2 className="text-gray-400 text-sm font-medium">
-                        Action:
+                    <div className="mt-4">
+                      <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
+                        ACTION:
                       </h2>
                       <form
                         className="mt-3 max-w-[700px] flex flex-col gap-2.5"

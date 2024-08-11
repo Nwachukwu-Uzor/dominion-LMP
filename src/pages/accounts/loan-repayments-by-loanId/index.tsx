@@ -51,6 +51,11 @@ const LoanRepaymentsByLoanId = () => {
 
   const columns: ColumnDef<LoanRepaymentType>[] = [
     {
+      header: "S/N",
+      accessorKey: "id",
+      cell: ({row}) => <span className="bold">{row.index + 1}. </span>
+    },
+    {
       header: "Employee Name",
       accessorKey: "employeeName",
     },
@@ -117,7 +122,7 @@ const LoanRepaymentsByLoanId = () => {
 
   return (
     <Container>
-      <PageTitle title="Loan Repayments by Loan Id" />
+      <PageTitle title="Loan Repayments" />
       <Card className="my-2 rounded-md">
         {isLoading ? (
           <div className="min-h-[25vh] flex items-center justify-center">
