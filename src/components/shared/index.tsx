@@ -6,3 +6,4 @@ export { DataTable, NonPaginatedTable } from "./data-table";
 export { PageLoader } from "./page-loader";
 export { PDFViewer } from "./pdf-viewer"
 export { FileViewer } from "./file-viewer"
+export { Record } from "./record"

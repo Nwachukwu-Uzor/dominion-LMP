@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Container, NonPaginatedTable, PageTitle } from "@/components/shared";
-import { LoanRequestType } from "@/types/shared";
+import { UnCompletedLoanRequestType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
@@ -43,7 +43,7 @@ const AccountRequests = () => {
     queryFn: async ({ queryKey }) => {
       const page = queryKey[2];
       const stage = (queryKey[1] as string) ?? "";
-      const data = await loanService.getAllLoanRequests(
+      const data = await loanService.getLoanRequestForStage(
         stage,
         Number(page),
         pageConfig.size
@@ -53,34 +53,34 @@ const AccountRequests = () => {
         ...prev,
         total: data?.payload?.totalPages ?? 1,
       }));
-      if (!data?.payload?.accountRecords) {
+      if (!data?.payload?.requestRecords) {
         return [];
       }
-      return data?.payload?.accountRecords;
+      return data?.payload?.requestRecords;
     },
   });
 
-  const columns: ColumnDef<LoanRequestType>[] = [
+  const columns: ColumnDef<UnCompletedLoanRequestType>[] = [
     {
       header: "Customer Name",
       accessorFn: (row) =>
-        `${row?.profile?.LastName ?? ""} ${row?.profile?.FirstName ?? ""}`,
+        `${row?.customerDetails?.LastName ?? ""} ${row?.customerDetails?.FirstName ?? ""}`,
     },
     {
       header: "Phone Number",
-      accessorFn: (row) => `${row?.profile?.PhoneNo ?? ""}`,
+      accessorFn: (row) => `${row?.customerDetails?.PhoneNo ?? ""}`,
     },
     {
       header: "BVN",
-      accessorFn: (row) => row?.profile?.BVN ?? "",
+      accessorFn: (row) => row?.customerDetails?.BVN ?? "",
     },
     {
       header: "NIN",
-      accessorKey: "profile.NationalIdentityNo",
+      accessorKey: "customerDetails.NationalIdentityNo",
     },
     {
       header: "Account Officer Code",
-      accessorKey: "AccountOfficerCode",
+      accessorKey: "accountDetails.AccountOfficerCode",
     },
     {
       header: "Request Date",
@@ -88,12 +88,12 @@ const AccountRequests = () => {
     },
     {
       header: "Loan Amount",
-      accessorKey: "profile.loanAmount",
+      accessorKey: "customerDetails.loanAmount",
       cell: ({ getValue }) => <>{formatCurrency(getValue() as string)}</>,
     },
     {
       header: "Loan Tenor",
-      accessorKey: "profile.loanTenor",
+      accessorKey: "customerDetails.loanTenor",
     },
     {
       header: "Stage",
@@ -107,7 +107,7 @@ const AccountRequests = () => {
       accessorKey: "id",
       cell: ({ row }) => (
         <Link
-          to={`${row?.original?.id}`}
+          to={`${row?.original?.accountDetails?.id}/${row?.original?.id}`}
           className="mt-2 text-primary text-xs group font-medium duration-200 relative w-fit text-center"
         >
           View Details
@@ -124,7 +124,7 @@ const AccountRequests = () => {
   return (
     <>
       <Container>
-        <PageTitle title="Account Requests" />
+        <PageTitle title="Loan Requests" />
         <Card className="my-2">
           {isLoadingAccounts ? (
             <div className="min-h-[25vh] flex items-center justify-center">

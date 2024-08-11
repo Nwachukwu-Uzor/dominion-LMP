@@ -2,7 +2,9 @@ import { baseUrl } from "@/config";
 import {
   AccountType,
   APIResponseType,
+  BVNValidationType,
   CustomerType,
+  IPPISResponseType,
   PaginatedAccountResponseType,
   PaginatedResponseType,
 } from "@/types/shared";
@@ -30,7 +32,9 @@ export class AccountService {
   }
   async getCustomers(page = 1, size = 10) {
     const response = await axios.get<
-      APIResponseType<PaginatedResponseType & { accountRecords: CustomerType[] }>
+      APIResponseType<
+        PaginatedResponseType & { accountRecords: CustomerType[] }
+      >
     >(
       `${baseUrl}/account/view/all/customer?size=${size}&page=${page}&option=status&gSearch=COMPLETED`,
       {
@@ -58,6 +62,35 @@ export class AccountService {
       `${baseUrl}/account/new/customer/account`,
       data
     );
+    return response?.data;
+  }
+
+  async validateBVN(data: { id: string }) {
+    const response = await axios.post<APIResponseType<BVNValidationType>>(
+      `${baseUrl}/bankOne/bvn/validate`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+        },
+      }
+    );
+    return response?.data;
+  }
+
+  async validateIPPISNumber(data: { IppisNumber: string }) {
+    const response = await axios.post<APIResponseType<IPPISResponseType>>(
+      `${baseUrl}/IPPIS/view/single`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+        },
+      }
+    );
+    if (!response?.data?.payload?.fullName) {
+      throw new Error(response?.data?.message);
+    }
     return response?.data;
   }
 }

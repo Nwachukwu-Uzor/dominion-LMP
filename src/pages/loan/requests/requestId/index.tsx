@@ -11,10 +11,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Container, FileViewer, PageTitle } from "@/components/shared";
+import { Container, FileViewer, PageTitle, Record } from "@/components/shared";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { FETCH_ACCOUNT_DETAILS_BY_ID, SESSION_STORAGE_KEY } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
@@ -26,6 +26,9 @@ import { toast } from "react-toastify";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { IoMdClose } from "react-icons/io";
 
 const GENDER_ENUM: Record<string, string> = {
   "1": "Male",
@@ -48,38 +51,28 @@ const VALID_STAGES: Record<string, string> = {
   SUPERVISOR: "SUPERVISOR",
 };
 
-const Record = ({
-  header,
-  content,
-}: {
-  header: string;
-  content?: string | number;
-}) => (
-  <div>
-    <h3 className="text-gray-400 text-xs font-medium">
-      {header.toUpperCase()}:
-    </h3>
-    <h6 className="text-sm mt-1">{content}</h6>
-  </div>
-);
-
 const RequestDetails = () => {
-  let ACTION_OPTIONS = [
-    {
-      id: 1,
-      label: "Approve",
-      value: "approve",
-    },
-    {
-      id: 2,
-      label: "Reject",
-      value: "reject",
-    },
-  ];
-  const { requestId, stage } = useParams<{
+  const { requestId, stage, accountId } = useParams<{
     requestId: string;
     stage: string;
+    accountId: string;
   }>();
+  console.log({ accountId });
+
+  const [openTokenModal, setOpenTokenModal] = useState(false);
+  const [otp, setOtp] = useState<string[]>(new Array(4).fill(""));
+  const [activeOtpBox, setActiveOtpBox] = useState(0);
+
+  const otpInputRef = useRef<HTMLInputElement | null>(null);
+
+  const isOtpValid = useMemo(() => {
+    return otp.every((it) => it !== "");
+  }, [otp]);
+
+  useEffect(() => {
+    otpInputRef?.current?.focus();
+  }, [activeOtpBox]);
+
   const { user } = useUser();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -103,6 +96,25 @@ const RequestDetails = () => {
     },
   });
 
+  let ACTION_OPTIONS = [
+    {
+      id: 1,
+      label:
+        accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR
+          ? "Approve"
+          : "Recommend for Approval",
+      value: "approve",
+    },
+    {
+      id: 2,
+      label:
+        accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR
+          ? "Reject"
+          : "Recommend for Rejection",
+      value: "reject",
+    },
+  ];
+
   if (accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR) {
     ACTION_OPTIONS = [
       ...ACTION_OPTIONS,
@@ -121,20 +133,81 @@ const RequestDetails = () => {
     setValue,
     trigger,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
   });
 
+  const handleOtpChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const result = event.target.value.replace(/\D/g, "");
+    if (!result.length) {
+      return;
+    }
+    const newOtp = [...otp];
+    newOtp[index] = result[result.length - 1] ?? "";
+    setOtp(newOtp);
+    if (!result.length) {
+      if (activeOtpBox > 0) {
+        setActiveOtpBox((current) => current - 1);
+      }
+    }
+    if (activeOtpBox < otp.length) {
+      if (activeOtpBox < otp.length - 1) {
+        setActiveOtpBox((current) => current + 1);
+      }
+    }
+  };
+
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (
+      ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown", "e"].includes(
+        event.key
+      )
+    ) {
+      event.preventDefault();
+    }
+
+    if (event.key === "Backspace") {
+      const value = (event.target as HTMLInputElement)?.value;
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+      if (value === "" && activeOtpBox > 0) {
+        setActiveOtpBox((current) => current - 1);
+      }
+    }
+  };
+
+  const handleFocus = (
+    _event: React.FocusEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (activeOtpBox !== index) {
+      otpInputRef?.current?.focus();
+    }
+  };
+
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
-    if (!requestId || !user?.UserId) {
+    if (!requestId || !user?.UserId || !accountId) {
       return;
     }
     try {
       if (stage?.toUpperCase() === VALID_STAGES.REVIEWER) {
+        const { approved } = values;
+        if (approved?.toUpperCase() === "APPROVE") {
+          setOpenTokenModal(true);
+          return;
+        }
         const payload = {
           ...values,
-          requestId,
+          requestId: accountId,
           reviewerUserId: user?.UserId,
         };
         const response = await loanService.reviewLoanRequest(payload);
@@ -145,7 +218,7 @@ const RequestDetails = () => {
       if (stage?.toUpperCase() === VALID_STAGES.SUPERVISOR) {
         const payload = {
           ...values,
-          requestId,
+          requestId: accountId,
           approvalUserId: user?.UserId,
         };
         const response = await loanService.reviewLoanRequestSupervisor(payload);
@@ -167,6 +240,40 @@ const RequestDetails = () => {
   };
 
   const [approved] = watch(["approved"]);
+
+  const {
+    isPending: isApproving,
+    error: approvalError,
+    isError: isApprovalError,
+    mutate: handleSubmitOtp,
+  } = useMutation({
+    mutationFn: async () => {
+      if (!requestId || !user?.UserId || !accountId) {
+        return;
+      }
+      const token = otp.join("");
+      const otpPayload = {
+        // userCode: "179373",
+        userCode: accountInfo?.profile?.profileId ?? "",
+        token: token,
+      };
+
+      const otpResponse = await loanService.validateOtp(otpPayload);
+      console.log({ otpResponse });
+
+      setOpenTokenModal(false);
+      const data = getValues();
+      const payload = {
+        ...data,
+        requestId: accountId,
+        reviewerUserId: user?.UserId,
+      };
+      const response = await loanService.reviewLoanRequest(payload);
+      toast.success(response?.message);
+      refetch();
+      return;
+    },
+  });
 
   return (
     <>
@@ -403,7 +510,10 @@ const RequestDetails = () => {
                           rows={10}
                         />
                         <p className="lg:col-span-full my-1 text-sm text-red-600 font-semibold">
-                          {errors?.root?.message}
+                          {isApprovalError
+                            ? (approvalError as any)?.response?.data?.message ??
+                              (error as any)?.message
+                            : errors?.root?.message}
                         </p>
                         <Button
                           className="rounded-sm max-w-[250px] mt-3"
@@ -425,6 +535,71 @@ const RequestDetails = () => {
           ) : null}
         </Card>
       </Container>
+      <Dialog open={openTokenModal}>
+        <DialogContent className="gap-0">
+          <div className="flex justify-end">
+            <button disabled={isSubmitting}>
+              <IoMdClose
+                className="cursor-pointer hover:scale-150 transition-all"
+                // onClick={onClose}
+              />
+            </button>
+          </div>
+          <h3 className="text-lg font-bold mt-5 text-center">Confirm</h3>'
+          <div>
+            <Label>OTP</Label>
+            <p className="my-3 text-sm font-light">
+              Please provide the otp sent to the customer on loan request
+            </p>
+            <div className="flex items-center justify-between gap-1 lg:gap-2 w-full mb-5 mt-[5px]">
+              {otp?.map((_, index) => (
+                <div
+                  key={`input-${index}]`}
+                  className="w-fit flex items-center justify-between"
+                >
+                  <input
+                    className="border-none py-2 appearance-none text-center outline-none ring-[0.75px] duration-200 ring-gray-500 rounded-md focus:ring-primary max-w-[2.25rem] font-bold text-lg placeholder:opacity-40 cursor-pointer"
+                    placeholder="-"
+                    value={otp[index] ?? ""}
+                    onChange={(e) => handleOtpChange(e, index)}
+                    ref={index === activeOtpBox ? otpInputRef : null}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    onFocus={(e) => handleFocus(e, index)}
+                    type="number"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+            {isApprovalError
+              ? (approvalError as any)?.response?.data?.message ??
+                (error as any)?.message
+              : null}
+          </p>
+          <Button
+            className="bg-green-600 w-full text-white mt-8"
+            disabled={isApproving || !isOtpValid}
+            onClick={() => handleSubmitOtp()}
+          >
+            {isApproving ? (
+              <>
+                <ClipLoader size={12} color="#fff" /> <span>Loading...</span>
+              </>
+            ) : (
+              "Submit"
+            )}
+          </Button>
+          <Button
+            className="bg-[#2D2D2D] text-white mt-0 lg:mt-4 w-full"
+            onClick={() => setOpenTokenModal(false)}
+            disabled={isApproving}
+            type="button"
+          >
+            No, Cancel
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

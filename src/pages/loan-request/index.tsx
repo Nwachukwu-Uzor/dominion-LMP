@@ -34,6 +34,9 @@ const LoanRequest = () => {
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_STAGE`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`)
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`)
   };
 
   function getSectionComponent() {

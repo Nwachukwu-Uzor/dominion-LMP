@@ -16,6 +16,10 @@ import {
   LoanRequestsPage,
   LoanRequestDetailsPage,
   CustomersPage,
+  SettingsPage,
+  LoanFrequencyPage,
+  IPPISDataPage,
+  IPPISUploadPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -62,7 +66,7 @@ const router = createBrowserRouter([
             element: <LoanRequestsPage />,
           },
           {
-            path: "requests/:stage/:requestId",
+            path: "requests/:stage/:requestId/:accountId",
             element: <LoanRequestDetailsPage />,
           },
         ],
@@ -98,6 +102,32 @@ const router = createBrowserRouter([
           {
             path: "new-template",
             element: <NewTemplatePage />,
+          },
+        ],
+      },
+      {
+        path: "settings",
+        children: [
+          {
+            index: true,
+            element: <SettingsPage />,
+          },
+          {
+            path: "loan-frequency",
+            element: <LoanFrequencyPage />,
+          },
+        ],
+      },
+      {
+        path: "ippis",
+        children: [
+          {
+            index: true,
+            element: <IPPISDataPage />,
+          },
+          {
+            path: "new-upload",
+            element: <IPPISUploadPage />,
           },
         ],
       },

@@ -13,6 +13,7 @@ import {
   MdOutlineMessage,
   MdSavings,
 } from "react-icons/md";
+import { BsFillClipboard2DataFill } from "react-icons/bs";
 import { TiUserAdd } from "react-icons/ti";
 import { HiUsers } from "react-icons/hi2";
 
@@ -21,7 +22,9 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import { toast } from "react-toastify";
 import { LogOutIcon } from "lucide-react";
 import { useUser } from "@/hooks";
-import { IoNotificationsCircleOutline } from "react-icons/io5";
+import {
+  IoNotificationsCircleOutline /**IoSettings **/,
+} from "react-icons/io5";
 
 type Props = {
   open: boolean;
@@ -38,6 +41,7 @@ const USER_ROLES = {
 export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
   const navigate = useNavigate();
   const { user } = useUser();
+  const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
 
   const onLinkClick = () => {
     if (window.innerWidth > 768) {
@@ -61,6 +65,12 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
     },
     {
       id: 3,
+      title: "IPPIS Data",
+      path: "ippis",
+      icon: <BsFillClipboard2DataFill />,
+    },
+    {
+      id: 3,
       title: "Customers",
       path: "/customers",
       icon: <TiUserAdd />,
@@ -77,6 +87,12 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       path: "/messaging",
       icon: <MdOutlineMessage />,
     },
+    // {
+    //   id: 6,
+    //   title: "Settings",
+    //   path: "/settings",
+    //   icon: <IoSettings />,
+    // },
   ];
 
   if (user) {
@@ -84,7 +100,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.SUPER_ADMIN.toUpperCase())) {
       menuItems.push({
-        id: 6,
+        id: 7,
         title: "Users",
         path: "/users",
         icon: <HiUsers />,
@@ -93,7 +109,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.SUPERVISOR)) {
       menuItems.splice(3, 0, {
-        id: 7,
+        id: 8,
         title: "Pending Authorizer",
         path: "/loan/requests/supervisor",
         icon: <MdOutlineAddCard />,
@@ -102,7 +118,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.REVIEWER)) {
       menuItems.splice(3, 0, {
-        id: 8,
+        id: 9,
         title: "Pending Reviewer",
         path: "/loan/requests/reviewer",
         icon: <MdOutlineAddCard />,
@@ -125,7 +141,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       <nav
         className={`bg-[#2D2D2D] fixed pt-8 lg:left-0 top-0 bottom-0 z-20 ${
           open ? "w-72 " : "w-0 -left-20 lg:block lg:w-20"
-        } duration-300 flex flex-col gap-10 h-[100vh-36px]`}
+        } duration-300 flex flex-col gap-10 h-[100vh-36px] overflow-y-hidden`}
       >
         <div
           className={`flex items-center justify-start mt-12 gap-3 px-5 ${
@@ -142,8 +158,8 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
             />
           </NavLink>
         </div>
-        <div className="flex flex-col justify-between mt-2">
-          <ul className="pt-2 flex flex-col gap-3 overflow-x-hidden">
+        <div className="flex flex-col justify-between mt-2 ">
+          <ul className="pt-2 flex flex-col gap-3 overflow-x-hidden h-[70vh] overflow-y-auto">
             {menuItems.map((item) => (
               <li key={item.id}>
                 <NavLink
@@ -185,7 +201,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               </li>
             ))}
             <NavLink
-              to="/loan-request"
+              to={`/loan-request?access_code=${token}`}
               target="_blank"
               onClick={onLinkClick}
               className={({ isActive }) =>
@@ -224,7 +240,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               </span>
             </NavLink>
           </ul>
-          <div className="w-full absolute bottom-4 border-t-2 border-t-white pt-2">
+          <div className="w-full z-50 absolute bottom-4 border-t-2 border-t-white pt-2">
             <button
               onClick={handleLogout}
               className={`flex items-center justify-start p-1 pl-5 gap-1 text-white w-full font-bold ${

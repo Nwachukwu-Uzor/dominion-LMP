@@ -140,3 +140,36 @@ export const LoanRequestPage = () => (
     <LoanRequestComponent />
   </Suspense>
 );
+
+// Settings Page
+const SettingsComponent = lazy(() => import("./settings"));
+
+export const SettingsPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <SettingsComponent />
+  </Suspense>
+);
+
+// Loan Frequency
+const LoanFrequencyComponent = lazy(() => import("./settings/loan-frequency"));
+export const LoanFrequencyPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <LoanFrequencyComponent />
+  </Suspense>
+);
+
+// IPPIS Data
+const IPPISDataComponent = lazy(() => import("./ippis"));
+export const IPPISDataPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <IPPISDataComponent />
+  </Suspense>
+);
+
+// IPPIS Upload
+const IPPISUploadComponent = lazy(() => import("./ippis/new-upload"));
+export const IPPISUploadPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <IPPISUploadComponent />
+  </Suspense>
+);

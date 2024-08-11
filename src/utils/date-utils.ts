@@ -62,3 +62,36 @@ export const getDaysFromToday = (numberOfDays: number) => {
     other: format(other, "yyyy-MM-dd"),
   };
 };
+
+
+export function parseDateToInputFormat(dateStr: string): string {
+  // Define month mappings
+  const monthMap: { [key: string]: string } = {
+    "Jan": "01",
+    "Feb": "02",
+    "Mar": "03",
+    "Apr": "04",
+    "May": "05",
+    "Jun": "06",
+    "Jul": "07",
+    "Aug": "08",
+    "Sep": "09",
+    "Oct": "10",
+    "Nov": "11",
+    "Dec": "12"
+  };
+
+  const [day, monthAbbr, year] = dateStr.split('-');
+  const month = monthMap[monthAbbr];
+
+  let fullYear = '';
+  const yearNum = parseInt(year);
+  if (yearNum < 50) {
+    fullYear = `20${year.padStart(2, '0')}`;
+  } else {
+    fullYear = `19${year}`;
+  }
+
+  const formattedDay = day.padStart(2, '0');
+  return `${fullYear}-${month}-${formattedDay}`;
+}

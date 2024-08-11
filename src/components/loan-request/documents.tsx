@@ -9,7 +9,12 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import SignaturePad from "react-signature-canvas";
 import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
-import { formatNumberWithCommasWithOptionPeriodSign } from "@/utils";
+import {
+  decodeAuthToken,
+  formatNumberWithCommasWithOptionPeriodSign,
+} from "@/utils";
+import { useSearchParams } from "react-router-dom";
+import { Checkbox } from "../ui/checkbox";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -41,6 +46,18 @@ const schema = z.object({
       },
       { message: "Loan amount must be greater than zero" }
     ),
+  AccountOfficerCode: z
+    .string({
+      required_error: "Account officer code is required",
+    })
+    .regex(/^\d+$/, {
+      message: "Account officer code must contain only digits",
+    }),
+  AccountOfficerEmail: z
+    .string({
+      required_error: "Account officer email is required",
+    })
+    .email("Please provide a valid email address"),
   IdentificationImage: z
     .instanceof(FileList, { message: "Please provide a valid file" })
     .refine((files: FileList) => files.length > 0, "File is required"),
@@ -59,6 +76,10 @@ const schema = z.object({
 type FormFields = z.infer<typeof schema>;
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
+  const [searchParams] = useSearchParams();
+  const access_code = searchParams.get("access_code") as string | undefined;
+  const [agreedToTAC, setAgreedToTAC] = useState(false);
+
   const [showSignatureCanvas, setShowSignatureCanvas] = useState(false);
   const sigCanvas = useRef<any>();
 
@@ -72,6 +93,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     trigger,
     getValues,
     watch,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
@@ -96,8 +118,20 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!access_code) {
+      return;
+    }
+    const user = decodeAuthToken(access_code);
+    console.log({ user });
+  }, [access_code]);
+
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
+      if (!agreedToTAC) {
+        setError("root", {message: "Please agree to terms and condition", type: "deps"})
+        return;
+      }
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_DOCUMENTS`,
         JSON.stringify(values)
@@ -151,10 +185,13 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         );
       }
       payload["loanAmount"] = Number(values?.loanAmount?.replace(/,/g, ""));
-      payload["AccountOfficerCode"] = "1001";
       payload["loanAgreement"] = "Agreed";
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
+      sessionStorage.setItem(
+        `${SESSION_STORAGE_KEY}_MESSAGE`,
+        response?.message ?? ""
+      );
       handleUpdateStep();
     } catch (error: any) {
       setError("root", {
@@ -264,9 +301,31 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         </div>
         <div>
           <Input
+            label="Account Officer Code"
+            {...register("AccountOfficerCode")}
+            error={errors?.AccountOfficerCode?.message}
+            // onChange={async (e) => {
+            //   const value = e.target.value.replace(/\D/g, "");
+            //   setValue("loanTenor", value);
+            //   await trigger("loanTenor");
+            // }}
+            disabled={isSubmitting}
+          />
+        </div>
+        <div>
+          <Input
+            label="Account Officer Email"
+            {...register("AccountOfficerEmail")}
+            error={errors?.AccountOfficerEmail?.message}
+            disabled={isSubmitting}
+          />
+        </div>
+        <div>
+          <Input
             label={
               <>
-                Select NIN Card Image: <i className="text-[10px]">Image or PDF</i>
+                Select NIN Card Image:{" "}
+                <i className="text-[10px]">Image or PDF</i>
               </>
             }
             {...register("IdentificationImage")}
@@ -375,6 +434,17 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
               className="max-h-[250px]"
             />
           )}
+        </div>
+        <div className="lg:col-span-full flex items-center gap-1 text-sm font-light mt-4">
+          <p>Agree to terms and conditions</p>{" "}
+          <Checkbox
+            checked={agreedToTAC}
+            disabled={isSubmitting}
+            onClick={() => {
+              clearErrors("root")
+              setAgreedToTAC((agreed) => !agreed);
+            }}
+          />
         </div>
         <p className="lg:col-span-full my-1 text-sm text-red-600 font-semibold">
           {errors?.root?.message}

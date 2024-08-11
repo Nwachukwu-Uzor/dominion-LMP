@@ -10,6 +10,8 @@ export type { AccountLoanType } from "./account-loan-type";
 export type { TemplateType } from "./template-type";
 export type { PaginatedResponseType } from "./paginated-response-type";
 export type { LoanRepaymentType } from "./loan-repayment-type";
-export type { LoanRequestType } from "./loan-request-type";
+export type { LoanRequestType, UnCompletedLoanRequestType } from "./loan-request-type";
 export type { CustomerType } from "./customer-type";
 export type { LanguageType } from "./language-type";
+export type { IPPISInfoType, IPPISResponseType } from "./ippis-info-type";
+export type { BVNType, BVNValidationType } from "./bvn-validation-type"

@@ -1,35 +1,38 @@
-import React, { useRef, useState } from "react";
 import { Container, DataTable, PageTitle } from "@/components/shared";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { IoChevronBack } from "react-icons/io5";
-import { Card } from "@/components/ui/card";
-import { ColumnDef } from "@tanstack/react-table";
-import { MdOutlineCloudUpload } from "react-icons/md";
 import { extractDataFromFile, ExtractedData } from "@/utils";
+import { useRef, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "react-toastify";
+import sampleUploadFile from "@/assets/documents/repayment-upload-sample.xlsx";
+import { Button } from "@/components/ui/button";
+import { ClipLoader } from "react-spinners";
+import { Card } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
+import { MdOutlineCloudUpload } from "react-icons/md";
 import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
-import { toast } from "react-toastify";
-import { ClipLoader } from "react-spinners";
-import sampleUploadFile from "@/assets/documents/repayment-upload-sample.xlsx";
 
-const VALIDCOLUMNS = [
-  "EMPLOYEE NAME",
-  "SERVICE NUMBER",
-  "IPPIS NO",
-  "PENCOMID",
-  "ACCOUNT ID",
-  "BANK CODE",
-  "AMOUNT",
-  "DEDUCTION BENEFICIARY",
-  "ELEMENT NAME",
-  "NHF NUMBER",
-  "NARRATION",
-  "LOAN ID",
+const VALID_IPPIS_COLUMNS = [
+  "STAFF_ID",
+  "FULL_NAME",
+  "EMPLOYMENT_STATUS",
+  "ASSIGNMENT_STATUS",
+  "HIRE_DATE",
+  "BIRTH_DATE",
+  "JOB_TITLE",
+  "COMMAND",
+  "TELEPHONE_NUMBER",
+  "BANK_NAME",
+  "ACCOUNT_NUMBER",
+  "STAFF_CATEGORY",
+  "EMPLOYEE_TYPE",
+  "NETPAY",
+  "PERIOD",
 ];
 
-const NewBulkNotification = () => {
+const MAX_IPPIS_RECORD_COUNT = 1000;
+
+const NewIPPIS = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -41,52 +44,64 @@ const NewBulkNotification = () => {
 
   const columns: ColumnDef<ExtractedData>[] = [
     {
-      header: "Employee Name",
-      accessorKey: "employeeName",
+      header: "Staff ID",
+      accessorKey: "staffId",
     },
     {
-      header: "Service Number",
-      accessorKey: "serviceNumber",
+      header: "Full Name",
+      accessorKey: "fullName",
     },
     {
-      header: "IPPIS Number",
-      accessorKey: "ippisNo",
+      header: "Employeement Status",
+      accessorKey: "employeeStatus",
     },
     {
-      header: "Account ID",
-      accessorKey: "accountId",
+      header: "Assignment Status",
+      accessorKey: "assignmentStatus",
     },
     {
-      header: "Pencom ID",
-      accessorKey: "pencomID",
+      header: "Hire Date",
+      accessorKey: "hireDate",
     },
     {
-      header: "Bank Code",
-      accessorKey: "bankCode",
+      header: "Birth Date",
+      accessorKey: "birthDate",
     },
     {
-      header: "Amount",
-      accessorKey: "amount",
+      header: "Job Title",
+      accessorKey: "jobTitle",
     },
     {
-      header: "Loan Id",
-      accessorKey: "loanloanId",
+      header: "Command",
+      accessorKey: "command",
     },
     {
-      header: "Deduction Beneficiary",
-      accessorKey: "deductionBeneficiary",
+      header: "Phone Number",
+      accessorKey: "Number",
     },
     {
-      header: "Element Name",
-      accessorKey: "elementName",
+      header: "Bank Name",
+      accessorKey: "bankName",
     },
     {
-      header: "Narration",
-      accessorKey: "narration",
+      header: "Account Number",
+      accessorKey: "accountNumber",
     },
     {
-      header: "NHF Number",
-      accessorKey: "nhfNumber",
+      header: "Staff Category",
+      accessorKey: "staffCategory",
+    },
+    {
+      header: "Employee Type",
+      accessorKey: "employeeType",
+    },
+    {
+      header: "Net Pay",
+      accessorKey: "netPay",
+    },
+    {
+      header: "Period",
+      accessorKey: "period",
     },
   ];
 
@@ -98,9 +113,11 @@ const NewBulkNotification = () => {
           return;
         }
 
+        console.log(data);
+
         formData.append("documentUpload", uploadedFile);
         formData.append("bulkUpload", JSON.stringify(data));
-        const response = await loanService.uploadRepayment(formData);
+        const response = await loanService.uploadIPPISRecord(formData);
         toast.success(response.message);
         handleClearFile();
       } catch (error: any) {
@@ -159,8 +176,8 @@ const NewBulkNotification = () => {
     const file = Array.from(e.dataTransfer.files)[0];
     try {
       if (file) {
-        await handleDataExtraction(file);
         setUploadedFile(file);
+        await handleDataExtraction(file);
       }
     } catch (error: unknown) {
       toast.error(error as string);
@@ -170,26 +187,49 @@ const NewBulkNotification = () => {
 
   const handleDataExtraction = async (file: File) => {
     setUploadError("");
-    const extractedData = await extractDataFromFile(file, VALIDCOLUMNS, {
-      PENCOMID: "pencomID",
-      "LOAN ID": "loanloanId",
+    const extractedData = await extractDataFromFile(file, VALID_IPPIS_COLUMNS, {
+      STAFF_ID: "staffId",
+      FULL_NAME: "fullName",
+      EMPLOYMENT_ID: "employeeId",
+      ASSIGNMENT_STATUS: "assignmentStatus",
+      HIRE_DATE: "hireDate",
+      BIRTH_DATE: "birthDate",
+      JOB_TITLE: "jobTitle",
+      COMMAND: "command",
+      TELEPHONE_NUMBER: "phoneNumber",
+      BANK_NAME: "bankName",
+      ACCOUNT_NUMBER: "accountNumber",
+      STAFF_CATEGORY: "staffCategory",
+      EMPLOYEE_TYPE: "employeeType",
+      NETPAY: "netPay",
+      PERIOD: "period",
+      EMPLOYMENT_STATUS: "employmentStatus",
     });
+
+    if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {
+      setUploadError(
+        `The maximum number of records allowed is ${MAX_IPPIS_RECORD_COUNT} but you provided ${extractedData.length}`
+      );
+      setUploadedFile(null);
+      return;
+    }
 
     setData(extractedData);
   };
 
   return (
     <Container>
-      <PageTitle title="New Bulk Notification" />
-      <Link
-        to="/bulk-notifications"
-        className="text-black my-2 flex items-center font-bold text-sm hover:opacity-75 gap-1"
-      >
-        <IoChevronBack /> Back
-      </Link>
+      <PageTitle title="New IPPIS Upload" />
       <Card className="rounded-sm">
         <p className="text-sm font-medium">
-          Create bulk notification by uploading a formatted .CSV sheet
+          Create bulk notification by uploading a formatted .CSV sheet <br />{" "}
+          <br />
+          <span className="font-light">
+            <strong>Note: </strong> You can only upload{" "}
+            <strong className="font-black">{MAX_IPPIS_RECORD_COUNT}</strong>{" "}
+            records a time.{" "}
+          </span>
+          <br />
         </p>
         <a
           href={sampleUploadFile}
@@ -230,13 +270,13 @@ const NewBulkNotification = () => {
             onChange={handleFileUpload}
             disabled={isPending}
           />
-         
-          {uploadError.length && (
+
+          {uploadError?.length > 0 && (
             <p className="text-red-700 font-medium text-xs my-1">
               {uploadError}
             </p>
           )}
-          {uploadedFile && (
+          {uploadedFile && !(uploadError?.length > 0) && (
             <>
               <div className="mt-3">
                 <div className="flex items-center gap-2">
@@ -275,4 +315,4 @@ const NewBulkNotification = () => {
   );
 };
 
-export default NewBulkNotification;
+export default NewIPPIS;

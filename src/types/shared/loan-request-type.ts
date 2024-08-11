@@ -1,4 +1,35 @@
+import { AccountType } from "./account-type";
 import { ProfileType } from "./profile-type";
+
+type CustomerDetailsType = {
+  id: string;
+  profileId: string;
+  LastName: string;
+  FirstName: string;
+  BVN: string;
+  PhoneNo: string;
+  alternatePhoneNo: string;
+  title: string;
+  Gender: string;
+  PlaceOfBirth: string;
+  DateOfBirth: string;
+  Address: string;
+  NationalIdentityNo: string;
+  NextOfKinPhoneNo: string;
+  NextOfKinName: string;
+  ReferralPhoneNo: string | null;
+  ReferralName: string | null;
+  Email: string;
+  loanAgreement: string;
+  organizationEmployer: string;
+  ippisNumber: string;
+  loanTenor: string;
+  loanAmount: string;
+  state: string;
+  language: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type LoanRequestType = {
   id: string;
@@ -11,7 +42,7 @@ export type LoanRequestType = {
   NotificationPreference: string;
   TransactionPermission: string;
   AccountTier: number;
-  stageStatus: string
+  stageStatus: string;
   reviewerUserId?: string;
   supervisorUserId?: string;
   stage: string;
@@ -23,5 +54,24 @@ export type LoanRequestType = {
   approved?: string;
   createdAt: string;
   updatedAt: string;
-  profile: ProfileType
+  profile: ProfileType;
+};
+
+export type UnCompletedLoanRequestType = {
+  id: string;
+  profileId: string;
+  TransactionTrackingRef: string;
+  stageStatus: string;
+  stage: string;
+  reviewerUserId: string | null;
+  supervisorUserId: string | null;
+  rejectionReason: string | null;
+  reviewerRecommendation: string | null;
+  supervisorRecommendation: string | null;
+  supervisorNote: string | null;
+  reviewerNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customerDetails?: CustomerDetailsType;
+  accountDetails: AccountType;
 };

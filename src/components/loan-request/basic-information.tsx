@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,11 @@ import {
 } from "../ui/select";
 import { Label } from "../ui/label";
 import { dummyStates } from "@/data";
+import { AccountService } from "@/services";
+import { useMutation } from "@tanstack/react-query";
+import { ClipLoader } from "react-spinners";
+import { capitalize, parseDateToInputFormat } from "@/utils";
+import { BVNType } from "@/types/shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -58,6 +63,11 @@ const schema = z.object({
     .refine((value) => !/\d/.test(value), {
       message: "First Name must not contain any digits",
     }),
+  OtherNames: z.optional(
+    z.string().refine((value) => !/\d/.test(value), {
+      message: "First Name must not contain any digits",
+    })
+  ),
   BVN: z
     .string({ required_error: "Bvn is required" })
     .length(11, "BVN must be 11 characters long")
@@ -123,6 +133,8 @@ const TITLE_OPTIONS = [
 ];
 
 export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
+  const [stage, setStage] = useState(1);
+
   const {
     register,
     setError,
@@ -136,6 +148,22 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
+  const accountService = new AccountService();
+
+  const {
+    mutate: validateBVN,
+    data: bvnDetails,
+    isError: isBvnError,
+    error: bvnError,
+    reset: resetBvnDetails,
+    isPending: isLoadingBvnDetails,
+  } = useMutation({
+    mutationFn: async (data: { id: string }) => {
+      const response = await accountService.validateBVN(data);
+      return response?.payload?.bvnDetails;
+    },
+  });
+
   const [Gender, state, title] = watch(["Gender", "state", "title"]);
 
   const today = new Date();
@@ -146,6 +174,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     const data = sessionStorage.getItem(
       `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`
     );
+
     if (!data) {
       return;
     }
@@ -171,6 +200,16 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     if (parsedData.title) {
       setValue("title", parsedData.title);
     }
+  }, [setValue, getValues, stage]);
+
+  useEffect(() => {
+    const bvnDetails = JSON.parse(
+      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string
+    ) as BVNType;
+
+    if (bvnDetails) {
+      setStage(2);
+    }
   }, []);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
@@ -195,158 +234,232 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   };
 
+  const handleValidateBvn = async () => {
+    const { BVN } = getValues();
+    if (BVN?.length !== 11) {
+      return;
+    }
+    if (bvnDetails) {
+      setValue("FirstName", capitalize(bvnDetails?.FirstName) ?? "");
+      setValue("LastName", capitalize(bvnDetails?.LastName) ?? "");
+      setValue("OtherNames", capitalize(bvnDetails?.OtherNames) ?? "");
+      const parsedDate = parseDateToInputFormat(bvnDetails.DOB);
+
+      if (parsedDate) {
+        setValue("DateOfBirth", parsedDate);
+      }
+
+      sessionStorage.setItem(
+        `${SESSION_STORAGE_KEY}_BVN_DETAILS`,
+        JSON.stringify(bvnDetails)
+      );
+      setStage(2);
+    }
+    validateBVN({ id: BVN });
+  };
+
+  const handleBackClick = () => {
+    setStage(1);
+  };
+
   return (
     <>
-      <form
-        className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 lg:gap-4"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <div className="col-span-full">
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Title
-          </Label>
-          <Select
-            value={title}
-            onValueChange={async (value) => {
-              setValue("title", value, { shouldValidate: true });
-              // await trigger("t");
-            }}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Title" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Title</SelectLabel>
-                {TITLE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
-            {errors?.title?.message}
-          </p>
-        </div>
+      {stage === 1 && (
         <div>
           <Input
-            label="First Name"
-            {...register("FirstName")}
-            error={errors?.FirstName?.message}
-          />
-        </div>
-        <div>
-          <Input
-            label="Last Name"
-            {...register("LastName")}
-            error={errors?.LastName?.message}
-          />
-        </div>
-
-        <div>
-          <Input
-            label="Date of Birth"
-            type="date"
-            {...register("DateOfBirth")}
-            error={errors?.DateOfBirth?.message}
-            max={yesterday}
-          />
-        </div>
-        <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Gender
-          </Label>
-          <Select
-            value={Gender}
-            onValueChange={async (value) => {
-              setValue("Gender", value);
-              await trigger("Gender");
-            }}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Status</SelectLabel>
-                {GENDER_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
-            {errors?.Gender?.message}
-          </p>
-        </div>
-        <div>
-          <Input
-            label="National Identity Number (NIN)"
-            {...register("NationalIdentityNo")}
-            error={errors?.NationalIdentityNo?.message}
-            onChange={async (e) => {
-              const value = e.target.value.replace(/\D/g, "");
-              setValue("NationalIdentityNo", value);
-              await trigger("NationalIdentityNo");
-            }}
-          />
-        </div>
-        <div>
-          <Input
-            label="BVN"
+            label="Enter BVN"
             {...register("BVN")}
-            error={errors?.BVN?.message}
+            error={
+              isBvnError
+                ? (bvnError as any)?.response?.data?.payload?.error
+                : errors?.BVN?.message
+            }
             onChange={async (e) => {
               const value = e.target.value.replace(/\D/g, "");
+              resetBvnDetails();
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
               setValue("BVN", value);
               await trigger("BVN");
             }}
+            disabled={isLoadingBvnDetails}
           />
-        </div>
-        <div>
-          <Input
-            label="Place of Birth"
-            {...register("PlaceOfBirth")}
-            error={errors?.PlaceOfBirth?.message}
-          />
-        </div>
-        <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            State
-          </Label>
-          <Select
-            value={state}
-            onValueChange={async (value) => {
-              setValue("state", value);
-              await trigger("state");
-            }}
+          {bvnDetails && (
+            <p className="text-sm p-1 font-bold bg-green-100 rounded-sm text-green-900">
+              Validation Successful
+            </p>
+          )}
+          <Button
+            onClick={handleValidateBvn}
+            className="mt-2 w-full max-w-[300px]"
           >
-            <SelectTrigger className="">
-              <SelectValue placeholder="State" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Status</SelectLabel>
-                {STATE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
-            {errors?.state?.message}
-          </p>
+            {isLoadingBvnDetails ? (
+              <>
+                <ClipLoader size={12} color="#fff" /> <span>Loading...</span>
+              </>
+            ) : bvnDetails ? (
+              "Next"
+            ) : (
+              "Validate"
+            )}
+          </Button>
         </div>
-        <div className="lg:col-span-full">
-          <Button className="max-w-[200px]">Next</Button>
-        </div>
-      </form>
+      )}
+      {stage === 2 && (
+        <form
+          className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 lg:gap-4"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="col-span-full">
+            <Label htmlFor="alertType" className="mb-1 font-semibold">
+              Title
+            </Label>
+            <Select
+              value={title}
+              onValueChange={async (value) => {
+                setValue("title", value, { shouldValidate: true });
+                // await trigger("t");
+              }}
+            >
+              <SelectTrigger className="">
+                <SelectValue placeholder="Title" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Title</SelectLabel>
+                  {TITLE_OPTIONS?.map((opt) => (
+                    <SelectItem value={opt.value} key={opt.id}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+              {errors?.title?.message}
+            </p>
+          </div>
+          <div>
+            <Input
+              label="First Name"
+              {...register("FirstName")}
+              error={errors?.FirstName?.message}
+            />
+          </div>
+          <div>
+            <Input
+              label="Last Name"
+              {...register("LastName")}
+              error={errors?.LastName?.message}
+            />
+          </div>
+          <div>
+            <Input
+              label="Other Names"
+              {...register("OtherNames")}
+              error={errors?.OtherNames?.message}
+            />
+          </div>
+
+          <div>
+            <Input
+              label="Date of Birth"
+              type="date"
+              {...register("DateOfBirth")}
+              error={errors?.DateOfBirth?.message}
+              max={yesterday}
+            />
+          </div>
+          <div>
+            <Label htmlFor="alertType" className="mb-1 font-semibold">
+              Gender
+            </Label>
+            <Select
+              value={Gender}
+              onValueChange={async (value) => {
+                setValue("Gender", value);
+                await trigger("Gender");
+              }}
+            >
+              <SelectTrigger className="">
+                <SelectValue placeholder="Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  {GENDER_OPTIONS?.map((opt) => (
+                    <SelectItem value={opt.value} key={opt.id}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+              {errors?.Gender?.message}
+            </p>
+          </div>
+          <div>
+            <Input
+              label="National Identity Number (NIN)"
+              {...register("NationalIdentityNo")}
+              error={errors?.NationalIdentityNo?.message}
+              onChange={async (e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                setValue("NationalIdentityNo", value);
+                await trigger("NationalIdentityNo");
+              }}
+            />
+          </div>
+          <div>
+            <Input
+              label="Place of Birth"
+              {...register("PlaceOfBirth")}
+              error={errors?.PlaceOfBirth?.message}
+            />
+          </div>
+          <div>
+            <Label htmlFor="alertType" className="mb-1 font-semibold">
+              State
+            </Label>
+            <Select
+              value={state}
+              onValueChange={async (value) => {
+                setValue("state", value);
+                await trigger("state");
+              }}
+            >
+              <SelectTrigger className="">
+                <SelectValue placeholder="State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  {STATE_OPTIONS?.map((opt) => (
+                    <SelectItem value={opt.value} key={opt.id}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+              {errors?.state?.message}
+            </p>
+          </div>
+          <div className="lg:col-span-full">
+            <div className="flex items-center gap-2 col-span-full">
+              <Button
+                className="max-w-[175px] bg-black"
+                type="button"
+                onClick={handleBackClick}
+              >
+                Back
+              </Button>
+              <Button className="max-w-[175px]">Next</Button>
+            </div>
+          </div>
+        </form>
+      )}
     </>
   );
 };
