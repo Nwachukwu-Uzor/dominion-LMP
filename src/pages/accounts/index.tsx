@@ -172,6 +172,11 @@ const Accounts = () => {
 
   const columns: ColumnDef<AccountType>[] = [
     {
+      header: "S/N",
+      accessorKey: "id",
+      cell: ({row}) => <span className="bold">{row.index + 1}. </span>
+    },
+    {
       header: "Account Number",
       accessorKey: "accountNumber",
     },
@@ -286,7 +291,13 @@ const Accounts = () => {
             <div>{accountError?.message}</div>
           ) : accounts ? (
             <>
-              <NonPaginatedTable columns={columns} data={accounts} />
+              <NonPaginatedTable
+                columns={columns}
+                data={accounts.filter(
+                  (acc) =>
+                    acc.customerNumber !== null && acc.accountNumber !== null
+                )}
+              />
               <div>
                 <Pagination
                   totalPages={pageConfig.total}

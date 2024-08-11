@@ -34,8 +34,8 @@ const ADMIN_OPTIONS = [
   },
   {
     id: 3,
-    label: "Supervisor",
-    value: "SUPERVISOR",
+    label: "Authorizer",
+    value: "AUTHORIZER",
   },
   {
     id: 2,

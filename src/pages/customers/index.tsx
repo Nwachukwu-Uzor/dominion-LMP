@@ -72,6 +72,11 @@ const Customers = () => {
 
   const columns: ColumnDef<CustomerType>[] = [
     {
+      header: "S/N",
+      accessorKey: "id",
+      cell: ({row}) => <span className="bold">{row.index + 1}. </span>
+    },
+    {
       header: "Title",
       accessorKey: "title",
     },

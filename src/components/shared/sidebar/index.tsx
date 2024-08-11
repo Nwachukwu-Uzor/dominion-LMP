@@ -35,7 +35,7 @@ const USER_ROLES = {
   SUPER_ADMIN: "superAdmin",
   ADMIN: "admin",
   REVIEWER: "REVIEWER",
-  SUPERVISOR: "SUPERVISOR",
+  AUTHORIZER: "AUTHORIZER",
 };
 
 export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
@@ -107,11 +107,11 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       });
     }
 
-    if (transformedRoles.includes(USER_ROLES.SUPERVISOR)) {
+    if (transformedRoles.includes(USER_ROLES.AUTHORIZER)) {
       menuItems.splice(3, 0, {
         id: 8,
         title: "Pending Authorizer",
-        path: "/loan/requests/supervisor",
+        path: "/loan/requests/authorizer",
         icon: <MdOutlineAddCard />,
       });
     }

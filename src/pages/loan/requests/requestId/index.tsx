@@ -48,7 +48,7 @@ type FormFields = z.infer<typeof schema>;
 
 const VALID_STAGES: Record<string, string> = {
   REVIEWER: "REVIEWER",
-  SUPERVISOR: "SUPERVISOR",
+  AUTHORIZER: "AUTHORIZER",
 };
 
 const RequestDetails = () => {
@@ -100,22 +100,19 @@ const RequestDetails = () => {
     {
       id: 1,
       label:
-        accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR
+        accountInfo?.stage?.toUpperCase() === VALID_STAGES.AUTHORIZER
           ? "Approve"
           : "Recommend for Approval",
       value: "approve",
     },
     {
       id: 2,
-      label:
-        accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR
-          ? "Reject"
-          : "Recommend for Rejection",
+      label: "Reject",
       value: "reject",
     },
   ];
 
-  if (accountInfo?.stage?.toUpperCase() === VALID_STAGES.SUPERVISOR) {
+  if (accountInfo?.stage?.toUpperCase() === VALID_STAGES.AUTHORIZER) {
     ACTION_OPTIONS = [
       ...ACTION_OPTIONS,
       {
@@ -215,13 +212,13 @@ const RequestDetails = () => {
         refetch();
         return;
       }
-      if (stage?.toUpperCase() === VALID_STAGES.SUPERVISOR) {
+      if (stage?.toUpperCase() === VALID_STAGES.AUTHORIZER) {
         const payload = {
           ...values,
           requestId: accountId,
           approvalUserId: user?.UserId,
         };
-        const response = await loanService.reviewLoanRequestSupervisor(payload);
+        const response = await loanService.reviewLoanRequestAuthorizer(payload);
         toast.success(response?.message);
         refetch();
       }
@@ -340,7 +337,7 @@ const RequestDetails = () => {
                   />
                   <Record header="Request Stage" content={accountInfo?.stage} />
                   {accountInfo?.stage?.toUpperCase() ===
-                    VALID_STAGES.SUPERVISOR && (
+                    VALID_STAGES.AUTHORIZER && (
                     <>
                       <Record
                         header="Reviewer Recommendation"
@@ -354,15 +351,15 @@ const RequestDetails = () => {
                   )}
                   {accountInfo?.stage?.toUpperCase() ===
                     VALID_STAGES.REVIEWER &&
-                    accountInfo?.supervisorUserId && (
+                    accountInfo?.authorizerUserId && (
                       <>
                         <Record
                           header="Reviewer Recommendation"
-                          content={accountInfo?.supervisorRecommendation}
+                          content={accountInfo?.authorizerRecommendation}
                         />
                         <Record
                           header="Reviewer Note"
-                          content={accountInfo?.supervisorNote}
+                          content={accountInfo?.authorizerNote}
                         />
                       </>
                     )}
@@ -460,7 +457,7 @@ const RequestDetails = () => {
                   (accountInfo?.stage?.toUpperCase() ===
                     VALID_STAGES.REVIEWER ||
                     accountInfo?.stage?.toUpperCase() ===
-                      VALID_STAGES.SUPERVISOR) && (
+                      VALID_STAGES.AUTHORIZER) && (
                     <div className="mt-2">
                       <h2 className="text-gray-400 text-sm font-medium">
                         Action:

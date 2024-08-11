@@ -62,9 +62,16 @@ const AccountRequests = () => {
 
   const columns: ColumnDef<UnCompletedLoanRequestType>[] = [
     {
+      header: "S/N",
+      accessorKey: "id",
+      cell: ({ row }) => <span className="bold">{row.index + 1}. </span>,
+    },
+    {
       header: "Customer Name",
       accessorFn: (row) =>
-        `${row?.customerDetails?.LastName ?? ""} ${row?.customerDetails?.FirstName ?? ""}`,
+        `${row?.customerDetails?.LastName ?? ""} ${
+          row?.customerDetails?.FirstName ?? ""
+        }`,
     },
     {
       header: "Phone Number",

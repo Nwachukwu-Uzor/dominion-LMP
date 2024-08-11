@@ -154,7 +154,7 @@ const AccountDetails = () => {
               <ClipLoader size={25} color="#5b21b6" />
             </div>
           ) : isError ? (
-            <div>{error?.message}</div>
+            <div>{JSON.stringify(error)}</div>
           ) : accountInfo ? (
             <>
               <div>

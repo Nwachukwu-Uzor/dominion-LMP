@@ -147,7 +147,7 @@ export class LoanService {
     try {
       const LOAN_STAGES = {
         REVIEWER: "REVIEWER",
-        SUPERVISOR: "SUPERVISOR",
+        AUTHORIZER: "AUTHORIZER",
         COMPLETED: "COMPLETED",
       };
       const data = {
@@ -155,7 +155,7 @@ export class LoanService {
           (await this.getLoanRequestForStage(LOAN_STAGES.REVIEWER, 1, 1))
             ?.payload?.totalRecords ?? 0,
         pendingAuthorizer:
-          (await this.getLoanRequestForStage(LOAN_STAGES.SUPERVISOR, 1, 1))
+          (await this.getLoanRequestForStage(LOAN_STAGES.AUTHORIZER, 1, 1))
             ?.payload?.totalRecords ?? 0,
         completed:
           (await this.getAllLoanRequests(LOAN_STAGES.COMPLETED, 1, 1))?.payload
@@ -213,7 +213,7 @@ export class LoanService {
     );
     return response?.data;
   }
-  async reviewLoanRequestSupervisor(payload: {
+  async reviewLoanRequestAuthorizer(payload: {
     approved: string;
     note: string;
     requestId: string;
