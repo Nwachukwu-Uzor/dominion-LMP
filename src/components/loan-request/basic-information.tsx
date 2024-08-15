@@ -66,7 +66,7 @@ const schema = z.object({
   OtherNames: z.optional(
     z.string().refine((value) => !/\d/.test(value), {
       message: "First Name must not contain any digits",
-    })
+    }),
   ),
   BVN: z
     .string({ required_error: "Bvn is required" })
@@ -87,7 +87,7 @@ const schema = z.object({
 
         return isValid(date);
       },
-      { message: "Date of Birth is required" }
+      { message: "Date of Birth is required" },
     )
     .refine(
       (value) => {
@@ -98,7 +98,7 @@ const schema = z.object({
         const today = new Date().setHours(0, 0, 0, 0);
         return date < today;
       },
-      { message: "Date of Birth has to be before today's date" }
+      { message: "Date of Birth has to be before today's date" },
     ),
   PlaceOfBirth: z
     .string({ required_error: "Place of Birth is required" })
@@ -172,7 +172,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   useEffect(() => {
     const data = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`
+      `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
     );
 
     if (!data) {
@@ -185,7 +185,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (key in fields) {
         setValue(
           key as keyof FormFields,
-          parsedData[key as keyof FormFields] ?? ""
+          parsedData[key as keyof FormFields] ?? "",
         );
       }
     }
@@ -204,7 +204,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   useEffect(() => {
     const bvnDetails = JSON.parse(
-      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string
+      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string,
     ) as BVNType;
 
     if (bvnDetails) {
@@ -216,7 +216,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     try {
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
-        JSON.stringify(values)
+        JSON.stringify(values),
       );
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "1");
       handleUpdateStep();
@@ -229,7 +229,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -251,7 +251,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_BVN_DETAILS`,
-        JSON.stringify(bvnDetails)
+        JSON.stringify(bvnDetails),
       );
       setStage(2);
     }
@@ -284,7 +284,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             disabled={isLoadingBvnDetails}
           />
           {bvnDetails && (
-            <p className="text-sm p-1 font-bold bg-green-100 rounded-sm text-green-900">
+            <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
               Validation Successful
             </p>
           )}
@@ -306,7 +306,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       )}
       {stage === 2 && (
         <form
-          className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 lg:gap-4"
+          className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="col-span-full">
@@ -334,7 +334,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+            <p className="mt-0.5 h-1 text-[10px] text-red-500">
               {errors?.title?.message}
             </p>
           </div>
@@ -394,7 +394,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+            <p className="mt-0.5 h-1 text-[10px] text-red-500">
               {errors?.Gender?.message}
             </p>
           </div>
@@ -442,12 +442,12 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+            <p className="mt-0.5 h-1 text-[10px] text-red-500">
               {errors?.state?.message}
             </p>
           </div>
           <div className="lg:col-span-full">
-            <div className="flex items-center gap-2 col-span-full">
+            <div className="col-span-full flex items-center gap-2">
               <Button
                 className="max-w-[175px] bg-black"
                 type="button"

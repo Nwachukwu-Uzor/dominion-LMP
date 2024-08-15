@@ -1,6 +1,7 @@
 import { baseUrl } from "@/config";
 import {
   APIResponseType,
+  LoanFrequencyType,
   LoanRepaymentType,
   LoanRequestType,
   PaginatedResponseType,
@@ -24,7 +25,7 @@ export class LoanService {
           Authorization: `Bearer ${this._token}`,
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response?.data;
@@ -38,7 +39,7 @@ export class LoanService {
           Authorization: `Bearer ${this._token}`,
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     return response?.data;
@@ -68,7 +69,7 @@ export class LoanService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response?.data;
   }
@@ -83,7 +84,7 @@ export class LoanService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response?.data;
   }
@@ -100,7 +101,7 @@ export class LoanService {
           headers: {
             Authorization: `Bearer ${this._token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error: any) {
@@ -128,7 +129,7 @@ export class LoanService {
           headers: {
             Authorization: `Bearer ${this._token}`,
           },
-        }
+        },
       );
 
       return response.data;
@@ -191,7 +192,7 @@ export class LoanService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response?.data;
   }
@@ -209,7 +210,7 @@ export class LoanService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response?.data;
   }
@@ -226,7 +227,32 @@ export class LoanService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
+    );
+    return response?.data;
+  }
+
+  async updateLoanFrequency(payload: { period: string; frequency: string }) {
+    const response = await axios.post<APIResponseType<string>>(
+      `${baseUrl}/eligibility/add`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+        },
+      },
+    );
+    return response?.data;
+  }
+
+  async fetchLoanFrequency() {
+    const response = await axios.get<APIResponseType<PaginatedResponseType & {data: LoanFrequencyType[]}>>(
+      `${baseUrl}/eligibility/view/all?size=10&page=1&sort=ASC&orderBy=createdAt&gSearch=active&option=status`,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+        },
+      },
     );
     return response?.data;
   }

@@ -7,30 +7,14 @@ const Settings = () => {
     <Container>
       <PageTitle title="Settings" />
       <Card className="mt-2">
-        <p className="font-light mb-4">
-          Please select the setting to update
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <p className="mb-4 font-light">Please select the setting to update</p>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
           <Link
             to="loan-frequency"
-            className="mt-2 text-primary text-sm group font-medium duration-200 relative w-fit text-center"
+            className="group relative mt-2 w-fit text-center text-sm font-medium text-primary duration-200"
           >
-            Loan Frequency
-            <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
-          </Link>
-          <Link
-            to="loan-frequency"
-            className="mt-2 text-primary text-sm group font-medium duration-200 relative w-fit text-center"
-          >
-            Loan Frequency
-            <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
-          </Link>
-          <Link
-            to="loan-frequency"
-            className="mt-2 text-primary text-sm group font-medium duration-200 relative w-fit text-center"
-          >
-            Loan Frequency
-            <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
+            - Loan Frequency
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
           </Link>
         </div>
       </Card>

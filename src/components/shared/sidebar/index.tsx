@@ -22,9 +22,7 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import { toast } from "react-toastify";
 import { LogOutIcon } from "lucide-react";
 import { useUser } from "@/hooks";
-import {
-  IoNotificationsCircleOutline /**, IoSettings , **/
-} from "react-icons/io5";
+import { IoNotificationsCircleOutline, IoSettings } from "react-icons/io5";
 
 type Props = {
   open: boolean;
@@ -87,12 +85,12 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       path: "/messaging",
       icon: <MdOutlineMessage />,
     },
-    // {
-    //   id: 6,
-    //   title: "Settings",
-    //   path: "/settings",
-    //   icon: <IoSettings />,
-    // },
+    {
+      id: 6,
+      title: "Settings",
+      path: "/settings",
+      icon: <IoSettings />,
+    },
   ];
 
   if (user) {
@@ -134,32 +132,32 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
   return (
     <aside
-      className={`bg-[#2D2D2D] h-screen  ${
-        open ? "lg:w-72 " : "lg:w-20"
-      } duration-300 overflow-y-auto no-scrollbar`}
+      className={`h-screen bg-[#2D2D2D] ${
+        open ? "lg:w-72" : "lg:w-20"
+      } no-scrollbar overflow-y-auto duration-300`}
     >
       <nav
-        className={`bg-[#2D2D2D] fixed pt-8 lg:left-0 top-0 bottom-0 z-20 ${
-          open ? "w-72 " : "w-0 -left-20 lg:block lg:w-20"
-        } duration-300 flex flex-col gap-10 h-[100vh-36px] overflow-y-hidden`}
+        className={`fixed bottom-0 top-0 z-20 bg-[#2D2D2D] pt-8 lg:left-0 ${
+          open ? "w-72" : "-left-20 w-0 lg:block lg:w-20"
+        } flex h-[100vh-36px] flex-col gap-10 overflow-y-hidden duration-300`}
       >
         <div
-          className={`flex items-center justify-start mt-12 gap-3 px-5 ${
+          className={`mt-12 flex items-center justify-start gap-3 px-5 ${
             open ? "w-fit" : "w-full"
           } h-8`}
         >
           <NavLink to={"/"}>
             <img
               src={logo}
-              className={`p-1 w-full rounded cursor-pointer mx-auto ${
+              className={`mx-auto w-full cursor-pointer rounded p-1 ${
                 open ? "" : "rotate-[360deg]"
               } duration-500`}
               alt="Logo"
             />
           </NavLink>
         </div>
-        <div className="flex flex-col justify-between mt-2 ">
-          <ul className="pt-2 flex flex-col gap-3 overflow-x-hidden h-[70vh] overflow-y-auto">
+        <div className="mt-2 flex flex-col justify-between">
+          <ul className="flex h-[70vh] flex-col gap-3 overflow-y-auto overflow-x-hidden pt-2">
             {menuItems.map((item) => (
               <li key={item.id}>
                 <NavLink
@@ -168,9 +166,9 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                   className={({ isActive }) =>
                     `w-full ${
                       open ? "" : "lg:justify-center"
-                    } flex items-center gap-x-4 text-sm cursor-pointer hover:opacity-80 p-2 pl-5 ${
+                    } flex cursor-pointer items-center gap-x-4 p-2 pl-5 text-sm hover:opacity-80 ${
                       isActive
-                        ? "text-primary bg-white lg:bg-transparent lg:border-l-[6px] lg:border-l-primary"
+                        ? "bg-white text-primary lg:border-l-[6px] lg:border-l-primary lg:bg-transparent"
                         : "bg-transparent text-white"
                     } hover:text-primary`
                   }
@@ -183,7 +181,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                       <TooltipContent
                         side="left"
                         sideOffset={open ? 250 : 35}
-                        className="bg-white shadow-sm text-black"
+                        className="bg-white text-black shadow-sm"
                         arrowPadding={4}
                       >
                         <p className="text-sm">{item.title}</p>
@@ -191,8 +189,8 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                     </Tooltip>
                   </TooltipProvider>
                   <span
-                    className={`font-medium text-base ${
-                      open ? "scale-1 w-auto" : "scale-0 w-0"
+                    className={`text-base font-medium ${
+                      open ? "scale-1 w-auto" : "w-0 scale-0"
                     }`}
                   >
                     {item.title}
@@ -207,9 +205,9 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               className={({ isActive }) =>
                 `w-full ${
                   open ? "" : "lg:justify-center"
-                } flex items-center gap-x-4 text-sm cursor-pointer hover:opacity-80 p-2 pl-5 ${
+                } flex cursor-pointer items-center gap-x-4 p-2 pl-5 text-sm hover:opacity-80 ${
                   isActive
-                    ? "text-primary bg-white lg:bg-transparent lg:border-l-[6px] lg:border-l-primary"
+                    ? "bg-white text-primary lg:border-l-[6px] lg:border-l-primary lg:bg-transparent"
                     : "bg-transparent text-white"
                 } hover:text-primary`
               }
@@ -224,7 +222,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                   <TooltipContent
                     side="left"
                     sideOffset={open ? 250 : 35}
-                    className="bg-white shadow-sm text-black"
+                    className="bg-white text-black shadow-sm"
                     arrowPadding={4}
                   >
                     <p className="text-sm">Initiate</p>
@@ -232,20 +230,20 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                 </Tooltip>
               </TooltipProvider>
               <span
-                className={`font-medium text-base ${
-                  open ? "scale-1 w-auto" : "scale-0 w-0"
+                className={`text-base font-medium ${
+                  open ? "scale-1 w-auto" : "w-0 scale-0"
                 }`}
               >
                 Initiate
               </span>
             </NavLink>
           </ul>
-          <div className="w-full z-50 absolute bottom-4 border-t-2 border-t-white pt-2">
+          <div className="absolute bottom-4 z-50 w-full border-t-2 border-t-white pt-2">
             <button
               onClick={handleLogout}
-              className={`flex items-center justify-start p-1 pl-5 gap-1 text-white w-full font-bold ${
+              className={`flex w-full items-center justify-start gap-1 p-1 pl-5 font-bold text-white ${
                 open ? "" : "lg:justify-center"
-              } hover:text-primary duration-150`}
+              } duration-150 hover:text-primary`}
             >
               <TooltipProvider>
                 <Tooltip>
@@ -257,7 +255,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                   <TooltipContent
                     side="left"
                     sideOffset={open ? 250 : 35}
-                    className="bg-white shadow-sm text-black"
+                    className="bg-white text-black shadow-sm"
                     arrowPadding={4}
                   >
                     <p className="text-sm font-normal">Logout</p>
@@ -265,8 +263,8 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                 </Tooltip>
               </TooltipProvider>
               <span
-                className={` text-base ${
-                  open ? "scale-1 w-auto" : "scale-0 w-0"
+                className={`text-base ${
+                  open ? "scale-1 w-auto" : "w-0 scale-0"
                 }`}
               >
                 Logout

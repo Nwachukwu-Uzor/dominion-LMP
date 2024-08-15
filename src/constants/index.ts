@@ -11,6 +11,7 @@ export {
   FETCH_LOAN_REQUEST_BY_ID,
   FETCH_STATS,
   FETCH_ALL_CUSTOMERS_PAGINATED,
-  FETCH_ALL_LANGUAGES
+  FETCH_ALL_LANGUAGES,
+  FETCH_LOAN_FREQUENCY_SETTINGS,
 } from "./query-keys";
 export { templateParametersList } from "./template-parameters-lists";

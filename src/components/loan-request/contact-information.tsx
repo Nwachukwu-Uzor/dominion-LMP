@@ -86,8 +86,7 @@ const schema = z.object({
   organizationEmployer: z
     .string({ required_error: "Organization Employer is required" })
     .min(2, "OrganizationEmployer must be at least 2 characters long"),
-  ippisNumber: z
-    .string({ required_error: "IPPIS number is required" }),
+  ippisNumber: z.string({ required_error: "IPPIS number is required" }),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -112,10 +111,10 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   useEffect(() => {
     const data = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`
+      `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
     );
     const bvnDetails = JSON.parse(
-      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string
+      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string,
     ) as BVNType;
 
     if (!data) {
@@ -130,26 +129,27 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (key in fields) {
         setValue(
           key as keyof FormFields,
-          parsedData[key as keyof FormFields] ?? ""
+          parsedData[key as keyof FormFields] ?? "",
         );
       }
     }
     if (parsedData.NotificationPreference) {
-      setValue("NotificationPreference", parsedData.NotificationPreference)
+      setValue("NotificationPreference", parsedData.NotificationPreference);
     }
   }, [setValue, getValues]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-      await accountService.validateIPPISNumber({ IppisNumber: values.ippisNumber });
+      await accountService.validateIPPISNumber({
+        IppisNumber: values.ippisNumber,
+      });
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
-        JSON.stringify(values)
+        JSON.stringify(values),
       );
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "2");
       handleUpdateStep();
     } catch (error: any) {
-
       setError("root", {
         type: "deps",
         message:
@@ -158,7 +158,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -171,7 +171,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
   return (
     <>
       <form
-        className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 lg:gap-4"
+        className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
         <div>
@@ -231,7 +231,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+          <p className="mt-0.5 h-1 text-[10px] text-red-500">
             {errors?.NotificationPreference?.message}
           </p>
         </div>
@@ -283,10 +283,10 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             }}
           />
         </div>
-        <p className="lg:col-span-full my-1 text-sm text-red-600 font-semibold">
+        <p className="my-1 text-sm font-semibold text-red-600 lg:col-span-full">
           {errors?.root?.message}
         </p>
-        <div className="flex items-center gap-2 col-span-full">
+        <div className="col-span-full flex items-center gap-2">
           <Button
             className="max-w-[175px] bg-black"
             type="button"
