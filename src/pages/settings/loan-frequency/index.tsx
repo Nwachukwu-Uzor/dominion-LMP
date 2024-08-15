@@ -35,7 +35,7 @@ const PERIOD_OPTIONS = [
   },
   {
     id: 2,
-    value: "semi-Annually",
+    value: "semi-annually",
     label: "Semi-Annually",
   },
   {
