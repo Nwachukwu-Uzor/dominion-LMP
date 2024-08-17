@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { AccountService } from "@/services";
+// import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
 
 type Props = {
@@ -107,7 +107,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const [NotificationPreference] = watch(["NotificationPreference"]);
 
-  const accountService = new AccountService();
+  // const accountService = new AccountService();
 
   useEffect(() => {
     const data = sessionStorage.getItem(
