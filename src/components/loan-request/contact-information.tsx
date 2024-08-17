@@ -140,9 +140,9 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-      await accountService.validateIPPISNumber({
-        IppisNumber: values.ippisNumber,
-      });
+      // await accountService.validateIPPISNumber({
+      //   IppisNumber: values.ippisNumber,
+      // });
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
         JSON.stringify(values),

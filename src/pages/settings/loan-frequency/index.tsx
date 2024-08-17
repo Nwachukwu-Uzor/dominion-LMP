@@ -115,6 +115,7 @@ const LoanFrequency = () => {
       );
     }
   };
+  
   return (
     <Container>
       <PageTitle title="Loan Frequency" />
