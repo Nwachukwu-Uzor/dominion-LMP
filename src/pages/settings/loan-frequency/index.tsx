@@ -115,7 +115,7 @@ const LoanFrequency = () => {
       );
     }
   };
-  
+
   return (
     <Container>
       <PageTitle title="Loan Frequency" />
@@ -158,6 +158,12 @@ const LoanFrequency = () => {
         <h3 className="mb-2 flex items-center gap-2 border-y-[0.5px] border-y-gray-400 py-1.5 text-sm font-semibold uppercase">
           <RiExpandDiagonalFill /> <span>Update Frequency Setting:</span>{" "}
         </h3>
+        <div className="rounded-xs my-2 bg-gray-100 p-2">
+          <p className="flex items-center gap-2 text-sm">
+            <FaInfoCircle /> Control how many loans a customer can take within a
+            predefined time interval.
+          </p>
+        </div>
         <form
           className="flex max-w-[500px] flex-col gap-3"
           onSubmit={handleSubmit(onSubmit)}
