@@ -282,7 +282,7 @@ const RequestDetails = () => {
               <ClipLoader size={25} color="#5b21b6" />
             </div>
           ) : isError ? (
-            <div>{error?.message}</div>
+            <div className="text-red-600 text-sm">{error?.message}</div>
           ) : accountInfo ? (
             <>
               <div>

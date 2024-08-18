@@ -26,7 +26,7 @@ export class AccountService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response.data;
   }
@@ -41,7 +41,7 @@ export class AccountService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response.data;
   }
@@ -54,13 +54,18 @@ export class AccountService {
         Authorization: `Bearer ${this._token}`,
       },
     });
+
+    if (!response?.data?.payload?.accountRecords) {
+      throw new Error(response?.data?.message);
+    }
+    
     return response?.data?.payload;
   }
 
   async createAccountRequest(data: Record<string, unknown>) {
     const response = await axios.post<APIResponseType<string>>(
       `${baseUrl}/account/new/customer/account`,
-      data
+      data,
     );
     return response?.data;
   }
@@ -73,7 +78,7 @@ export class AccountService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     return response?.data;
   }
@@ -86,7 +91,7 @@ export class AccountService {
         headers: {
           Authorization: `Bearer ${this._token}`,
         },
-      }
+      },
     );
     if (!response?.data?.payload?.fullName) {
       throw new Error(response?.data?.message);

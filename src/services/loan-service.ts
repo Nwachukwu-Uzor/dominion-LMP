@@ -181,6 +181,11 @@ export class LoanService {
         Authorization: `Bearer ${this._token}`,
       },
     });
+
+    if (!response?.data?.payload?.accountRecords) {
+      throw new Error(response?.data?.message);
+    }
+
     return response?.data?.payload;
   }
 
@@ -246,7 +251,9 @@ export class LoanService {
   }
 
   async fetchLoanFrequency() {
-    const response = await axios.get<APIResponseType<PaginatedResponseType & {data: LoanFrequencyType[]}>>(
+    const response = await axios.get<
+      APIResponseType<PaginatedResponseType & { data: LoanFrequencyType[] }>
+    >(
       `${baseUrl}/eligibility/view/all?size=10&page=1&sort=ASC&orderBy=createdAt&gSearch=active&option=status`,
       {
         headers: {

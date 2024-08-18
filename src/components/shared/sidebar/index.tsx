@@ -68,25 +68,25 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       icon: <BsFillClipboard2DataFill />,
     },
     {
-      id: 3,
+      id: 4,
       title: "Customers",
       path: "/customers",
       icon: <TiUserAdd />,
     },
     {
-      id: 4,
+      id: 5,
       title: "Bulk Notifications",
       path: "/bulk-notifications",
       icon: <IoNotificationsCircleOutline />,
     },
     {
-      id: 5,
+      id: 6,
       title: "Messaging",
       path: "/messaging",
       icon: <MdOutlineMessage />,
     },
     {
-      id: 6,
+      id: 7,
       title: "Settings",
       path: "/settings",
       icon: <IoSettings />,
@@ -98,7 +98,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.SUPER_ADMIN.toUpperCase())) {
       menuItems.push({
-        id: 7,
+        id: 8,
         title: "Users",
         path: "/users",
         icon: <HiUsers />,
@@ -107,7 +107,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.AUTHORIZER)) {
       menuItems.splice(3, 0, {
-        id: 8,
+        id: 9,
         title: "Pending Authorizer",
         path: "/loan/requests/authorizer",
         icon: <MdOutlineAddCard />,
@@ -116,7 +116,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
 
     if (transformedRoles.includes(USER_ROLES.REVIEWER)) {
       menuItems.splice(3, 0, {
-        id: 9,
+        id: 10,
         title: "Pending Reviewer",
         path: "/loan/requests/reviewer",
         icon: <MdOutlineAddCard />,
@@ -137,14 +137,14 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       } no-scrollbar overflow-y-auto duration-300`}
     >
       <nav
-        className={`fixed bottom-0 top-0 z-20 bg-[#2D2D2D] pt-8 lg:left-0 ${
+        className={`fixed bottom-0 top-0 z-20 bg-[#2D2D2D] lg:left-0 ${
           open ? "w-72" : "-left-20 w-0 lg:block lg:w-20"
-        } flex h-[100vh-36px] flex-col gap-10 overflow-y-hidden duration-300`}
+        } flex h-[100vh-36px] flex-col overflow-y-hidden duration-300`}
       >
         <div
-          className={`mt-12 flex items-center justify-start gap-3 px-5 ${
+          className={`flex items-center justify-start gap-3 px-5 ${
             open ? "w-fit" : "w-full"
-          } h-8`}
+          } h-24`}
         >
           <NavLink to={"/"}>
             <img
@@ -156,8 +156,8 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
             />
           </NavLink>
         </div>
-        <div className="mt-2 flex flex-col justify-between">
-          <ul className="flex h-[70vh] flex-col gap-3 overflow-y-auto overflow-x-hidden pt-2">
+        <div className="flex flex-col justify-between">
+          <ul className="flex h-[calc(100vh-10rem)] flex-col gap-3 overflow-y-auto overflow-x-hidden py-3">
             {menuItems.map((item) => (
               <li key={item.id}>
                 <NavLink
@@ -238,7 +238,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               </span>
             </NavLink>
           </ul>
-          <div className="absolute bottom-4 z-50 w-full border-t-2 border-t-white pt-2">
+          <div className="absolute bottom-0 h-16 flex items-center justify-center z-50 w-full border-t-2 border-t-white pt-2">
             <button
               onClick={handleLogout}
               className={`flex w-full items-center justify-start gap-1 p-1 pl-5 font-bold text-white ${
