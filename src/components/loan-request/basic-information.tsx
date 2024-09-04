@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +6,13 @@ import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
 import { isValid } from "date-fns";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import {
+  GENDER_ENUM,
+  GENDER_OPTIONS,
+  SESSION_STORAGE_KEY,
+  STATE_OPTIONS,
+  TITLE_OPTIONS,
+} from "@/constants";
 import {
   Select,
   SelectContent,
@@ -17,29 +23,16 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Label } from "../ui/label";
-import { dummyStates } from "@/data";
 import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
-import { capitalize, parseDateToInputFormat } from "@/utils";
-import { BVNType } from "@/types/shared";
+import { capitalize, maskData, parseDateToInputFormat } from "@/utils";
+import { CustomerInfoType } from "@/types/shared";
+// import { BVNType } from "@/types/shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
 };
-
-const GENDER_OPTIONS = [
-  {
-    id: 1,
-    label: "Male",
-    value: "Male",
-  },
-  {
-    id: 2,
-    label: "Female",
-    value: "Female",
-  },
-];
 
 const schema = z.object({
   title: z
@@ -65,17 +58,20 @@ const schema = z.object({
     }),
   OtherNames: z.optional(
     z.string().refine((value) => !/\d/.test(value), {
-      message: "First Name must not contain any digits",
+      message: "Other Names must not contain any digits",
     }),
   ),
   BVN: z
     .string({ required_error: "Bvn is required" })
     .length(11, "BVN must be 11 characters long")
-    .regex(/^\d+$/, { message: "BVN must contain only digits" }),
+    .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
   NationalIdentityNo: z
-    .string({ required_error: "Bvn is required" })
+    .string()
     .length(11, "NIN must be 11 characters long")
-    .regex(/^\d+$/, { message: "NIN must contain only digits" }),
+    .regex(/^[\d*]+$/, { message: "NIN must contain only digits" })
+    .optional()
+    .or(z.literal("")),
+
   Gender: z
     .string({ required_error: "Gender is required" })
     .min(4, { message: "Gender is required" }),
@@ -108,33 +104,7 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-const STATE_OPTIONS = dummyStates.map((state) => ({
-  ...state,
-  value: state.name,
-  label: state.name,
-}));
-
-const TITLE_OPTIONS = [
-  {
-    id: 1,
-    value: "Mr.",
-    label: "Mr.",
-  },
-  {
-    id: 2,
-    value: "Mrs.",
-    label: "Mrs.",
-  },
-  {
-    id: 3,
-    value: "Ms.",
-    label: "Ms.",
-  },
-];
-
 export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
-  const [stage, setStage] = useState(1);
-
   const {
     register,
     setError,
@@ -150,6 +120,20 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const accountService = new AccountService();
 
+  const populateFieldsWithCustomInfo = (info: CustomerInfoType) => {
+    const data = maskData(info);
+
+    setValue("FirstName", data?.FirstName ?? "");
+    setValue("LastName", data?.LastName ?? "");
+    setValue("Gender", GENDER_ENUM[info?.Gender] ?? "");
+    setValue("NationalIdentityNo", data?.NationalIdentityNo ?? "");
+    setValue("PlaceOfBirth", data?.PlaceOfBirth ?? "");
+    setValue("title", data?.title ?? "");
+    setValue("DateOfBirth", info?.DateOfBirth ?? "");
+    setValue("state", info?.state ?? "");
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION}`);
+  };
+
   const {
     mutate: validateBVN,
     data: bvnDetails,
@@ -160,7 +144,27 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
   } = useMutation({
     mutationFn: async (data: { id: string }) => {
       const response = await accountService.validateBVN(data);
-      return response?.payload?.bvnDetails;
+      if (!response?.payload) {
+        return;
+      }
+      const { customerInfo, mainOneDetails } = response.payload;
+      if (customerInfo) {
+        populateFieldsWithCustomInfo(customerInfo);
+      } else {
+        const info = mainOneDetails.bvnDetails;
+
+        if (info) {
+          setValue("FirstName", capitalize(info?.FirstName) ?? "");
+          setValue("LastName", capitalize(info?.LastName) ?? "");
+          setValue("OtherNames", capitalize(info?.OtherNames) ?? "");
+          const parsedDate = parseDateToInputFormat(info.DOB);
+
+          if (parsedDate) {
+            setValue("DateOfBirth", parsedDate);
+          }
+        }
+      }
+      return response?.payload;
     },
   });
 
@@ -200,17 +204,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     if (parsedData.title) {
       setValue("title", parsedData.title);
     }
-  }, [setValue, getValues, stage]);
-
-  useEffect(() => {
-    const bvnDetails = JSON.parse(
-      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string,
-    ) as BVNType;
-
-    if (bvnDetails) {
-      setStage(2);
-    }
-  }, []);
+  }, [setValue, getValues]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -219,6 +213,12 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         JSON.stringify(values),
       );
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "1");
+      if (bvnDetails?.customerInfo) {
+        sessionStorage.setItem(
+          `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
+          JSON.stringify(bvnDetails.customerInfo),
+        );
+      }
       handleUpdateStep();
     } catch (error: any) {
       setError("root", {
@@ -239,32 +239,55 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     if (BVN?.length !== 11) {
       return;
     }
-    if (bvnDetails) {
-      setValue("FirstName", capitalize(bvnDetails?.FirstName) ?? "");
-      setValue("LastName", capitalize(bvnDetails?.LastName) ?? "");
-      setValue("OtherNames", capitalize(bvnDetails?.OtherNames) ?? "");
-      const parsedDate = parseDateToInputFormat(bvnDetails.DOB);
 
-      if (parsedDate) {
-        setValue("DateOfBirth", parsedDate);
-      }
-
-      sessionStorage.setItem(
-        `${SESSION_STORAGE_KEY}_BVN_DETAILS`,
-        JSON.stringify(bvnDetails),
-      );
-      setStage(2);
-    }
     validateBVN({ id: BVN });
   };
 
-  const handleBackClick = () => {
-    setStage(1);
+  const handleBvnInputBlur = async (
+    event: React.FocusEvent<HTMLInputElement>,
+  ) => {
+    const { value } = event.target;
+    if (value?.length === 11) {
+      await handleValidateBvn();
+    }
   };
 
   return (
     <>
-      {stage === 1 && (
+      <form
+        className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div>
+          <Label htmlFor="Title" className="mb-1 font-semibold">
+            Title
+          </Label>
+          <Select
+            disabled={bvnDetails?.customerInfo !== undefined}
+            value={title}
+            onValueChange={async (value) => {
+              setValue("title", value, { shouldValidate: true });
+              // await trigger("t");
+            }}
+          >
+            <SelectTrigger className="">
+              <SelectValue placeholder="Title" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Title</SelectLabel>
+                {TITLE_OPTIONS?.map((opt) => (
+                  <SelectItem value={opt.value} key={opt.id}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <p className="mt-0.5 h-1 text-[10px] text-red-500">
+            {errors?.title?.message}
+          </p>
+        </div>
         <div>
           <Input
             label="Enter BVN"
@@ -274,6 +297,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
                 ? (bvnError as any)?.response?.data?.payload?.error
                 : errors?.BVN?.message
             }
+            type="number"
             onChange={async (e) => {
               const value = e.target.value.replace(/\D/g, "");
               resetBvnDetails();
@@ -282,184 +306,154 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               await trigger("BVN");
             }}
             disabled={isLoadingBvnDetails}
+            onBlur={handleBvnInputBlur}
           />
-          {bvnDetails && (
-            <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
-              Validation Successful
-            </p>
+          {isLoadingBvnDetails ? (
+            <>
+              <ClipLoader size={12} color="#5b21b6" /> <span>Loading...</span>
+            </>
+          ) : (
+            bvnDetails && (
+              <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
+                Validation Successful
+              </p>
+            )
           )}
-          <Button
-            onClick={handleValidateBvn}
-            className="mt-2 w-full max-w-[300px]"
-          >
-            {isLoadingBvnDetails ? (
-              <>
-                <ClipLoader size={12} color="#fff" /> <span>Loading...</span>
-              </>
-            ) : bvnDetails ? (
-              "Next"
-            ) : (
-              "Validate"
-            )}
-          </Button>
         </div>
-      )}
-      {stage === 2 && (
-        <form
-          className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div className="col-span-full">
-            <Label htmlFor="alertType" className="mb-1 font-semibold">
-              Title
-            </Label>
-            <Select
-              value={title}
-              onValueChange={async (value) => {
-                setValue("title", value, { shouldValidate: true });
-                // await trigger("t");
-              }}
-            >
-              <SelectTrigger className="">
-                <SelectValue placeholder="Title" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Title</SelectLabel>
-                  {TITLE_OPTIONS?.map((opt) => (
-                    <SelectItem value={opt.value} key={opt.id}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <p className="mt-0.5 h-1 text-[10px] text-red-500">
-              {errors?.title?.message}
-            </p>
-          </div>
-          <div>
-            <Input
-              label="First Name"
-              {...register("FirstName")}
-              error={errors?.FirstName?.message}
-            />
-          </div>
-          <div>
-            <Input
-              label="Last Name"
-              {...register("LastName")}
-              error={errors?.LastName?.message}
-            />
-          </div>
-          <div>
-            <Input
-              label="Other Names"
-              {...register("OtherNames")}
-              error={errors?.OtherNames?.message}
-            />
-          </div>
+        <div>
+          <Input
+            label="First Name"
+            {...register("FirstName")}
+            error={errors?.FirstName?.message}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
+        <div>
+          <Input
+            label="Last Name"
+            {...register("LastName")}
+            error={errors?.LastName?.message}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
+        <div>
+          <Input
+            label="Other Names"
+            {...register("OtherNames")}
+            error={errors?.OtherNames?.message}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
 
-          <div>
-            <Input
-              label="Date of Birth"
-              type="date"
-              {...register("DateOfBirth")}
-              error={errors?.DateOfBirth?.message}
-              max={yesterday}
-            />
-          </div>
-          <div>
-            <Label htmlFor="alertType" className="mb-1 font-semibold">
-              Gender
-            </Label>
-            <Select
-              value={Gender}
-              onValueChange={async (value) => {
-                setValue("Gender", value);
-                await trigger("Gender");
-              }}
+        <div>
+          <Input
+            label="Date of Birth"
+            type="date"
+            {...register("DateOfBirth")}
+            error={errors?.DateOfBirth?.message}
+            max={yesterday}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
+        <div>
+          <Label htmlFor="Gender" className="mb-1 font-semibold">
+            Gender
+          </Label>
+          <Select
+            value={Gender}
+            onValueChange={async (value) => {
+              setValue("Gender", value);
+              await trigger("Gender");
+            }}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          >
+            <SelectTrigger className="">
+              <SelectValue placeholder="Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Gender</SelectLabel>
+                {GENDER_OPTIONS?.map((opt) => (
+                  <SelectItem value={opt.value} key={opt.id}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <p className="mt-0.5 h-1 text-[10px] text-red-500">
+            {errors?.Gender?.message}
+          </p>
+        </div>
+        <div>
+          <Input
+            label={
+              <>
+                National Identity Number (NIN){" "}
+                <i className="font-light">[optional]</i>
+              </>
+            }
+            {...register("NationalIdentityNo")}
+            error={errors?.NationalIdentityNo?.message}
+            onChange={async (e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              setValue("NationalIdentityNo", value);
+              await trigger("NationalIdentityNo");
+            }}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
+        <div>
+          <Input
+            label="Place of Birth"
+            {...register("PlaceOfBirth")}
+            error={errors?.PlaceOfBirth?.message}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          />
+        </div>
+        <div>
+          <Label htmlFor="alertType" className="mb-1 font-semibold">
+            State
+          </Label>
+          <Select
+            value={state}
+            onValueChange={async (value) => {
+              setValue("state", value);
+              await trigger("state");
+            }}
+            disabled={bvnDetails?.customerInfo !== undefined}
+          >
+            <SelectTrigger className="">
+              <SelectValue placeholder="State" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>State</SelectLabel>
+                {STATE_OPTIONS?.map((opt) => (
+                  <SelectItem value={opt.value} key={opt.id}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <p className="mt-0.5 h-1 text-[10px] text-red-500">
+            {errors?.state?.message}
+          </p>
+        </div>
+        <div className="lg:col-span-full">
+          <div className="col-span-full flex items-center gap-2">
+            {/* <Button
+              className="max-w-[175px] bg-black"
+              type="button"
+              onClick={handleBackClick}
             >
-              <SelectTrigger className="">
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  {GENDER_OPTIONS?.map((opt) => (
-                    <SelectItem value={opt.value} key={opt.id}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <p className="mt-0.5 h-1 text-[10px] text-red-500">
-              {errors?.Gender?.message}
-            </p>
+              Back
+            </Button> */}
+            <Button className="w-full max-w-[250px]">Next</Button>
           </div>
-          <div>
-            <Input
-              label="National Identity Number (NIN)"
-              {...register("NationalIdentityNo")}
-              error={errors?.NationalIdentityNo?.message}
-              onChange={async (e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                setValue("NationalIdentityNo", value);
-                await trigger("NationalIdentityNo");
-              }}
-            />
-          </div>
-          <div>
-            <Input
-              label="Place of Birth"
-              {...register("PlaceOfBirth")}
-              error={errors?.PlaceOfBirth?.message}
-            />
-          </div>
-          <div>
-            <Label htmlFor="alertType" className="mb-1 font-semibold">
-              State
-            </Label>
-            <Select
-              value={state}
-              onValueChange={async (value) => {
-                setValue("state", value);
-                await trigger("state");
-              }}
-            >
-              <SelectTrigger className="">
-                <SelectValue placeholder="State" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  {STATE_OPTIONS?.map((opt) => (
-                    <SelectItem value={opt.value} key={opt.id}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <p className="mt-0.5 h-1 text-[10px] text-red-500">
-              {errors?.state?.message}
-            </p>
-          </div>
-          <div className="lg:col-span-full">
-            <div className="col-span-full flex items-center gap-2">
-              <Button
-                className="max-w-[175px] bg-black"
-                type="button"
-                onClick={handleBackClick}
-              >
-                Back
-              </Button>
-              <Button className="max-w-[175px]">Next</Button>
-            </div>
-          </div>
-        </form>
-      )}
+        </div>
+      </form>
     </>
   );
 };

@@ -18,32 +18,52 @@ export class AccountService {
   }
 
   async getAccounts(page = 1, size = 10) {
-    const response = await axios.get<
-      APIResponseType<PaginatedAccountResponseType>
-    >(
-      `${baseUrl}/account/view/all?size=${size}&page=${page}&option=status&gSearch=COMPLETED`,
-      {
-        headers: {
-          Authorization: `Bearer ${this._token}`,
+    try {
+      const response = await axios.get<
+        APIResponseType<PaginatedAccountResponseType>
+      >(
+        `${baseUrl}/account/view/all?size=${size}&page=${page}&option=status&gSearch=COMPLETED`,
+        {
+          headers: {
+            Authorization: `Bearer ${this._token}`,
+          },
         },
-      },
-    );
-    return response.data;
+      );
+      return response.data;
+    } catch (_error: unknown) {
+      return {
+        payload: {
+          totalRecords: 0,
+          accountRecords: [],
+          totalPages: 0,
+        },
+      };
+    }
   }
   async getCustomers(page = 1, size = 10) {
-    const response = await axios.get<
-      APIResponseType<
-        PaginatedResponseType & { accountRecords: CustomerType[] }
-      >
-    >(
-      `${baseUrl}/account/view/all/customer?size=${size}&page=${page}&option=status&gSearch=COMPLETED`,
-      {
-        headers: {
-          Authorization: `Bearer ${this._token}`,
+    try {
+      const response = await axios.get<
+        APIResponseType<
+          PaginatedResponseType & { accountRecords: CustomerType[] }
+        >
+      >(
+        `${baseUrl}/account/view/all/customer?size=${size}&page=${page}&option=status&gSearch=COMPLETED`,
+        {
+          headers: {
+            Authorization: `Bearer ${this._token}`,
+          },
         },
-      },
-    );
-    return response.data;
+      );
+      return response.data;
+    } catch (_error: unknown) {
+      return {
+        payload: {
+          totalRecords: 0,
+          accountRecords: [],
+          totalPages: 0,
+        },
+      };
+    }
   }
 
   async getAccountByCustomerId(customerId: string) {
@@ -58,7 +78,7 @@ export class AccountService {
     if (!response?.data?.payload?.accountRecords) {
       throw new Error(response?.data?.message);
     }
-    
+
     return response?.data?.payload;
   }
 
@@ -96,6 +116,40 @@ export class AccountService {
     if (!response?.data?.payload?.fullName) {
       throw new Error(response?.data?.message);
     }
+    return response?.data;
+  }
+
+  async editCustomerInfo(data: {
+    CustomerID: string;
+    LastName: string;
+    FirstName: string;
+    OtherNames?: string;
+    City?: string;
+    Address: string;
+    Gender: string;
+    DateOfBirth: string;
+    PhoneNo: string;
+    PlaceOfBirth: string;
+    NationalIdentityNo?: string;
+    NextOfKinFirstName: string;
+    NextOfKinLastName: string;
+    NextOfKinPhoneNumber: string;
+    ReferralName?: string;
+    ReferralPhoneNo?: string;
+    Email: string;
+    BVN: string;
+    AccountOfficerEmail: string;
+    AccountOfficerCode: string;
+  }) {
+    const response = await axios.put<APIResponseType<string>>(
+      `${baseUrl}/account/update/customer/account`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+        },
+      },
+    );
     return response?.data;
   }
 }

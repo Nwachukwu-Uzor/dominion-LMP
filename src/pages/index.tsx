@@ -81,6 +81,16 @@ export const AccountDetailsPage = () => (
   </Suspense>
 );
 
+// Edit Customer Details
+const EditDetailsComponent = lazy(
+  () => import("./accounts/account-details/edit")
+);
+export const EditDetailsPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <EditDetailsComponent />
+  </Suspense>
+);
+
 // Customers
 const CustomersComponent = lazy(() => import("./customers"));
 export const CustomersPage = () => (

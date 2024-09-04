@@ -1,5 +1,6 @@
 export type AccountLoanType = {
   id: string;
+  loanloanId: string;
   TransactionTrackingRef: string;
   createAccountTrackingReference: string;
   LoanProductCode: string;
@@ -12,12 +13,20 @@ export type AccountLoanType = {
   Moratorium: string;
   InterestAccrualCommencementDate: string;
   Amount: string;
+  rePaymentAmount: any;
+  paidAmount: any;
+  totalRepaymentAmount: any;
+  totalLoanAmountPaidPercent: any;
+  outStandingLoanAmount: any;
   InterestRate: string;
   PrincipalPaymentFrequency: string;
   InterestPaymentFrequency: string;
   loanAccountStatus: string;
   accountMessage: string;
+  stageStatus: string;
+  stage: string;
+  createLoanAccountPayload: any;
+  num_of_retries: any;
   createdAt: string;
   updatedAt: string;
-  loanloanId: string;
 };

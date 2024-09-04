@@ -16,3 +16,4 @@ export type { LanguageType } from "./language-type";
 export type { IPPISInfoType, IPPISResponseType } from "./ippis-info-type";
 export type { BVNType, BVNValidationType } from "./bvn-validation-type"
 export type { LoanFrequencyType } from "./loan-frequency-type"
+export type { CustomerInfoType, AccountInfoType } from "./customer-info-type"

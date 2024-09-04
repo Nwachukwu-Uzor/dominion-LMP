@@ -105,7 +105,6 @@ export class LoanService {
       );
       return response.data;
     } catch (error: any) {
-      console.log({ error });
 
       return {
         payload: {

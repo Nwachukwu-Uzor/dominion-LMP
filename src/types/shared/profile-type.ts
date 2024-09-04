@@ -3,8 +3,10 @@ export type ProfileType = {
   profileId: string;
   LastName: string;
   FirstName: string;
+  OtherNames?: string;
   BVN: string;
   PhoneNo: string;
+  alternatePhoneNo?: string;
   Gender: string;
   PlaceOfBirth: string;
   DateOfBirth: string;
@@ -28,4 +30,5 @@ export type ProfileType = {
   IdentificationImage?: string;
   otherDocument?: string;
   title: string;
+  workIdentification: string;
 };

@@ -1,3 +1,5 @@
+import { CustomerInfoType } from "./customer-info-type";
+
 export type BVNType = {
   BVN: string;
   phoneNumber: string;
@@ -7,9 +9,14 @@ export type BVNType = {
   DOB: string;
 };
 
-export type BVNValidationType = {
+export type MainOneDetailsType = {
   RequestStatus: boolean;
   ResponseMessage: string;
   isBvnValid: boolean;
   bvnDetails: BVNType;
+};
+
+export type BVNValidationType = {
+  mainOneDetails: MainOneDetailsType;
+  customerInfo: CustomerInfoType;
 };

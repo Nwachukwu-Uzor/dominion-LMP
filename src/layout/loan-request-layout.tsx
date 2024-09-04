@@ -6,11 +6,11 @@ import { Card } from "@/components/ui/card";
 export const LoanRequestLayout = () => {
   return (
     <main>
-      <section className="flex justify-center items-center h-auto min-h-screen relative border-2">
+      <section className="flex justify-center items-center h-auto min-h-screen relative">
         <img
           src={authIllustration}
           alt="Auth"
-          className="object-center inline-block absolute inset-0 max-h-full w-full"
+          className="object-center block absolute inset-0 w-full h-full"
         />
         <div className="absolute inset-0 bg-[#7E21CF] opacity-60"></div>
         <article className="py-6 min-h-screen flex items-center justify-center w-[95%] mx-auto max-w-[800px] relative z-30">

@@ -20,6 +20,7 @@ import {
   LoanFrequencyPage,
   IPPISDataPage,
   IPPISUploadPage,
+  EditDetailsPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -41,7 +42,16 @@ const router = createBrowserRouter([
           },
           {
             path: ":customerId",
-            element: <AccountDetailsPage />,
+            children: [
+              {
+                index: true,
+                element: <AccountDetailsPage />,
+              },
+              {
+                path: "edit",
+                element: <EditDetailsPage />,
+              },
+            ],
           },
           {
             path: "loan/:loanId",

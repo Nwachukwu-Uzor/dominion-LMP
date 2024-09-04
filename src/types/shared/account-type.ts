@@ -14,6 +14,7 @@ export type AccountType = {
   AccountInformationSource: number;
   OtherAccountInformationSource: string;
   AccountOfficerCode: string;
+  AccountOfficerEmail?: string;
   NotificationPreference: string;
   TransactionPermission: string;
   AccountTier: number;

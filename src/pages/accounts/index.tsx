@@ -148,7 +148,7 @@ const Accounts = () => {
       const page = queryKey[1];
       const data = await accountsService.getAccounts(
         Number(page),
-        pageConfig.size
+        pageConfig.size,
       );
 
       setPageConfig((prev) => ({
@@ -174,7 +174,7 @@ const Accounts = () => {
     {
       header: "S/N",
       accessorKey: "id",
-      cell: ({row}) => <span className="bold">{row.index + 1}. </span>
+      cell: ({ row }) => <span className="bold">{row.index + 1}. </span>,
     },
     {
       header: "Account Number",
@@ -215,10 +215,10 @@ const Accounts = () => {
       cell: ({ row }) => (
         <Link
           to={`${row?.original?.customerNumber}`}
-          className="mt-2 text-primary text-xs group font-medium duration-200 relative w-fit text-center"
+          className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
         >
           View Details
-          <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
+          <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
         </Link>
       ),
     },
@@ -284,28 +284,32 @@ const Accounts = () => {
           <Button>Search</Button>
         </form> */}
           {isLoadingAccounts ? (
-            <div className="min-h-[25vh] flex items-center justify-center">
+            <div className="flex min-h-[25vh] items-center justify-center">
               <ClipLoader size={25} color="#5b21b6" />
             </div>
           ) : isAccountsError ? (
             <div>{accountError?.message}</div>
           ) : accounts ? (
-            <>
-              <NonPaginatedTable
-                columns={columns}
-                data={accounts.filter(
-                  (acc) =>
-                    acc.customerNumber !== null && acc.accountNumber !== null
-                )}
-              />
-              <div>
-                <Pagination
-                  totalPages={pageConfig.total}
-                  currentPage={pageConfig.page}
-                  handlePageClick={handlePaginate}
+            accounts?.length > 0 ? (
+              <>
+                <NonPaginatedTable
+                  columns={columns}
+                  data={accounts.filter(
+                    (acc) =>
+                      acc.customerNumber !== null && acc.accountNumber !== null,
+                  )}
                 />
-              </div>
-            </>
+                <div>
+                  <Pagination
+                    totalPages={pageConfig.total}
+                    currentPage={pageConfig.page}
+                    handlePageClick={handlePaginate}
+                  />
+                </div>
+              </>
+            ) : (
+              <p>No accounts available</p>
+            )
           ) : null}
         </Card>
       </Container>

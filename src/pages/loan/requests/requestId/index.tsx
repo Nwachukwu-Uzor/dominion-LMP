@@ -138,7 +138,7 @@ const RequestDetails = () => {
 
   const handleOtpChange = (
     event: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const result = event.target.value.replace(/\D/g, "");
     if (!result.length) {
@@ -161,11 +161,11 @@ const RequestDetails = () => {
 
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     if (
       ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown", "e"].includes(
-        event.key
+        event.key,
       )
     ) {
       event.preventDefault();
@@ -184,7 +184,7 @@ const RequestDetails = () => {
 
   const handleFocus = (
     _event: React.FocusEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     if (activeOtpBox !== index) {
       otpInputRef?.current?.focus();
@@ -231,7 +231,7 @@ const RequestDetails = () => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -278,25 +278,25 @@ const RequestDetails = () => {
         <PageTitle title="Account Details" />
         <Card className="my-2 rounded-sm">
           {isLoading ? (
-            <div className="min-h-[25vh] flex items-center justify-center">
+            <div className="flex min-h-[25vh] items-center justify-center">
               <ClipLoader size={25} color="#5b21b6" />
             </div>
           ) : isError ? (
-            <div className="text-red-600 text-sm">{error?.message}</div>
+            <div className="text-sm text-red-600">{error?.message}</div>
           ) : accountInfo ? (
             <>
               <div>
                 <img
                   src={accountInfo?.profile?.CustomerImage}
                   alt="Customer Photo"
-                  className="h-10 md:h-20 lg:h-32 aspect-square rounded-sm mb-4 object-center"
+                  className="mb-4 aspect-square h-10 rounded-sm object-center md:h-20 lg:h-32"
                 />
               </div>
               <article>
-                <h3 className="text-sm font-semibold text-gray-400 py-1 border-b border-b-gray-400">
+                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold text-gray-400">
                   ACCOUNT INFO
                 </h3>
-                <div className="grid grid-cols-1 md:grid-col-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+                <div className="md:grid-col-2 mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   <Record
                     header="Title"
                     content={accountInfo?.profile?.title}
@@ -331,7 +331,7 @@ const RequestDetails = () => {
                     content={
                       formatDate(
                         accountInfo.createdAt,
-                        "dd-MM-yyyy hh:mm:ss a"
+                        "dd-MM-yyyy hh:mm:ss a",
                       ) ?? ""
                     }
                   />
@@ -366,17 +366,17 @@ const RequestDetails = () => {
                 </div>
               </article>
               <article className="mt-4">
-                <h3 className="text-sm font-semibold text-gray-400 py-1 border-b border-b-gray-400">
+                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold text-gray-400">
                   PERSONAL INFORMATION
                 </h3>
-                <div className="grid grid-cols-1 md:grid-col-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+                <div className="md:grid-col-2 mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   <Record
                     header="Date of Birth"
                     content={
                       accountInfo?.profile?.DateOfBirth
                         ? formatDate(
                             accountInfo?.profile?.DateOfBirth,
-                            "dd-MM-yy"
+                            "dd-MM-yy",
                           )
                         : ""
                     }
@@ -385,8 +385,8 @@ const RequestDetails = () => {
                     header="Gender"
                     content={
                       accountInfo?.profile?.Gender
-                        ? GENDER_ENUM[accountInfo?.profile?.Gender] ??
-                          accountInfo?.profile?.Gender
+                        ? (GENDER_ENUM[accountInfo?.profile?.Gender] ??
+                          accountInfo?.profile?.Gender)
                         : ""
                     }
                   />
@@ -421,11 +421,11 @@ const RequestDetails = () => {
                 </div>
               </article>
               <article className="mt-4">
-                <h3 className="text-sm font-semibold text-gray-400 py-1 border-b border-b-gray-400">
+                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold text-gray-400">
                   DOCUMENTS
                 </h3>
-                <div className="mt-2">
-                  <h2 className="text-gray-400 text-sm font-medium">NIN: </h2>
+                <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
+                  <h2 className="text-sm font-medium text-gray-400">NIN: </h2>
                   {accountInfo?.profile?.IdentificationImage && (
                     <FileViewer
                       url={accountInfo?.profile?.IdentificationImage}
@@ -433,9 +433,20 @@ const RequestDetails = () => {
                     />
                   )}
                 </div>
-                <div className="mt-2">
-                  <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
-                    SIGNATURE:{" "}
+                <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
+                  <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
+                    Work Identification:{" "}
+                  </h2>
+                  {accountInfo?.profile?.workIdentification && (
+                    <FileViewer
+                      url={accountInfo?.profile?.workIdentification}
+                      maxWidth={250}
+                    />
+                  )}
+                </div>
+                <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
+                  <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
+                    Signature:{" "}
                   </h2>
                   {accountInfo?.profile?.CustomerSignature && (
                     <FileViewer
@@ -444,16 +455,19 @@ const RequestDetails = () => {
                     />
                   )}
                 </div>
-                {accountInfo?.profile?.otherDocument && (
-                  <div className="mt-2">
-                    <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
-                      OTHER DOCUMENTS:{" "}
-                    </h2>
-                    {accountInfo?.profile?.otherDocument && (
-                      <FileViewer url={accountInfo?.profile?.otherDocument} />
-                    )}
-                  </div>
-                )}
+                <div
+                  className={`mt-2 ${
+                    accountInfo?.profile?.otherDocument &&
+                    "border-b-[0.15px] border-b-gray-200 pb-2"
+                  }`}
+                >
+                  <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
+                    Other Documents:{" "}
+                  </h2>
+                  {accountInfo?.profile?.otherDocument && (
+                    <FileViewer url={accountInfo?.profile?.otherDocument} />
+                  )}
+                </div>
                 {stage?.trim()?.toUpperCase() ===
                   accountInfo?.stage?.trim()?.toUpperCase() &&
                   (accountInfo?.stage?.toUpperCase() ===
@@ -461,11 +475,11 @@ const RequestDetails = () => {
                     accountInfo?.stage?.toUpperCase() ===
                       VALID_STAGES.AUTHORIZER) && (
                     <div className="mt-4">
-                      <h2 className="text-gray-400 text-sm font-medium py-1 border-b border-b-gray-400">
+                      <h2 className="border-b border-b-gray-400 py-1 text-sm font-medium text-gray-400">
                         ACTION:
                       </h2>
                       <form
-                        className="mt-3 max-w-[700px] flex flex-col gap-2.5"
+                        className="mt-3 flex max-w-[700px] flex-col gap-2.5"
                         onSubmit={handleSubmit(onSubmit)}
                       >
                         <div>
@@ -497,7 +511,7 @@ const RequestDetails = () => {
                               </SelectGroup>
                             </SelectContent>
                           </Select>
-                          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+                          <p className="mt-0.5 h-1 text-[10px] text-red-500">
                             {errors?.approved?.message}
                           </p>
                         </div>
@@ -508,14 +522,14 @@ const RequestDetails = () => {
                           disabled={isSubmitting}
                           rows={10}
                         />
-                        <p className="lg:col-span-full my-1 text-sm text-red-600 font-semibold">
+                        <p className="my-1 text-sm font-semibold text-red-600 lg:col-span-full">
                           {isApprovalError
-                            ? (approvalError as any)?.response?.data?.message ??
-                              (error as any)?.message
+                            ? ((approvalError as any)?.response?.data
+                                ?.message ?? (error as any)?.message)
                             : errors?.root?.message}
                         </p>
                         <Button
-                          className="rounded-sm max-w-[250px] mt-3"
+                          className="mt-3 max-w-[250px] rounded-sm"
                           disabled={isSubmitting}
                         >
                           {isSubmitting ? (
@@ -539,25 +553,25 @@ const RequestDetails = () => {
           <div className="flex justify-end">
             <button disabled={isSubmitting}>
               <IoMdClose
-                className="cursor-pointer hover:scale-150 transition-all"
+                className="cursor-pointer transition-all hover:scale-150"
                 // onClick={onClose}
               />
             </button>
           </div>
-          <h3 className="text-lg font-bold mt-5 text-center">Confirm</h3>'
+          <h3 className="mt-5 text-center text-lg font-bold">Confirm</h3>'
           <div>
             <Label>OTP</Label>
             <p className="my-3 text-sm font-light">
               Please provide the otp sent to the customer on loan request
             </p>
-            <div className="flex items-center justify-between gap-1 lg:gap-2 w-full mb-5 mt-[5px]">
+            <div className="mb-5 mt-[5px] flex w-full items-center justify-between gap-1 lg:gap-2">
               {otp?.map((_, index) => (
                 <div
                   key={`input-${index}]`}
-                  className="w-fit flex items-center justify-between"
+                  className="flex w-fit items-center justify-between"
                 >
                   <input
-                    className="border-none py-2 appearance-none text-center outline-none ring-[0.75px] duration-200 ring-gray-500 rounded-md focus:ring-primary max-w-[2.25rem] font-bold text-lg placeholder:opacity-40 cursor-pointer"
+                    className="max-w-[2.25rem] cursor-pointer appearance-none rounded-md border-none py-2 text-center text-lg font-bold outline-none ring-[0.75px] ring-gray-500 duration-200 placeholder:opacity-40 focus:ring-primary"
                     placeholder="-"
                     value={otp[index] ?? ""}
                     onChange={(e) => handleOtpChange(e, index)}
@@ -570,14 +584,14 @@ const RequestDetails = () => {
               ))}
             </div>
           </div>
-          <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+          <p className="mt-0.5 h-1 text-[10px] text-red-500">
             {isApprovalError
-              ? (approvalError as any)?.response?.data?.message ??
-                (error as any)?.message
+              ? ((approvalError as any)?.response?.data?.message ??
+                (error as any)?.message)
               : null}
           </p>
           <Button
-            className="bg-green-600 w-full text-white mt-8"
+            className="mt-8 w-full bg-green-600 text-white"
             disabled={isApproving || !isOtpValid}
             onClick={() => handleSubmitOtp()}
           >
@@ -590,7 +604,7 @@ const RequestDetails = () => {
             )}
           </Button>
           <Button
-            className="bg-[#2D2D2D] text-white mt-0 lg:mt-4 w-full"
+            className="mt-0 w-full bg-[#2D2D2D] text-white lg:mt-4"
             onClick={() => setOpenTokenModal(false)}
             disabled={isApproving}
             type="button"

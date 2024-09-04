@@ -16,6 +16,8 @@ import { ClipLoader } from "react-spinners";
 import { Link, useParams } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
 import { AccountService } from "@/services";
+import { FaEdit } from "react-icons/fa";
+import { formatCurrency } from "@/utils";
 
 const GENDER_ENUM: Record<string, string> = {
   "0": "Male",
@@ -65,6 +67,18 @@ const AccountDetails = () => {
     {
       header: "Amount",
       accessorKey: "Amount",
+      cell: ({getValue}) => {
+        const amount = getValue<string>();
+        return amount ? formatCurrency(amount) : 0;
+      }
+    },
+    {
+      header: "Paid Amount",
+      accessorKey: "paidAmount",
+      cell: ({getValue}) => {
+        const amount = getValue<string>();
+        return amount ? formatCurrency(amount) : 0;
+      }
     },
     {
       header: "Product Code",
@@ -276,6 +290,17 @@ const AccountDetails = () => {
                 </div>
                 <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
+                    Work Identification:{" "}
+                  </h2>
+                  {accountInfo?.profile?.workIdentification && (
+                    <FileViewer
+                      url={accountInfo?.profile?.workIdentification}
+                      maxWidth={250}
+                    />
+                  )}
+                </div>
+                <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
+                  <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Signature:{" "}
                   </h2>
                   {accountInfo?.profile?.CustomerSignature && (
@@ -313,6 +338,16 @@ const AccountDetails = () => {
                   <p className="my-2 text-center">No Loan Found</p>
                 )}
               </article>
+              {/* <div> */}
+              <Link
+                to={`edit/`}
+                className="group relative mt-6 flex w-fit items-center gap-2 text-center text-sm font-medium text-primary duration-200"
+              >
+                <FaEdit /> Edit Customer Information
+                <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+              </Link>
+              {/* </div>
+               */}
             </>
           ) : null}
         </Card>
