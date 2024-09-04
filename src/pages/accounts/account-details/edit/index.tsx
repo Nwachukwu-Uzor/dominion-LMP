@@ -280,7 +280,7 @@ const EditDetails = () => {
   } = useMutation({
     mutationFn: async (data: { id: string }) => {
       const response = await accountService.validateBVN(data);
-      const info = response?.payload?.bvnDetails;
+      const info = response?.payload?.mainOneDetails?.bvnDetails
       return info;
     },
   });
