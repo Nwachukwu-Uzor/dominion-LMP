@@ -142,7 +142,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       }
       return;
     }
-
   }, [getValues, setValue]);
 
   useEffect(() => {
@@ -176,7 +175,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         string,
         string | File
       >;
-
+      
       for (const key in parsedBasicInfo) {
         payload[key] = parsedBasicInfo[key];
       }
@@ -202,19 +201,26 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         }
       }
 
-      // Replace any field the existing customer info field 
-      const parsedCustomerInfo = customerInfo as unknown as Record<string, unknown>;
+      // Replace any field the existing customer info field
+      const parsedCustomerInfo = customerInfo as unknown as Record<
+        string,
+        unknown
+      >;
+
+      if (customerInfo && Object.keys(customerInfo).length > 0) {
       for (const key in payload) {
-        if (parsedCustomerInfo[key] ) {
+        if (parsedCustomerInfo[key]) {
           payload[key] = parsedCustomerInfo[key];
         }
       }
 
-      if(customerInfo?.NextOfKinName) {
-        const [NextOfKinFirstName, NextOfKinLastName] = customerInfo.NextOfKinName.split(' ');
-        payload['NextOfKinFirstName'] = NextOfKinFirstName;
-        payload['NextOfKinLastName'] = NextOfKinLastName;
+      if (customerInfo?.NextOfKinName) {
+        const [NextOfKinFirstName, NextOfKinLastName] =
+          customerInfo.NextOfKinName.split(" ");
+        payload["NextOfKinFirstName"] = NextOfKinFirstName;
+        payload["NextOfKinLastName"] = NextOfKinLastName;
       }
+    }
 
       //   append Images'
       if (
@@ -245,6 +251,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       );
       handleUpdateStep();
     } catch (error: any) {
+
       setError("root", {
         type: "deps",
         message:

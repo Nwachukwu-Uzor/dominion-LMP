@@ -148,11 +148,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         return;
       }
       const { customerInfo, mainOneDetails } = response.payload;
-      if (customerInfo) {
+      if (customerInfo && Object.keys(customerInfo).length > 0) {
         populateFieldsWithCustomInfo(customerInfo);
       } else {
         const info = mainOneDetails.bvnDetails;
-
         if (info) {
           setValue("FirstName", capitalize(info?.FirstName) ?? "");
           setValue("LastName", capitalize(info?.LastName) ?? "");
@@ -213,7 +212,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         JSON.stringify(values),
       );
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "1");
-      if (bvnDetails?.customerInfo) {
+      if (
+        bvnDetails?.customerInfo &&
+        Object.keys(bvnDetails.customerInfo).length > 0
+      ) {
         sessionStorage.setItem(
           `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
           JSON.stringify(bvnDetails.customerInfo),
@@ -263,7 +265,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             Title
           </Label>
           <Select
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
             value={title}
             onValueChange={async (value) => {
               setValue("title", value, { shouldValidate: true });
@@ -325,7 +330,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             label="First Name"
             {...register("FirstName")}
             error={errors?.FirstName?.message}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
         <div>
@@ -333,7 +341,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             label="Last Name"
             {...register("LastName")}
             error={errors?.LastName?.message}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
         <div>
@@ -341,7 +352,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             label="Other Names"
             {...register("OtherNames")}
             error={errors?.OtherNames?.message}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
 
@@ -352,7 +366,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("DateOfBirth")}
             error={errors?.DateOfBirth?.message}
             max={yesterday}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
         <div>
@@ -365,7 +382,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               setValue("Gender", value);
               await trigger("Gender");
             }}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           >
             <SelectTrigger className="">
               <SelectValue placeholder="Gender" />
@@ -400,7 +420,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               setValue("NationalIdentityNo", value);
               await trigger("NationalIdentityNo");
             }}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
         <div>
@@ -408,7 +431,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             label="Place of Birth"
             {...register("PlaceOfBirth")}
             error={errors?.PlaceOfBirth?.message}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           />
         </div>
         <div>
@@ -421,7 +447,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               setValue("state", value);
               await trigger("state");
             }}
-            disabled={bvnDetails?.customerInfo !== undefined}
+            disabled={
+              bvnDetails?.customerInfo !== undefined &&
+              Object.keys(bvnDetails?.customerInfo).length > 0
+            }
           >
             <SelectTrigger className="">
               <SelectValue placeholder="State" />
@@ -443,13 +472,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         </div>
         <div className="lg:col-span-full">
           <div className="col-span-full flex items-center gap-2">
-            {/* <Button
-              className="max-w-[175px] bg-black"
-              type="button"
-              onClick={handleBackClick}
-            >
-              Back
-            </Button> */}
             <Button className="w-full max-w-[250px]">Next</Button>
           </div>
         </div>
