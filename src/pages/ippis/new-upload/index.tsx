@@ -3,7 +3,7 @@ import { extractDataFromFile, ExtractedData } from "@/utils";
 import { useRef, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "react-toastify";
-import sampleUploadFile from "@/assets/documents/repayment-upload-sample.xlsx";
+import sampleUploadFile from "@/assets/documents/ippis-upload-sample.xlsx";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import { Card } from "@/components/ui/card";

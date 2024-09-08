@@ -196,7 +196,7 @@ const NewBulkNotification = () => {
           download
           className="my-1 text-[#7E21CF] font-bold"
         >
-          Download Sample CSV
+          Download a Sample CSV File
         </a>
         <div className="max-w-[400px]">
           <div
@@ -231,7 +231,7 @@ const NewBulkNotification = () => {
             disabled={isPending}
           />
          
-          {uploadError.length && (
+          {uploadError.length > 0 && (
             <p className="text-red-700 font-medium text-xs my-1">
               {uploadError}
             </p>

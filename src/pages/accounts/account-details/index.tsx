@@ -159,7 +159,7 @@ const AccountDetails = () => {
   return (
     <>
       <Container>
-        <PageTitle title="Account Details" />
+        <PageTitle title="Loan Account Details" />
         <Card className="my-2 rounded-sm">
           {isLoading ? (
             <div className="flex min-h-[25vh] items-center justify-center">

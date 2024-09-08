@@ -110,8 +110,8 @@ const schema = z.object({
     }),
   NextOfKinPhoneNumber: z
     .string({ required_error: "Next of Kin phone number is required" })
-    .min(10, "Must be at least 10 characters long")
-    .regex(/^\d+$/, { message: "Phone number must contain only digits" }),
+    .length(11, "Phone Number must be 11 characters long")
+    .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
   Address: z
     .string({ required_error: "Address is required" })
     .min(5, { message: "Address is required" }),
@@ -280,7 +280,7 @@ const EditDetails = () => {
   } = useMutation({
     mutationFn: async (data: { id: string }) => {
       const response = await accountService.validateBVN(data);
-      const info = response?.payload?.mainOneDetails?.bvnDetails
+      const info = response?.payload?.mainOneDetails?.bvnDetails;
       return info;
     },
   });
@@ -689,7 +689,10 @@ const EditDetails = () => {
                     {errors?.root?.message}
                   </p>
                   <div className="col-span-full flex items-center gap-2">
-                    <Button className="w-full max-w-[300px]" disabled={isSubmitting}>
+                    <Button
+                      className="w-full max-w-[300px]"
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? (
                         <>
                           <ClipLoader size={12} color="#fff" />{" "}

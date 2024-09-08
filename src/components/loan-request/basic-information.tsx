@@ -113,6 +113,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     trigger,
     getValues,
     watch,
+    reset: resetForm,
     formState: { errors },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
@@ -147,6 +148,14 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (!response?.payload) {
         return;
       }
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
+      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+      resetForm();
+      setValue("BVN", data.id);
       const { customerInfo, mainOneDetails } = response.payload;
       if (customerInfo && Object.keys(customerInfo).length > 0) {
         populateFieldsWithCustomInfo(customerInfo);

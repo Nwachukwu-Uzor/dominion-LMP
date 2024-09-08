@@ -82,7 +82,7 @@ const schema = z.object({
     }),
   NextOfKinPhoneNo: z
     .string({ required_error: "Next of Kin phone number is required" })
-    .min(10, "Must be at least 10 characters long")
+    .length(11, "Phone Number must be 11 characters long")
     .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
   Address: z
     .string({ required_error: "Address is required" })
