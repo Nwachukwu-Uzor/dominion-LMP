@@ -385,7 +385,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             onChange={async (e) => {
               const value = e.target.value.replace(/\D/g, "");
               resetBvnDetails();
+              setCustomerLoans([])
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`)
               setValue("BVN", value);
               await trigger("BVN");
             }}
