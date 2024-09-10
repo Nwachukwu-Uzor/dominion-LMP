@@ -30,6 +30,7 @@ declare module "@tanstack/table-core" {
 interface Props<T> {
   data: T[];
   columns: ColumnDef<T, any>[];
+  isSearchable?: boolean;
 }
 
 /* eslint-disable */
@@ -47,13 +48,13 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
 };
 /* eslint-enable */
 
-export function NonPaginatedTable<T>({ data, columns }: Props<T>): JSX.Element {
+export function NonPaginatedTable<T>({
+  data,
+  columns,
+  isSearchable = true,
+}: Props<T>): JSX.Element {
   const [globalFilter, setGlobalFilter] = useState("");
-  const {
-    getHeaderGroups,
-    getRowModel,
-  
-  } = useReactTable({
+  const { getHeaderGroups, getRowModel } = useReactTable({
     data,
     columns,
     filterFns: {
@@ -84,14 +85,16 @@ export function NonPaginatedTable<T>({ data, columns }: Props<T>): JSX.Element {
   });
 
   return (
-    <div className="py-3 grid grid-cols-1">
-      <div className="px-2 mb-2.5">
-        <DebouncedInput
-          value={globalFilter ?? ""}
-          onChange={(value) => setGlobalFilter(String(value))}
-          placeholder="Search..."
-        />
-      </div>
+    <div className="grid grid-cols-1 py-3">
+      {isSearchable ? (
+        <div className="mb-2.5 px-2">
+          <DebouncedInput
+            value={globalFilter ?? ""}
+            onChange={(value) => setGlobalFilter(String(value))}
+            placeholder="Search..."
+          />
+        </div>
+      ) : null}
       <div className="overflow-auto">
         <table className="table w-full whitespace-nowrap">
           <thead className="bg-[#6D6C6C] text-white">
@@ -102,7 +105,7 @@ export function NonPaginatedTable<T>({ data, columns }: Props<T>): JSX.Element {
                     <th
                       key={header.id + idx}
                       colSpan={header.colSpan}
-                      className="text-sm text-left last:text-right px-2 py-3 first:pl-3 last:pr-3"
+                      className="px-2 py-3 text-left text-sm first:pl-3 last:pr-3 last:text-right"
                     >
                       {header.isPlaceholder ? null : (
                         <div
@@ -115,7 +118,7 @@ export function NonPaginatedTable<T>({ data, columns }: Props<T>): JSX.Element {
                         >
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                           {{
                             asc: " 🔼",
@@ -138,11 +141,11 @@ export function NonPaginatedTable<T>({ data, columns }: Props<T>): JSX.Element {
                     return (
                       <td
                         key={cell.id + idx}
-                        className={`text-left text-sm last:text-right px-2 py-3 first:pl-3 last:pr-3`}
+                        className={`px-2 py-3 text-left text-sm first:pl-3 last:pr-3 last:text-right`}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     );

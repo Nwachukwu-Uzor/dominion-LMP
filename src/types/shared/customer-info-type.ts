@@ -1,4 +1,4 @@
-import { LoanType } from "./loan-type"
+import { AccountLoanType } from "./account-loan-type"
 
 export interface CustomerInfoType {
     id: string
@@ -63,5 +63,5 @@ export interface CustomerInfoType {
     approved: string
     createdAt: string
     updatedAt: string
-    accountLoans: LoanType[]
+    accountLoans: AccountLoanType[]
   }

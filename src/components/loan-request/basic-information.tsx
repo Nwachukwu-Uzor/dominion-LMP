@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
-import { isValid } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import {
   GENDER_ENUM,
   GENDER_OPTIONS,
@@ -26,8 +26,15 @@ import { Label } from "../ui/label";
 import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
-import { capitalize, maskData, parseDateToInputFormat } from "@/utils";
-import { CustomerInfoType } from "@/types/shared";
+import {
+  capitalize,
+  formatCurrency,
+  maskData,
+  parseDateToInputFormat,
+} from "@/utils";
+import { AccountLoanType, CustomerInfoType } from "@/types/shared";
+import { ColumnDef } from "@tanstack/react-table";
+import { NonPaginatedTable } from "../shared";
 // import { BVNType } from "@/types/shared";
 
 type Props = {
@@ -105,6 +112,8 @@ const schema = z.object({
 type FormFields = z.infer<typeof schema>;
 
 export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
+  const [customerLoans, setCustomerLoans] = useState<AccountLoanType[]>([]);
+
   const {
     register,
     setError,
@@ -159,6 +168,16 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       const { customerInfo, mainOneDetails } = response.payload;
       if (customerInfo && Object.keys(customerInfo).length > 0) {
         populateFieldsWithCustomInfo(customerInfo);
+        const loans: AccountLoanType[] = [];
+        const data = customerInfo?.accountInfo;
+        if (data) {
+          data?.forEach((info) => {
+            info.accountLoans?.forEach((inf) => {
+              loans.push(inf);
+            });
+          });
+          setCustomerLoans(loans);
+        }
       } else {
         const info = mainOneDetails.bvnDetails;
         if (info) {
@@ -176,6 +195,18 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     },
   });
 
+  // const customerLoans = useMemo(() => {
+  //   const loans: AccountLoanType[] = [];
+  //   if (
+  //     !bvnDetails ||
+  //     !bvnDetails?.customerInfo ||
+  //     Object.keys(bvnDetails?.customerInfo).length === 0
+  //   ) {
+  //     return loans;
+  //   }
+
+  // }, [bvnDetails]);
+
   const [Gender, state, title] = watch(["Gender", "state", "title"]);
 
   const today = new Date();
@@ -187,30 +218,49 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
     );
 
-    if (!data) {
-      return;
-    }
-    const parsedData = JSON.parse(data) as FormFields;
+    if (data) {
+      const parsedData = JSON.parse(data) as FormFields;
 
-    const fields = getValues();
-    for (const key in parsedData) {
-      if (key in fields) {
-        setValue(
-          key as keyof FormFields,
-          parsedData[key as keyof FormFields] ?? "",
-        );
+      const fields = getValues();
+      for (const key in parsedData) {
+        if (key in fields) {
+          setValue(
+            key as keyof FormFields,
+            parsedData[key as keyof FormFields] ?? "",
+          );
+        }
+      }
+      if (parsedData.Gender) {
+        setValue("Gender", parsedData.Gender);
+      }
+
+      if (parsedData.state) {
+        setValue("state", parsedData.state);
+      }
+
+      if (parsedData.title) {
+        setValue("title", parsedData.title);
       }
     }
-    if (parsedData.Gender) {
-      setValue("Gender", parsedData.Gender);
-    }
 
-    if (parsedData.state) {
-      setValue("state", parsedData.state);
-    }
+    const customerInfo = sessionStorage.getItem(
+      `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
+    );
 
-    if (parsedData.title) {
-      setValue("title", parsedData.title);
+    if (customerInfo) {
+      const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
+      if (infoFromStorage && Object.keys(infoFromStorage).length > 0) {
+        const loans: AccountLoanType[] = [];
+        const data = infoFromStorage?.accountInfo;
+        if (data) {
+          data?.forEach((info) => {
+            info.accountLoans?.forEach((inf) => {
+              loans.push(inf);
+            });
+          });
+          setCustomerLoans(loans);
+        }
+      }
     }
   }, [setValue, getValues]);
 
@@ -263,6 +313,25 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   };
 
+  const loanTableColumns: ColumnDef<AccountLoanType>[] = [
+    {
+      header: "#",
+      accessorFn: (_dat, index) => index + 1,
+    },
+    {
+      header: "Loan Amount",
+      accessorFn: (data) => formatCurrency(data?.Amount),
+    },
+    {
+      header: "Total Amount Paid",
+      accessorFn: (data) => formatCurrency(data?.paidAmount),
+    },
+    {
+      header: "Created At",
+      accessorFn: (data) => formatDate(data.createdAt, "dd-MM-yyyy HH:mm:ss"),
+    },
+  ];
+
   return (
     <>
       <form
@@ -274,9 +343,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             Title
           </Label>
           <Select
-            disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+             disabled={
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
             value={title}
             onValueChange={async (value) => {
@@ -340,8 +410,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("FirstName")}
             error={errors?.FirstName?.message}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -351,8 +422,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("LastName")}
             error={errors?.LastName?.message}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -362,8 +434,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("OtherNames")}
             error={errors?.OtherNames?.message}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -376,8 +449,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             error={errors?.DateOfBirth?.message}
             max={yesterday}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -392,8 +466,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               await trigger("Gender");
             }}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           >
             <SelectTrigger className="">
@@ -430,8 +505,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               await trigger("NationalIdentityNo");
             }}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -441,8 +517,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("PlaceOfBirth")}
             error={errors?.PlaceOfBirth?.message}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           />
         </div>
@@ -457,8 +534,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               await trigger("state");
             }}
             disabled={
-              bvnDetails?.customerInfo !== undefined &&
-              Object.keys(bvnDetails?.customerInfo).length > 0
+              (bvnDetails?.customerInfo !== undefined &&
+                Object.keys(bvnDetails?.customerInfo).length > 0) ||
+              customerLoans.length > 0
             }
           >
             <SelectTrigger className="">
@@ -479,6 +557,16 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {errors?.state?.message}
           </p>
         </div>
+        {customerLoans && customerLoans.length > 0 ? (
+          <div className="lg:col-span-full">
+            <h3 className="mb-2 text-sm font-medium">Loans</h3>
+            <NonPaginatedTable
+              isSearchable={false}
+              columns={loanTableColumns}
+              data={customerLoans}
+            />
+          </div>
+        ) : null}
         <div className="lg:col-span-full">
           <div className="col-span-full flex items-center gap-2">
             <Button className="w-full max-w-[250px]">Next</Button>
