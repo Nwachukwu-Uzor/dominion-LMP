@@ -57,7 +57,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
     },
     {
       id: 2,
-      title: "Accounts",
+      title: "Loan Accounts",
       path: "/accounts",
       icon: <MdSavings />,
     },

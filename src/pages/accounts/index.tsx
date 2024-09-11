@@ -118,58 +118,8 @@ const Accounts = () => {
   return (
     <>
       <Container>
-        <PageTitle title="Accounts" />
+        <PageTitle title="Loan Accounts Details" />
         <Card className="my-2">
-          {/* <form
-          className="flex my-2 flex-col lg:flex-row gap-3 lg:gap-2 justify-between items-start lg:items-center"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div className="w-full max-w-[400px]">
-            <Label htmlFor="alertType" className="mb-1 font-semibold">
-              Status
-            </Label>
-            <Select
-              value={status}
-              onValueChange={async (value) => {
-                setValue("status", value);
-                await trigger(["status"]);
-              }}
-            >
-              <SelectTrigger className="">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Status</SelectLabel>
-                  {STATUS_OPTIONS?.map((opt) => (
-                    <SelectItem value={opt.value} key={opt.id}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <Input
-              type="date"
-              label="Start Date"
-              className="cursor-pointer w-full"
-              {...register("startDate")}
-              error={errors?.startDate?.message}
-              disabled={isSubmitting}
-            />
-            <Input
-              type="date"
-              label="End Date"
-              className="cursor-pointer w-full"
-              {...register("endDate")}
-              error={errors?.endDate?.message}
-              disabled={isSubmitting}
-            />
-          </div>
-          <Button>Search</Button>
-        </form> */}
           {isLoadingAccounts ? (
             <div className="flex min-h-[25vh] items-center justify-center">
               <ClipLoader size={25} color="#5b21b6" />
