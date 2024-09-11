@@ -124,7 +124,7 @@ const NewIPPIS = () => {
         toast.error(
           error?.response?.message ??
             error?.response?.data?.message ??
-            error?.message
+            error?.message,
         );
       }
     },
@@ -208,7 +208,7 @@ const NewIPPIS = () => {
 
     if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {
       setUploadError(
-        `The maximum number of records allowed is ${MAX_IPPIS_RECORD_COUNT} but you provided ${extractedData.length}`
+        `The maximum number of records allowed is ${MAX_IPPIS_RECORD_COUNT} but you provided ${extractedData.length}`,
       );
       setUploadedFile(null);
       return;
@@ -233,13 +233,13 @@ const NewIPPIS = () => {
         <a
           href={sampleUploadFile}
           download
-          className="my-2 text-sm text-[#7E21CF] font-semibold"
+          className="my-2 text-sm font-semibold text-[#7E21CF]"
         >
-          Download Sample CSV
+          Download a Sample CSV File
         </a>
         <div>
           <div
-            className={`${dragging ? "opacity-60 bg-gray-500 rounded-lg" : ""}`}
+            className={`${dragging ? "rounded-lg bg-gray-500 opacity-60" : ""}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
@@ -247,9 +247,9 @@ const NewIPPIS = () => {
           >
             <label
               htmlFor="bulk-file"
-              className={`mt-4 border-2 border-dashed border-[#A8A8A8] flex flex-col items-center justify-center gap-[10px] p-4 py-10 lg:py-6 min-h-[30vh] lg:p-6 rounded-lg cursor-pointer`}
+              className={`mt-4 flex min-h-[30vh] cursor-pointer flex-col items-center justify-center gap-[10px] rounded-lg border-2 border-dashed border-[#A8A8A8] p-4 py-10 lg:p-6 lg:py-6`}
             >
-              <p className="flex items-center justify-center h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full bg-gray-200 active:scale-95 duration-150">
+              <p className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 duration-150 active:scale-95 lg:h-[60px] lg:w-[60px]">
                 <MdOutlineCloudUpload className="text-3xl" />
               </p>
               <div>
@@ -271,7 +271,7 @@ const NewIPPIS = () => {
           />
 
           {uploadError?.length > 0 && (
-            <p className="text-red-700 font-medium text-xs my-1">
+            <p className="my-1 text-xs font-medium text-red-700">
               {uploadError}
             </p>
           )}
