@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { CustomerInfoType } from "@/types/shared";
+import { Dialog, DialogContent } from "../ui/dialog";
+import { IoMdClose } from "react-icons/io";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -90,6 +92,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
+  const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
   const access_code = searchParams.get("access_code") as string | undefined;
   const [agreedToTAC, setAgreedToTAC] = useState(false);
@@ -175,7 +178,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         string,
         string | File
       >;
-      
+
       for (const key in parsedBasicInfo) {
         payload[key] = parsedBasicInfo[key];
       }
@@ -208,19 +211,19 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       >;
 
       if (customerInfo && Object.keys(customerInfo).length > 0) {
-      for (const key in payload) {
-        if (parsedCustomerInfo[key]) {
-          payload[key] = parsedCustomerInfo[key];
+        for (const key in payload) {
+          if (parsedCustomerInfo[key]) {
+            payload[key] = parsedCustomerInfo[key];
+          }
+        }
+
+        if (customerInfo?.NextOfKinName) {
+          const [NextOfKinFirstName, NextOfKinLastName] =
+            customerInfo.NextOfKinName.split(" ");
+          payload["NextOfKinFirstName"] = NextOfKinFirstName;
+          payload["NextOfKinLastName"] = NextOfKinLastName;
         }
       }
-
-      if (customerInfo?.NextOfKinName) {
-        const [NextOfKinFirstName, NextOfKinLastName] =
-          customerInfo.NextOfKinName.split(" ");
-        payload["NextOfKinFirstName"] = NextOfKinFirstName;
-        payload["NextOfKinLastName"] = NextOfKinLastName;
-      }
-    }
 
       //   append Images'
       if (
@@ -251,7 +254,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       );
       handleUpdateStep();
     } catch (error: any) {
-
       setError("root", {
         type: "deps",
         message:
@@ -320,6 +322,10 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     } catch (error: any) {
       console.log(error);
     }
+  };
+
+  const handleToggleTACPopup = () => {
+    setShowTACPopup((shown) => !shown);
   };
 
   return (
@@ -533,6 +539,19 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
             }}
           />
         </div>
+        <p className="my-2 text-sm font-semibold lg:col-span-full">
+          By click the checkbox above, you are indicating that you agree to the
+          terms and conditions of the requested service. Kindly click{" "}
+          <button
+            className="group relative uppercase text-primary"
+            type="button"
+            onClick={handleToggleTACPopup}
+          >
+            here{" "}
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+          </button>{" "}
+          to review the terms and conditions
+        </p>
         <p className="my-1 text-sm font-semibold text-red-600 lg:col-span-full">
           {errors?.root?.message}
         </p>
@@ -556,6 +575,45 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           </Button>
         </div>
       </form>
+      <Dialog open={showTACPopup}>
+        <DialogContent className="w-[90vw] gap-0 md:max-w-[800px]">
+          <div className="flex justify-end">
+            <button disabled={isSubmitting}>
+              <IoMdClose
+                className="cursor-pointer transition-all hover:scale-150"
+                onClick={handleToggleTACPopup}
+              />
+            </button>
+          </div>
+
+          <h3 className="mt-5 text-center text-lg font-bold">
+            TERMS AND CONDITIONS
+          </h3>
+          <p className="mt-[5px] text-center">
+            <span className="font-semibold"> Loan Agreement *</span> <br />{" "}
+            <br />
+            <span className="font-semibold">CONFIRMATION</span> <br /> <br />
+            <span>
+              I confirm that the information given in this form is true,
+              complete and accurate I confirm that I have read and understood
+              Dominion Merchants and Partners Limited ("the Lender”) Terms and
+              Conditions Governing the Operations of Borrower-Lender
+              relationship and agree to abide and be bound by these terms and
+              conditions. I understand that my submission of this application
+              and acceptance of this application by Dominion Merchants and
+              Partners Limited shall in no way be construed as approval of my
+              application and that the Lender reserves the right to decline this
+              application without giving any reasons whatsoever.
+            </span>
+          </p>
+          <p className="text-sm font-semibold mt-6 text-center">
+            &copy; {new Date().getFullYear()}
+            <span className="ml-1 inline-block font-semibold">
+              Dominion Merchants and Partners Limited
+            </span>
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

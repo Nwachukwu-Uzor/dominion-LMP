@@ -107,7 +107,7 @@ const NewBulkNotification = () => {
         toast.error(
           error?.response?.message ??
             error?.response?.data?.message ??
-            error?.message
+            error?.message,
         );
       }
     },
@@ -183,7 +183,7 @@ const NewBulkNotification = () => {
       <PageTitle title="New Bulk Notification" />
       <Link
         to="/bulk-notifications"
-        className="text-black my-2 flex items-center font-bold text-sm hover:opacity-75 gap-1"
+        className="my-2 flex items-center gap-1 text-sm font-bold text-black hover:opacity-75"
       >
         <IoChevronBack /> Back
       </Link>
@@ -194,81 +194,78 @@ const NewBulkNotification = () => {
         <a
           href={sampleUploadFile}
           download
-          className="my-1 text-[#7E21CF] font-bold"
+          className="my-1 font-bold text-[#7E21CF]"
         >
           Download a Sample CSV File
         </a>
-        <div className="max-w-[400px]">
-          <div
-            className={`${dragging ? "opacity-60 bg-gray-500 rounded-lg" : ""}`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
+        <div
+          className={`${dragging ? "rounded-lg bg-gray-500 opacity-60" : ""}`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+        >
+          <label
+            htmlFor="bulk-file"
+            className={`mt-4 flex min-h-[30vh] cursor-pointer flex-col items-center justify-center gap-[10px] rounded-lg border-2 border-dashed border-[#A8A8A8] p-4 py-10 lg:p-6 lg:py-6`}
           >
-            <label
-              htmlFor="bulk-file"
-              className={`mt-4 border-2 border-dashed border-[#A8A8A8] flex flex-col items-center justify-center gap-[10px] p-4 py-10 lg:py-6 lg:p-6 rounded-lg cursor-pointer`}
-            >
-              <p className="flex items-center justify-center h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full bg-gray-200 active:scale-95 duration-150">
-                <MdOutlineCloudUpload className="text-3xl" />
-              </p>
-              <div>
-                <p className="mt-2 text-center">
-                  <strong>Click to upload</strong> or drag and drop Only .CSV
-                  files are allowed
-                </p>
-              </div>
-            </label>
-          </div>
-          <input
-            type="file"
-            name="bulk-file"
-            id="bulk-file"
-            hidden
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            disabled={isPending}
-          />
-         
-          {uploadError.length > 0 && (
-            <p className="text-red-700 font-medium text-xs my-1">
-              {uploadError}
+            <p className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 duration-150 active:scale-95 lg:h-[60px] lg:w-[60px]">
+              <MdOutlineCloudUpload className="text-3xl" />
             </p>
-          )}
-          {uploadedFile && (
-            <>
-              <div className="mt-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-[100px] bg-green-700"></div>
-                  <h3 className="font-semibold text-green-700">
-                    {uploadedFile.name}
-                  </h3>
-                </div>
-
-                <div className="mt-2 flex items-center gap-3">
-                  <Button onClick={() => mutate()}>
-                    {isPending ? (
-                      <>
-                        <ClipLoader size={12} color="#fff" />{" "}
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      "Process Bulk"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleClearFile}
-                    className="bg-gray-800 text-white"
-                    disabled={isPending}
-                  >
-                    Clear File
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
+            <div>
+              <p className="mt-2 text-center">
+                <strong>Click to upload</strong> or drag and drop Only .CSV
+                files are allowed
+              </p>
+            </div>
+          </label>
         </div>
+        <input
+          type="file"
+          name="bulk-file"
+          id="bulk-file"
+          hidden
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          disabled={isPending}
+        />
+
+        {uploadError.length > 0 && (
+          <p className="my-1 text-xs font-medium text-red-700">{uploadError}</p>
+        )}
+        {uploadedFile && (
+          <>
+            <div className="mt-3">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-[100px] bg-green-700"></div>
+                <h3 className="font-semibold text-green-700">
+                  {uploadedFile.name}
+                </h3>
+              </div>
+
+              <div className="mt-2 flex items-center gap-3">
+                <Button onClick={() => mutate()}>
+                  {isPending ? (
+                    <>
+                      <ClipLoader size={12} color="#fff" />{" "}
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    "Process Bulk"
+                  )}
+                </Button>
+                <Button
+                  onClick={handleClearFile}
+                  className="bg-gray-800 text-white"
+                  disabled={isPending}
+                >
+                  Clear File
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
         {data.length > 0 && <DataTable columns={columns} data={data} />}
       </Card>
     </Container>
