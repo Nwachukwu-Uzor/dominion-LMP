@@ -138,7 +138,7 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mt-2.5">
               <Label className="mb-1.5 block text-sm font-semibold">
-                State(s)
+                Role(s)
               </Label>
 
               <MultiSelect

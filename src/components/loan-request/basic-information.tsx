@@ -343,7 +343,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             Title
           </Label>
           <Select
-             disabled={
+            disabled={
               (bvnDetails?.customerInfo !== undefined &&
                 Object.keys(bvnDetails?.customerInfo).length > 0) ||
               customerLoans.length > 0
@@ -385,9 +385,9 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             onChange={async (e) => {
               const value = e.target.value.replace(/\D/g, "");
               resetBvnDetails();
-              setCustomerLoans([])
+              setCustomerLoans([]);
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
-              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`)
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
               setValue("BVN", value);
               await trigger("BVN");
             }}
@@ -527,7 +527,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         </div>
         <div>
           <Label htmlFor="alertType" className="mb-1 font-semibold">
-            State
+            State of Origin
           </Label>
           <Select
             value={state}
@@ -542,11 +542,11 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             }
           >
             <SelectTrigger className="">
-              <SelectValue placeholder="State" />
+              <SelectValue placeholder="State of Origin" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel>State</SelectLabel>
+                <SelectLabel>State of Origin</SelectLabel>
                 {STATE_OPTIONS?.map((opt) => (
                   <SelectItem value={opt.value} key={opt.id}>
                     {opt.label}

@@ -540,7 +540,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <p className="my-2 text-sm font-semibold lg:col-span-full">
-          By click the checkbox above, you are indicating that you agree to the
+          By clicking the checkbox above, you are indicating that you agree to the
           terms and conditions of the requested service. Kindly click{" "}
           <button
             className="group relative uppercase text-primary"

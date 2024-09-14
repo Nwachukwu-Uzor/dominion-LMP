@@ -531,35 +531,6 @@ const EditDetails = () => {
                       disabled={isSubmitting}
                     />
                   </div>
-                  {/* <div>
-                    <Label htmlFor="state" className="mb-1 font-semibold">
-                      State
-                    </Label>
-                    <Select
-                      value={state}
-                      onValueChange={async (value) => {
-                        setValue("state", value);
-                        await trigger("state");
-                      }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>State</SelectLabel>
-                          {STATE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.state?.message}
-                    </p>
-                  </div> */}
                   <div>
                     <Input
                       label={
@@ -578,50 +549,6 @@ const EditDetails = () => {
                       disabled={isSubmitting}
                     />
                   </div>
-                  {/* <div>
-                    <Input
-                      label="Employer (Organization)"
-                      {...register("organizationEmployer")}
-                      error={errors?.organizationEmployer?.message}
-                    />
-                  </div> */}
-                  {/* <div>
-                    <Label htmlFor="alertType" className="mb-1 font-semibold">
-                      Notification Preference:
-                    </Label>
-                    <Select
-                      value={NotificationPreference}
-                      onValueChange={async (value) => {
-                        setValue("NotificationPreference", value, {
-                          shouldValidate: true,
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Notification Preference" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Notification Preference</SelectLabel>
-                          {NOTIFICATION_PREFERENCE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.NotificationPreference?.message}
-                    </p>
-                  </div> */}
-                  {/* <div>
-                    <Input
-                      label="IPPIS Number"
-                      {...register("ippisNumber")}
-                      error={errors?.ippisNumber?.message}
-                    />
-                  </div> */}
                   <div>
                     <Input
                       label="Next of Kin First Name: "
