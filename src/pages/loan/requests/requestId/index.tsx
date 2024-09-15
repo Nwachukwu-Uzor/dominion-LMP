@@ -399,7 +399,7 @@ const RequestDetails = () => {
                     content={accountInfo?.profile?.Email}
                   />
                   <Record
-                    header="State"
+                    header="State of Origin"
                     content={accountInfo?.profile?.state}
                   />
                   <Record

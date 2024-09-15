@@ -136,13 +136,6 @@ const schema = z.object({
       },
       { message: "Date of Birth has to be before today's date" },
     ),
-  // organizationEmployer: z
-  //   .string({ required_error: "Organization Employer is required" })
-  //   .min(2, "OrganizationEmployer must be at least 2 characters long"),
-  // ippisNumber: z.string({ required_error: "IPPIS number is required" }),
-  PlaceOfBirth: z
-    .string({ required_error: "Place of Birth is required" })
-    .min(2, "Place of Birth is required"),
   City: z.string({ required_error: "City is required" }),
   ReferralName: z
     .string({ required_error: "Referral name is required" })
@@ -504,14 +497,6 @@ const EditDetails = () => {
                       {...register("DateOfBirth")}
                       error={errors?.DateOfBirth?.message}
                       max={yesterday}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      label="Place of Birth"
-                      {...register("PlaceOfBirth")}
-                      error={errors?.PlaceOfBirth?.message}
                       disabled={isSubmitting}
                     />
                   </div>

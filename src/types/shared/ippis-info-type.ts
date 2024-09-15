@@ -19,6 +19,7 @@ export type IPPISInfoType = {
 export type IPPISResponseType = {
   id: string;
   staffId: string;
+  ippisNumber: string;
   fullName: string;
   employmentStatus: string;
   assignmentStatus: string;

@@ -13,6 +13,7 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 
 const VALID_IPPIS_COLUMNS = [
+  "IPPIS_NO",
   "STAFF_ID",
   "FULL_NAME",
   "EMPLOYMENT_STATUS",
@@ -43,6 +44,10 @@ const NewIPPIS = () => {
   const loanService = new LoanService(token);
 
   const columns: ColumnDef<ExtractedData>[] = [
+    {
+      header: "IPPIS Number",
+      accessorKey: "ippisNumber",
+    },
     {
       header: "Staff ID",
       accessorKey: "staffId",
@@ -204,6 +209,7 @@ const NewIPPIS = () => {
       NETPAY: "netPay",
       PERIOD: "period",
       EMPLOYMENT_STATUS: "employmentStatus",
+      IPPIS_NO: "ippisNumber",
     });
 
     if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {

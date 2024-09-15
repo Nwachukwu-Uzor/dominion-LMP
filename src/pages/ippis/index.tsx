@@ -54,7 +54,7 @@ const IPPISData = () => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -65,7 +65,7 @@ const IPPISData = () => {
       <Card className="mt-4">
         <Link
           to="new-upload"
-          className="max-w-[180px] gap-1 rounded-md active:scale-75 hover:opacity-60 duration-150 py-2 px-1 mb-4 flex items-center justify-center ml-auto bg-[#7E21CF] text-white text-xs font-medium"
+          className="mb-4 ml-auto flex max-w-[180px] items-center justify-center gap-1 rounded-md bg-[#7E21CF] px-1 py-2 text-xs font-medium text-white duration-150 hover:opacity-60 active:scale-75"
         >
           Upload New
         </Link>
@@ -84,56 +84,63 @@ const IPPISData = () => {
               }}
             />
           </div>
-          <p className="h-1 my-0.5 text-red-500 text-[10px]">
+          <p className="my-0.5 h-1 text-[10px] text-red-500">
             {errors?.root?.message}
           </p>
-          <Button className="min-w-[250px] mt-2">
+          <Button className="mt-2 min-w-[250px]">
             {isSubmitting ? <ClipLoader color="#fff" size={12} /> : "Search"}
           </Button>
         </form>
         <article>
           {isSubmitting ? (
-            <div className="flex items-center justify-center h-[10vh]">
+            <div className="flex h-[10vh] items-center justify-center">
               <ClipLoader color="#5b21b6" size={12} />
             </div>
           ) : IPPISInfo ? (
             <article>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
-                <Record header="Staff ID" content={IPPISInfo.staffId} />
-                <Record header="Full Name" content={IPPISInfo.fullName} />
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <Record
+                  header="IPPIS Number"
+                  content={IPPISInfo?.ippisNumber}
+                />
+                <Record header="Staff ID" content={IPPISInfo?.staffId} />
+                <Record header="Full Name" content={IPPISInfo?.fullName} />
                 <Record
                   header="Employment Status"
-                  content={IPPISInfo.employmentStatus}
+                  content={IPPISInfo?.employmentStatus}
                 />
                 <Record
                   header="Assignment Status"
-                  content={IPPISInfo.assignmentStatus}
+                  content={IPPISInfo?.assignmentStatus}
                 />
-                <Record header="Hire Date" content={IPPISInfo.hireDate} />
-                <Record header="Birth Date" content={IPPISInfo.birthDate} />
-                <Record header="Job Title" content={IPPISInfo.jobTitle} />
-                <Record header="Command" content={IPPISInfo.command} />
-                <Record header="Phone Number" content={IPPISInfo.phoneNumber} />
-                <Record header="Bank Name" content={IPPISInfo.bankName} />
+                <Record header="Hire Date" content={IPPISInfo?.hireDate} />
+                <Record header="Birth Date" content={IPPISInfo?.birthDate} />
+                <Record header="Job Title" content={IPPISInfo?.jobTitle} />
+                <Record header="Command" content={IPPISInfo?.command} />
+                <Record
+                  header="Phone Number"
+                  content={IPPISInfo?.phoneNumber}
+                />
+                <Record header="Bank Name" content={IPPISInfo?.bankName} />
                 <Record
                   header="Account Number"
-                  content={IPPISInfo.accountNumber}
+                  content={IPPISInfo?.accountNumber}
                 />
                 <Record
                   header="Staff Category"
-                  content={IPPISInfo.staffCategory}
+                  content={IPPISInfo?.staffCategory}
                 />
                 <Record
                   header="Employee Type"
-                  content={IPPISInfo.employeeType}
+                  content={IPPISInfo?.employeeType}
                 />
                 <Record
                   header="Net Pay"
-                  content={formatCurrency(IPPISInfo.netPay)}
+                  content={formatCurrency(IPPISInfo?.netPay)}
                 />
-                <Record header="Period" content={IPPISInfo.period} />
+                <Record header="Period" content={IPPISInfo?.period} />
 
-                <Record header="Status" content={IPPISInfo.status} />
+                <Record header="Status" content={IPPISInfo?.status} />
               </div>
             </article>
           ) : null}

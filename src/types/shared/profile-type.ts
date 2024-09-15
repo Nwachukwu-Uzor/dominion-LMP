@@ -8,7 +8,6 @@ export type ProfileType = {
   PhoneNo: string;
   alternatePhoneNo?: string;
   Gender: string;
-  PlaceOfBirth: string;
   DateOfBirth: string;
   Address: string;
   NationalIdentityNo: string;

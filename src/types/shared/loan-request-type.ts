@@ -11,7 +11,6 @@ type CustomerDetailsType = {
   alternatePhoneNo: string;
   title: string;
   Gender: string;
-  PlaceOfBirth: string;
   DateOfBirth: string;
   Address: string;
   NationalIdentityNo: string;

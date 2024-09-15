@@ -100,7 +100,7 @@ const AdminLogin = () => {
             error={errors?.password?.message}
             disabled={isSubmitting}
             rightIcon={
-              <button onClick={handleToggleShowPassword} type="button">
+              <button onClick={handleToggleShowPassword} type="button" disabled={isSubmitting}>
                 {showPassword ? <EyeNoneIcon /> : <EyeOpenIcon />}
               </button>
             }

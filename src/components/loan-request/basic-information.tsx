@@ -103,10 +103,7 @@ const schema = z.object({
       },
       { message: "Date of Birth has to be before today's date" },
     ),
-  PlaceOfBirth: z
-    .string({ required_error: "Place of Birth is required" })
-    .min(2, "Place of Birth is required"),
-  state: z.string({ required_error: "State is required" }),
+  state: z.string({ required_error: "State of origin is required" }),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -137,7 +134,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     setValue("LastName", data?.LastName ?? "");
     setValue("Gender", GENDER_ENUM[info?.Gender] ?? "");
     setValue("NationalIdentityNo", data?.NationalIdentityNo ?? "");
-    setValue("PlaceOfBirth", data?.PlaceOfBirth ?? "");
     setValue("title", data?.title ?? "");
     setValue("DateOfBirth", info?.DateOfBirth ?? "");
     setValue("state", info?.state ?? "");
@@ -506,18 +502,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               setValue("NationalIdentityNo", value);
               await trigger("NationalIdentityNo");
             }}
-            disabled={
-              (bvnDetails?.customerInfo !== undefined &&
-                Object.keys(bvnDetails?.customerInfo).length > 0) ||
-              customerLoans.length > 0
-            }
-          />
-        </div>
-        <div>
-          <Input
-            label="Place of Birth"
-            {...register("PlaceOfBirth")}
-            error={errors?.PlaceOfBirth?.message}
             disabled={
               (bvnDetails?.customerInfo !== undefined &&
                 Object.keys(bvnDetails?.customerInfo).length > 0) ||

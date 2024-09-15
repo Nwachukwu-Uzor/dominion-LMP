@@ -129,7 +129,6 @@ export class AccountService {
     Gender: string;
     DateOfBirth: string;
     PhoneNo: string;
-    PlaceOfBirth: string;
     NationalIdentityNo?: string;
     NextOfKinFirstName: string;
     NextOfKinLastName: string;
