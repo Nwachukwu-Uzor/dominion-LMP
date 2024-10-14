@@ -250,7 +250,6 @@ const RequestDetails = () => {
       }
       const token = otp.join("");
       const otpPayload = {
-        // userCode: "179373",
         userCode: accountInfo?.profile?.profileId ?? "",
         token: token,
       };

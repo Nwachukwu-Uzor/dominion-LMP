@@ -65,15 +65,17 @@ const IPPISData = () => {
       <Card className="mt-4">
         <Link
           to="new-upload"
-          className="mb-4 ml-auto flex max-w-[180px] items-center justify-center gap-1 rounded-md bg-[#7E21CF] px-1 py-2 text-xs font-medium text-white duration-150 hover:opacity-60 active:scale-75"
+          className="mb-4 ml-auto flex max-w-[180px] items-center justify-center gap-1 rounded-md bg-black px-1 py-2 text-xs font-medium text-white duration-150 hover:opacity-60 active:scale-75"
         >
           Upload New
         </Link>
         <h2 className="mb-6 font-semibold">Verify IPPIS Info</h2>
-        <form className="max-w-[600px]" onSubmit={handleSubmit(onSubmit)}>
-          <div>
+        <form
+          className="flex flex-col gap-3 lg:flex-row lg:items-start"
+          onSubmit={handleSubmit(onSubmit)}
+        >
+          <div className="flex-1">
             <Input
-              label="Enter IPPIS Number"
               placeholder="Enter IPPIS Number"
               {...register("IppisNumber")}
               error={errors?.IppisNumber?.message}
@@ -84,13 +86,13 @@ const IPPISData = () => {
               }}
             />
           </div>
-          <p className="my-0.5 h-1 text-[10px] text-red-500">
-            {errors?.root?.message}
-          </p>
-          <Button className="mt-2 min-w-[250px]">
+          <Button className="min-w-[250px]">
             {isSubmitting ? <ClipLoader color="#fff" size={12} /> : "Search"}
           </Button>
         </form>
+        <p className="my-0.5 h-1 text-[10px] text-red-500">
+          {errors?.root?.message}
+        </p>
         <article>
           {isSubmitting ? (
             <div className="flex h-[10vh] items-center justify-center">
@@ -103,8 +105,12 @@ const IPPISData = () => {
                   header="IPPIS Number"
                   content={IPPISInfo?.ippisNumber}
                 />
-                <Record header="Staff ID" content={IPPISInfo?.staffId} />
                 <Record header="Full Name" content={IPPISInfo?.fullName} />
+                <Record
+                  header="Employer Organization"
+                  content={IPPISInfo?.employerOrganization}
+                />
+                <Record header="Staff ID" content={IPPISInfo?.staffId} />
                 <Record
                   header="Employment Status"
                   content={IPPISInfo?.employmentStatus}

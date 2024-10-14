@@ -9,7 +9,10 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import SignaturePad from "react-signature-canvas";
 import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
-import { formatNumberWithCommasWithOptionPeriodSign } from "@/utils";
+import {
+  calculateLoanForOrganization,
+  formatNumberWithCommasWithOptionPeriodSign,
+} from "@/utils";
 import { useSearchParams } from "react-router-dom";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
@@ -88,10 +91,16 @@ const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n }),
 );
 
+const initialLoanPayment = {
+  monthlyRepayment: "0",
+  totalPayment: "0",
+};
+
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
+  const [loanRepayment, setLoanRepayment] = useState(initialLoanPayment);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
   const access_code = searchParams.get("access_code") as string | undefined;
@@ -116,9 +125,10 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [customerSignature, loanTenor] = watch([
+  const [customerSignature, loanTenor, loanAmount] = watch([
     "CustomerSignature",
     "loanTenor",
+    "loanAmount",
   ]);
 
   useEffect(() => {
@@ -328,6 +338,22 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setShowTACPopup((shown) => !shown);
   };
 
+  const handleTenureAndAmountFieldBlur = (
+    loanAmount: string,
+    loanTenor: string,
+  ) => {
+    const amount = loanAmount.replace(/[^0-9.]/g, "");
+    const repaymentInfo = calculateLoanForOrganization(
+      customerInfo?.organizationEmployer ?? "",
+      Number(amount),
+      Number(loanTenor),
+    );
+    setLoanRepayment({
+      monthlyRepayment: repaymentInfo.monthlyInstallment,
+      totalPayment: repaymentInfo.totalRepayment,
+    });
+  };
+
   return (
     <>
       <form
@@ -348,6 +374,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
               await trigger("loanAmount");
             }}
             disabled={isSubmitting}
+            onBlur={() => handleTenureAndAmountFieldBlur(loanAmount, loanTenor)}
           />
         </div>
         <div>
@@ -357,6 +384,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           <Select
             value={loanTenor}
             onValueChange={async (value) => {
+              handleTenureAndAmountFieldBlur(loanAmount, value);
               setValue("loanTenor", value, {
                 shouldValidate: true,
               });
@@ -380,6 +408,25 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           <p className="mt-0.5 h-1 text-[10px] text-red-500">
             {errors?.loanTenor?.message}
           </p>
+        </div>
+
+        <div>
+          <Input
+            label="Monthly Payment"
+            value={formatNumberWithCommasWithOptionPeriodSign(
+              loanRepayment.monthlyRepayment,
+            )}
+            disabled={true}
+          />
+        </div>
+        <div>
+          <Input
+            label="Total Payment: "
+            value={formatNumberWithCommasWithOptionPeriodSign(
+              loanRepayment.totalPayment,
+            )}
+            disabled={true}
+          />
         </div>
         <div>
           <Input
@@ -540,8 +587,8 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <p className="my-2 text-sm font-semibold lg:col-span-full">
-          By clicking the checkbox above, you are indicating that you agree to the
-          terms and conditions of the requested service. Kindly click{" "}
+          By clicking the checkbox above, you are indicating that you agree to
+          the terms and conditions of the requested service. Kindly click{" "}
           <button
             className="group relative uppercase text-primary"
             type="button"
@@ -606,7 +653,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
               application without giving any reasons whatsoever.
             </span>
           </p>
-          <p className="text-sm font-semibold mt-6 text-center">
+          <p className="mt-6 text-center text-sm font-semibold">
             &copy; {new Date().getFullYear()}
             <span className="ml-1 inline-block font-semibold">
               Dominion Merchants and Partners Limited

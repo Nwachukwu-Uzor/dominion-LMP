@@ -29,6 +29,7 @@ const VALID_IPPIS_COLUMNS = [
   "EMPLOYEE_TYPE",
   "NETPAY",
   "PERIOD",
+  "EMPLOYER",
 ];
 
 const MAX_IPPIS_RECORD_COUNT = 1000;
@@ -75,6 +76,10 @@ const NewIPPIS = () => {
     {
       header: "Job Title",
       accessorKey: "jobTitle",
+    },
+    {
+      header: "Employer",
+      accessorKey: "employerOrganization",
     },
     {
       header: "Command",
@@ -192,25 +197,33 @@ const NewIPPIS = () => {
 
   const handleDataExtraction = async (file: File) => {
     setUploadError("");
-    const extractedData = await extractDataFromFile(file, VALID_IPPIS_COLUMNS, {
-      STAFF_ID: "staffId",
-      FULL_NAME: "fullName",
-      EMPLOYMENT_ID: "employeeId",
-      ASSIGNMENT_STATUS: "assignmentStatus",
-      HIRE_DATE: "hireDate",
-      BIRTH_DATE: "birthDate",
-      JOB_TITLE: "jobTitle",
-      COMMAND: "command",
-      TELEPHONE_NUMBER: "phoneNumber",
-      BANK_NAME: "bankName",
-      ACCOUNT_NUMBER: "accountNumber",
-      STAFF_CATEGORY: "staffCategory",
-      EMPLOYEE_TYPE: "employeeType",
-      NETPAY: "netPay",
-      PERIOD: "period",
-      EMPLOYMENT_STATUS: "employmentStatus",
-      IPPIS_NO: "ippisNumber",
-    });
+    const extractedData = await extractDataFromFile(
+      file,
+      VALID_IPPIS_COLUMNS,
+      {
+        STAFF_ID: "staffId",
+        FULL_NAME: "fullName",
+        EMPLOYMENT_ID: "employeeId",
+        ASSIGNMENT_STATUS: "assignmentStatus",
+        HIRE_DATE: "hireDate",
+        BIRTH_DATE: "birthDate",
+        JOB_TITLE: "jobTitle",
+        COMMAND: "command",
+        TELEPHONE_NUMBER: "phoneNumber",
+        BANK_NAME: "bankName",
+        ACCOUNT_NUMBER: "accountNumber",
+        STAFF_CATEGORY: "staffCategory",
+        EMPLOYEE_TYPE: "employeeType",
+        NETPAY: "netPay",
+        PERIOD: "period",
+        EMPLOYMENT_STATUS: "employmentStatus",
+        IPPIS_NO: "ippisNumber",
+        EMPLOYER: "employerOrganization",
+      },
+      "",
+    );
+
+    console.log({ extractedData });
 
     if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {
       setUploadError(

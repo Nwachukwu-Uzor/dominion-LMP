@@ -35,8 +35,9 @@ const LoanRequest = () => {
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
-    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`)
-    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`)
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
   };
 
   function getSectionComponent() {
@@ -55,10 +56,10 @@ const LoanRequest = () => {
   }
   return (
     <main>
-      <h3 className="scroll-m-20 text-xl text-center font-semibold tracking-tight">
+      <h3 className="scroll-m-20 text-center text-xl font-semibold tracking-tight">
         DMB IPPIS Loan
       </h3>
-      <p className="leading-7 mt-1 text-sm text-center">
+      <p className="mt-1 text-center text-sm leading-7">
         Start your Loan Application today!
       </p>
       <div className="my-8">

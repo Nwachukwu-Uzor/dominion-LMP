@@ -71,6 +71,6 @@ export type UnCompletedLoanRequestType = {
   reviewerNote: string | null;
   createdAt: string;
   updatedAt: string;
-  customerDetails?: CustomerDetailsType;
+  customerDetails: CustomerDetailsType;
   accountDetails: AccountType;
 };

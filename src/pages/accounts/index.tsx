@@ -11,6 +11,10 @@ import { AccountService } from "@/services/account-service";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { IoMdDownload } from "react-icons/io";
+import { formatDataForReport } from "@/utils";
+import * as XLSX from "xlsx";
 
 const initialPageConfig = {
   size: 10,
@@ -115,6 +119,69 @@ const Accounts = () => {
     setPageConfig((prev) => ({ ...prev, page }));
   };
 
+  const handleDownload = () => {
+    if (!accounts || accounts?.length === 0) {
+      return;
+    }
+    const formattedData = accounts.map((account) => {
+      const {
+        profile,
+        ProductCode,
+        customerNumber,
+        accountNumber,
+        accountStatus,
+        status,
+        AccountOfficerCode,
+        AccountOfficerEmail,
+      } = account;
+
+      return {
+        ...profile,
+        ProductCode,
+        customerNumber,
+        accountNumber,
+        accountStatus,
+        status,
+        AccountOfficerCode,
+        AccountOfficerEmail,
+        loanCount: account?.accountLoans?.length?.toString() ?? "0",
+      };
+    });
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(
+        formatDataForReport(formattedData, ["workIdentification", "id", "profileId"]),
+      );
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const excelBlob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const fileName = `loan-account-details-${new Date()
+        .getTime()
+        .toString()}`;
+
+      if (window.navigator && (window as any).navigator.msSaveOrOpenBlob) {
+        // For IE browser
+        (window as any).navigator.msSaveOrOpenBlob(excelBlob, fileName);
+      } else {
+        // For other modern browsers
+        const url = URL.createObjectURL(excelBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <Container>
@@ -129,6 +196,14 @@ const Accounts = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
+                <div className="my-1 flex items-center justify-end">
+                  <Button
+                    className="rounded-sm bg-black text-xs text-white"
+                    onClick={handleDownload}
+                  >
+                    <IoMdDownload /> Export as CSV
+                  </Button>
+                </div>
                 <NonPaginatedTable
                   columns={columns}
                   data={accounts.filter(

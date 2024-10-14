@@ -4,10 +4,12 @@ import { UnCompletedLoanRequestType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
+import * as XLSX from "xlsx";
 
 import { useQuery } from "@tanstack/react-query";
 import {
   FETCH_ALL_LOAN_REQUESTS_PAGINATED,
+  GENDER_ENUM,
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { Pagination } from "@/components/shared/pagination";
@@ -15,6 +17,9 @@ import { ClipLoader } from "react-spinners";
 import { Link, useParams } from "react-router-dom";
 import { LoanService } from "@/services";
 import { formatCurrency } from "@/utils/format-number-with-commas";
+import { Button } from "@/components/ui/button";
+import { IoMdDownload } from "react-icons/io";
+import { formatDataForReport } from "@/utils";
 
 const initialPageConfig = {
   size: 10,
@@ -128,6 +133,61 @@ const AccountRequests = () => {
     setPageConfig((prev) => ({ ...prev, page }));
   };
 
+  const handleDownload = () => {
+    if (!accounts || accounts.length === 0) {
+      return;
+    }
+    const formattedData = accounts.map((account) => {
+      const { customerDetails } = account;
+      const { state, createdAt, Gender, ...rest } = customerDetails;
+
+      return {
+        ...rest,
+        stateOfOrigin: state,
+        createdAt: formatDate(createdAt, "dd-MM-yyy hh:mm:ss a"),
+        gender: GENDER_ENUM[Gender] ?? ""
+      };
+    });
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(
+        formatDataForReport(formattedData, [
+          "workIdentification",
+          "id",
+          "profileId",
+          "updatedAt"
+        ]),
+      );
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const excelBlob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const fileName = `${stage}-Loan-account-details-${new Date()
+        .getTime()
+        .toString()}`;
+
+      if (window.navigator && (window as any).navigator.msSaveOrOpenBlob) {
+        // For IE browser
+        (window as any).navigator.msSaveOrOpenBlob(excelBlob, fileName);
+      } else {
+        // For other modern browsers
+        const url = URL.createObjectURL(excelBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <Container>
@@ -142,6 +202,14 @@ const AccountRequests = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
+                <div className="my-1 flex items-center justify-end">
+                  <Button
+                    className="rounded-sm bg-black text-xs text-white"
+                    onClick={handleDownload}
+                  >
+                    <IoMdDownload /> Export as CSV
+                  </Button>
+                </div>
                 <NonPaginatedTable columns={columns} data={accounts} />
                 <div>
                   <Pagination

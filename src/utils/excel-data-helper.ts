@@ -12,7 +12,7 @@ const camelCase = (str: string): string => {
   return str
     .toLowerCase()
     .replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) =>
-      index === 0 ? match.toLowerCase() : match.toUpperCase()
+      index === 0 ? match.toLowerCase() : match.toUpperCase(),
     )
     .replace(/\s+/g, "");
 };
@@ -20,7 +20,8 @@ const camelCase = (str: string): string => {
 export const extractDataFromFile = (
   file: File,
   VALIDCOLUMNS: string[],
-  config: Config
+  config: Config,
+  defaultValue: string | null = null,
 ): Promise<ExtractedData[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -43,7 +44,7 @@ export const extractDataFromFile = (
       const headerMap: { [key: string]: string } = {};
       VALIDCOLUMNS.forEach((validColumn) => {
         const header = headers.find(
-          (h) => h.toLowerCase() === validColumn.toLowerCase()
+          (h) => h.toLowerCase() === validColumn.toLowerCase(),
         );
         if (header) {
           headerMap[header] = config[validColumn] || camelCase(validColumn);
@@ -56,7 +57,7 @@ export const extractDataFromFile = (
         const rowObject: ExtractedData = {};
         headers.forEach((header, index) => {
           if (headerMap[header]) {
-            rowObject[headerMap[header]] = row[index] ?? null;
+            rowObject[headerMap[header]] = row[index] ?? defaultValue;
           }
         });
         return rowObject;

@@ -40,4 +40,5 @@ export type IPPISResponseType = {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+  employerOrganization: string;
 };

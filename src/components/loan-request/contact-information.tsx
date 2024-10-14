@@ -24,6 +24,8 @@ import {
 // import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
 import { maskData, maskValue } from "@/utils";
+import { useMutation } from "@tanstack/react-query";
+import { AccountService } from "@/services";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -113,9 +115,33 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [NotificationPreference] = watch(["NotificationPreference"]);
+  const [NotificationPreference, ippisNumber] = watch([
+    "NotificationPreference",
+    "ippisNumber",
+  ]);
 
-  // const accountService = new AccountService();
+  const accountService = new AccountService();
+
+  const {
+    reset: resetIppisInfo,
+    data: ippisData,
+    isError: isIppisError,
+    mutateAsync: validateIppisData,
+    isPending: isLoadingIppisInfo,
+  } = useMutation({
+    mutationFn: async (data: string) => {
+      const response = await accountService.validateIPPISNumber({
+        IppisNumber: data,
+      });
+      const ippisData = response?.payload;
+      setValue("organizationEmployer", ippisData?.employerOrganization ?? "");
+      sessionStorage.setItem(
+        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
+        JSON.stringify(ippisData),
+      );
+      return ippisData;
+    },
+  });
 
   useEffect(() => {
     const data = sessionStorage.getItem(
@@ -145,6 +171,10 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (parsedData.NotificationPreference) {
         setValue("NotificationPreference", parsedData.NotificationPreference);
       }
+      if (parsedData.ippisNumber) {
+        setValue("ippisNumber", parsedData.ippisNumber);
+        validateIppisData(parsedData.ippisNumber);
+      }
       return;
     }
 
@@ -164,6 +194,8 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       setValue("NextOfKinPhoneNo", parseInfo.NextOfKinPhoneNo);
       setValue("organizationEmployer", parseInfo.organizationEmployer);
       setValue("ippisNumber", parseInfo.ippisNumber ?? "");
+      console.log("here 2");
+      validateIppisData(parseInfo.ippisNumber);
       return;
     }
 
@@ -175,7 +207,13 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       setValue("PhoneNo", bvnDetails.phoneNumber);
     }
     return;
-  }, [setValue, getValues]);
+  }, [setValue, getValues, validateIppisData]);
+
+  const handleValidateIppisData = async (
+    event: React.FocusEvent<HTMLInputElement>,
+  ) => {
+    await validateIppisData(event.target.value);
+  };
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -287,20 +325,41 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         </div>
         <div>
           <Input
-            label="Employer (Organization)"
-            {...register("organizationEmployer")}
-            error={errors?.organizationEmployer?.message}
-            disabled={customerInfo !== null}
+            label="IPPIS Number"
+            onChange={(e) => {
+              setValue("ippisNumber", e.target.value, { shouldValidate: true });
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
+              resetIppisInfo();
+            }}
+            value={ippisNumber}
+            error={errors?.ippisNumber?.message}
+            disabled={customerInfo !== null || isLoadingIppisInfo}
+            onBlur={handleValidateIppisData}
           />
+          {isLoadingIppisInfo ? (
+            <>
+              <ClipLoader size={12} color="#5b21b6" />{" "}
+              <span className="text-xs font-semibold italic">Loading...</span>
+            </>
+          ) : isIppisError ? (
+            <p>Unable to retrieve ippis information</p>
+          ) : (
+            ippisData && (
+              <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
+                Validation Successful
+              </p>
+            )
+          )}
         </div>
         <div>
           <Input
-            label="IPPIS Number"
-            {...register("ippisNumber")}
-            error={errors?.ippisNumber?.message}
-            disabled={customerInfo !== null}
+            label="Employer (Organization)"
+            {...register("organizationEmployer")}
+            error={errors?.organizationEmployer?.message}
+            disabled
           />
         </div>
+
         <div>
           <Input
             label="Next of Kin First Name: "
