@@ -323,6 +323,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       accessorFn: (data) => formatCurrency(data?.paidAmount),
     },
     {
+      header: "Outstanding Amount",
+      accessorFn: (data) => formatCurrency(data?.outStandingLoanAmount),
+    },
+    {
       header: "Created At",
       accessorFn: (data) => formatDate(data.createdAt, "dd-MM-yyyy HH:mm:ss"),
     },

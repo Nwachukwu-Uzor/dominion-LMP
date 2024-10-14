@@ -173,6 +173,11 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       }
       if (parsedData.ippisNumber) {
         setValue("ippisNumber", parsedData.ippisNumber);
+      }
+      if (customerInfo) {
+        const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
+        validateIppisData(infoFromStorage.ippisNumber);
+      } else {
         validateIppisData(parsedData.ippisNumber);
       }
       return;
@@ -194,8 +199,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       setValue("NextOfKinPhoneNo", parseInfo.NextOfKinPhoneNo);
       setValue("organizationEmployer", parseInfo.organizationEmployer);
       setValue("ippisNumber", parseInfo.ippisNumber ?? "");
-      console.log("here 2");
-      validateIppisData(parseInfo.ippisNumber);
+      validateIppisData(infoFromStorage.ippisNumber);
       return;
     }
 

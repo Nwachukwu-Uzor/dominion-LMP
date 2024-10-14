@@ -35,7 +35,7 @@ export const BulkNotificationsPage = () => (
 
 // New Bulk Notification
 const NewBulkNotificationComponent = lazy(
-  () => import("./bulk-notifications/new")
+  () => import("./bulk-notifications/new"),
 );
 export const NewBulkNotificationPage = () => (
   <Suspense fallback={<PageLoader />}>
@@ -45,7 +45,7 @@ export const NewBulkNotificationPage = () => (
 
 // Single Request
 const SingleRequestComponent = lazy(
-  () => import("./bulk-notifications/details")
+  () => import("./bulk-notifications/details"),
 );
 
 export const SingleRequestPage = () => (
@@ -73,7 +73,7 @@ export const AccountsPage = () => (
 
 // Account Details
 const AccountDetailsComponent = lazy(
-  () => import("./accounts/account-details")
+  () => import("./accounts/account-details"),
 );
 export const AccountDetailsPage = () => (
   <Suspense fallback={<PageLoader />}>
@@ -83,7 +83,7 @@ export const AccountDetailsPage = () => (
 
 // Edit Customer Details
 const EditDetailsComponent = lazy(
-  () => import("./accounts/account-details/edit")
+  () => import("./accounts/account-details/edit"),
 );
 export const EditDetailsPage = () => (
   <Suspense fallback={<PageLoader />}>
@@ -110,7 +110,7 @@ export const LoanRequestsPage = () => (
 
 // Loan Request Details
 const LoanRequestDetailsComponent = lazy(
-  () => import("./loan/requests/requestId")
+  () => import("./loan/requests/requestId"),
 );
 export const LoanRequestDetailsPage = () => (
   <Suspense fallback={<PageLoader />}>
@@ -120,7 +120,7 @@ export const LoanRequestDetailsPage = () => (
 
 // Loan Repayment by Loan Id
 const LoanRepaymentByLoanIdComponent = lazy(
-  () => import("./accounts/loan-repayments-by-loanId")
+  () => import("./accounts/loan-repayments-by-loanId"),
 );
 export const LoanRepaymentByLoanIdPage = () => (
   <Suspense fallback={<PageLoader />}>
@@ -165,6 +165,14 @@ const LoanFrequencyComponent = lazy(() => import("./settings/loan-frequency"));
 export const LoanFrequencyPage = () => (
   <Suspense fallback={<PageLoader />}>
     <LoanFrequencyComponent />
+  </Suspense>
+);
+
+// Link Status
+const LinkStatusComponent = lazy(() => import("./settings/link-status"));
+export const LinkStatusPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <LinkStatusComponent />
   </Suspense>
 );
 

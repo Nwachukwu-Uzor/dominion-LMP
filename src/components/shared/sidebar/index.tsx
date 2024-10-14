@@ -18,7 +18,7 @@ import { TiUserAdd } from "react-icons/ti";
 import { HiUsers } from "react-icons/hi2";
 
 import logo from "@/assets/images/dominion-logo.svg";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
 import { toast } from "react-toastify";
 import { LogOutIcon } from "lucide-react";
 import { useUser } from "@/hooks";
@@ -27,13 +27,6 @@ import { IoNotificationsCircleOutline, IoSettings } from "react-icons/io5";
 type Props = {
   open: boolean;
   handleToggleSidebar: () => void;
-};
-
-const USER_ROLES = {
-  SUPER_ADMIN: "superAdmin",
-  ADMIN: "admin",
-  REVIEWER: "REVIEWER",
-  AUTHORIZER: "AUTHORIZER",
 };
 
 export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {

@@ -16,6 +16,13 @@ const Settings = () => {
             - Loan Frequency
             <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
           </Link>
+          <Link
+            to="link-status"
+            className="group relative mt-2 w-fit text-center text-sm font-medium text-primary duration-200"
+          >
+            - Link Status
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+          </Link>
         </div>
       </Card>
     </Container>

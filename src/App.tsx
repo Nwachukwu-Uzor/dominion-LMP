@@ -21,6 +21,7 @@ import {
   IPPISDataPage,
   IPPISUploadPage,
   EditDetailsPage,
+  LinkStatusPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -126,6 +127,10 @@ const router = createBrowserRouter([
             path: "loan-frequency",
             element: <LoanFrequencyPage />,
           },
+          {
+            path: "link-status",
+            element: <LinkStatusPage />,
+          }
         ],
       },
       {
