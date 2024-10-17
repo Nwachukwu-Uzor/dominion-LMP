@@ -410,20 +410,11 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           </p>
         </div>
 
-        <div>
+        <div className="col-span-full">
           <Input
             label="Monthly Payment"
             value={formatNumberWithCommasWithOptionPeriodSign(
               loanRepayment.monthlyRepayment,
-            )}
-            disabled={true}
-          />
-        </div>
-        <div>
-          <Input
-            label="Total Payment: "
-            value={formatNumberWithCommasWithOptionPeriodSign(
-              loanRepayment.totalPayment,
             )}
             disabled={true}
           />
@@ -604,7 +595,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         </p>
         <div className="flex items-center gap-2 lg:col-span-full">
           <Button
-            className="w-full md:max-w-[200px] bg-black"
+            className="w-full bg-black md:max-w-[200px]"
             type="button"
             onClick={handleBackClick}
             disabled={isSubmitting}
