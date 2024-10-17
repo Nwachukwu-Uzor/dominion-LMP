@@ -399,13 +399,13 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         </p>
         <div className="col-span-full flex items-center gap-2">
           <Button
-            className="max-w-[175px] bg-black"
+            className="w-full md:max-w-[200px] bg-black"
             type="button"
             onClick={handleBackClick}
           >
             Back
           </Button>
-          <Button className="max-w-[175px]">
+          <Button className="w-full md:max-w-[200px]">
             {isSubmitting ? (
               <>
                 <ClipLoader size={12} color="#fff" /> <span>Loading...</span>

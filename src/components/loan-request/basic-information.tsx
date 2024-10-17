@@ -559,7 +559,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         ) : null}
         <div className="lg:col-span-full">
           <div className="col-span-full flex items-center gap-2">
-            <Button className="w-full max-w-[250px]">Next</Button>
+            <Button className="w-full md:max-w-[250px]">Next</Button>
           </div>
         </div>
       </form>

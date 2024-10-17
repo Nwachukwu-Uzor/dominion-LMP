@@ -604,14 +604,14 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         </p>
         <div className="flex items-center gap-2 lg:col-span-full">
           <Button
-            className="max-w-[175px] bg-black"
+            className="w-full md:max-w-[200px] bg-black"
             type="button"
             onClick={handleBackClick}
             disabled={isSubmitting}
           >
             Back
           </Button>
-          <Button className="max-w-[175px]">
+          <Button className="w-full md:max-w-[200px]">
             {isSubmitting ? (
               <>
                 <ClipLoader color="#fff" size={12} /> Submitting
