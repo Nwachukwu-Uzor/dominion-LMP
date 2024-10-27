@@ -9,7 +9,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useEffect, useRef, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { FETCH_ALL_LANGUAGES, SESSION_STORAGE_KEY, templateParametersList } from "@/constants";
+import { SESSION_STORAGE_KEY, templateParametersList } from "@/constants";
 import { dummyStates } from "@/data";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { TemplateService } from "@/services";
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
+import { FETCH_ALL_LANGUAGES } from "@/constants/query-keys";
 
 type ParameterType = {
   id: number;
