@@ -105,13 +105,6 @@ const AdminLogin = () => {
               </button>
             }
           />
-          {/* <Link
-            to="/auth/forgot-password/account-number"
-            className="mt-0.5 text-primary text-xs group font-medium duration-200 relative w-fit text-center"
-          >
-            Forgot Password?{" "}
-            <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
-          </Link> */}
           <div className="flex flex-col gap-0.5">
             {errors?.root?.message?.split(";").map((error) => (
               <p key={error} className="text-sm text-red-500">

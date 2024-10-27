@@ -10,10 +10,10 @@ export const AuthLayout = () => {
         <img
           src={authIllustration}
           alt="Auth"
-          className="w-full object-center inline-block absolute inset-0"
+          className="w-full fixed inset-0"
         />
         <div className="absolute inset-0 bg-[#7E21CF] opacity-60"></div>
-        <article className="min-h-screen flex items-center justify-center w-[95%] mx-auto max-w-[500px] relative z-30">
+        <article className="min-h-screen flex items-center justify-center w-[95%] mx-auto max-w-[600px] relative z-30">
           <Card className="w-full rounded">
             <img
               src={logo}

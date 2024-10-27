@@ -68,8 +68,8 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
     },
     {
       id: 5,
-      title: "Bulk Notifications",
-      path: "/bulk-notifications",
+      title: "Repayment Tracker",
+      path: "/repayment-tracker",
       icon: <IoNotificationsCircleOutline />,
     },
     {
@@ -98,7 +98,19 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       });
     }
 
-    if (transformedRoles.includes(USER_ROLES.AUTHORIZER)) {
+    if (
+      transformedRoles.includes(USER_ROLES.SUPER_ADMIN.toUpperCase()) ||
+      transformedRoles.includes(USER_ROLES.EDITOR.toUpperCase())
+    ) {
+      menuItems.splice(3, 0, {
+        id: 10,
+        title: "Rejected Request",
+        path: "/loan/requests/rejected",
+        icon: <MdOutlineAddCard />,
+      });
+    }
+
+    if (transformedRoles.includes(USER_ROLES.AUTHORIZER.toUpperCase())) {
       menuItems.splice(3, 0, {
         id: 9,
         title: "Pending Authorizer",
@@ -107,7 +119,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
       });
     }
 
-    if (transformedRoles.includes(USER_ROLES.REVIEWER)) {
+    if (transformedRoles.includes(USER_ROLES.REVIEWER.toUpperCase())) {
       menuItems.splice(3, 0, {
         id: 10,
         title: "Pending Reviewer",
@@ -182,7 +194,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
                     </Tooltip>
                   </TooltipProvider>
                   <span
-                    className={`text-base font-medium ${
+                    className={`text-sm font-medium ${
                       open ? "scale-1 w-auto" : "w-0 scale-0"
                     }`}
                   >
@@ -231,7 +243,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               </span>
             </NavLink>
           </ul>
-          <div className="absolute bottom-0 h-16 flex items-center justify-center z-50 w-full border-t-2 border-t-white pt-2">
+          <div className="absolute bottom-0 z-50 flex h-16 w-full items-center justify-center border-t-2 border-t-white pt-2">
             <button
               onClick={handleLogout}
               className={`flex w-full items-center justify-start gap-1 p-1 pl-5 font-bold text-white ${

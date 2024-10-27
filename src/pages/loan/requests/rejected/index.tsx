@@ -7,19 +7,16 @@ import { formatDate } from "date-fns";
 import * as XLSX from "xlsx";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  GENDER_ENUM,
-  SESSION_STORAGE_KEY,
-} from "@/constants";
+import { GENDER_ENUM, SESSION_STORAGE_KEY } from "@/constants";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LoanService } from "@/services";
 import { formatCurrency } from "@/utils/format-number-with-commas";
 import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
-import { FETCH_ALL_LOAN_REQUESTS_PAGINATED } from "@/constants/query-keys";
+import { FETCH_REJECTED_LOAN_REQUESTS } from "@/constants/query-keys";
 
 const initialPageConfig = {
   size: 10,
@@ -27,12 +24,11 @@ const initialPageConfig = {
   page: 1,
 };
 
-const AccountRequests = () => {
+const RejectedRequests = () => {
   const [pageConfig, setPageConfig] = useState(initialPageConfig);
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
-  const { stage } = useParams<{ stage: string }>();
 
   const {
     data: accounts,
@@ -40,16 +36,10 @@ const AccountRequests = () => {
     error: accountError,
     isLoading: isLoadingAccounts,
   } = useQuery({
-    queryKey: [
-      FETCH_ALL_LOAN_REQUESTS_PAGINATED,
-      stage?.toUpperCase(),
-      pageConfig.page,
-    ],
+    queryKey: [FETCH_REJECTED_LOAN_REQUESTS, pageConfig.page],
     queryFn: async ({ queryKey }) => {
-      const page = queryKey[2];
-      const stage = (queryKey[1] as string) ?? "";
-      const data = await loanService.getLoanRequestForStage(
-        stage,
+      const page = queryKey[1];
+      const data = await loanService.getRejectedLoanRequests(
         Number(page),
         pageConfig.size,
       );
@@ -145,7 +135,7 @@ const AccountRequests = () => {
         ...rest,
         stateOfOrigin: state,
         createdAt: formatDate(createdAt, "dd-MM-yyy hh:mm:ss a"),
-        gender: GENDER_ENUM[Gender] ?? ""
+        gender: GENDER_ENUM[Gender] ?? "",
       };
     });
     try {
@@ -154,7 +144,7 @@ const AccountRequests = () => {
           "workIdentification",
           "id",
           "profileId",
-          "updatedAt"
+          "updatedAt",
         ]),
       );
       const workbook = XLSX.utils.book_new();
@@ -166,7 +156,7 @@ const AccountRequests = () => {
       const excelBlob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const fileName = `${stage}-Loan-account-details-${new Date()
+      const fileName = `$rejected-Loan-account-details-${new Date()
         .getTime()
         .toString()}`;
 
@@ -191,7 +181,7 @@ const AccountRequests = () => {
   return (
     <>
       <Container>
-        <PageTitle title="Loan Requests" />
+        <PageTitle title="Rejected Loan Requests" />
         <Card className="my-2">
           {isLoadingAccounts ? (
             <div className="flex min-h-[25vh] items-center justify-center">
@@ -229,4 +219,4 @@ const AccountRequests = () => {
   );
 };
 
-export default AccountRequests;
+export default RejectedRequests;

@@ -1,18 +1,13 @@
 import { Container, PageTitle } from "@/components/shared";
 import { Card } from "@/components/ui/card";
-// import { IoEye } from "react-icons/io5";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  FETCH_ACCOUNT_DETAILS_BY_ID,
-  FETCH_PROFILE_INFORMATION_BY_CUSTOMER_ID,
   GENDER_ENUM,
   GENDER_OPTIONS,
-  // NOTIFICATION_PREFERENCE_OPTIONS,
   SESSION_STORAGE_KEY,
-  // TITLE_OPTIONS,
 } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
@@ -35,13 +30,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FETCH_ACCOUNT_DETAILS_BY_ID, FETCH_PROFILE_INFORMATION_BY_CUSTOMER_ID } from "@/constants/query-keys";
 
 const schema = z.object({
-  // title: z
-  //   .string({
-  //     required_error: "Title is required",
-  //   })
-  //   .min(2, "Title is required"),
   Gender: z
     .string({ required_error: "Gender is required" })
     .min(4, { message: "Gender is required" }),
@@ -183,15 +174,9 @@ const EditDetails = () => {
   });
 
   const [
-    // title,
-    // state,
-    Gender,
-    // NotificationPreference
+    Gender
   ] = watch([
-    // "title",
-    // "state",
-    "Gender",
-    // "NotificationPreference",
+    "Gender"
   ]);
 
   const {

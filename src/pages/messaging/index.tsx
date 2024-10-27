@@ -1,12 +1,13 @@
 import { Container, PageTitle } from "@/components/shared";
 import { Link } from "react-router-dom";
 import { TemplatesList } from "@/components/templates";
-import { FETCH_ALL_TEMPLATES, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { TemplateService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ClipLoader } from "react-spinners";
 import { Pagination } from "@/components/shared/pagination";
+import { FETCH_ALL_TEMPLATES } from "@/constants/query-keys";
 
 const INITIAL_CONFIG = {
   status: "active",

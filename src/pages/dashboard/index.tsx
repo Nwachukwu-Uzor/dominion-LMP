@@ -9,13 +9,12 @@ import { NonPaginatedTable } from "@/components/shared/data-table";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import {
-  FETCH_ALL_LOAN_REPAYMENTS,
-  FETCH_STATS,
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { LoanService } from "@/services";
 import { ClipLoader } from "react-spinners";
 import { formatDate } from "date-fns";
+import { FETCH_ALL_LOAN_REPAYMENTS, FETCH_STATS } from "@/constants/query-keys";
 
 const Dashboard = () => {
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -59,7 +58,7 @@ const Dashboard = () => {
       accessorKey: "id",
       cell: ({ row }) => (
         <Link
-          to={`/bulk-notifications/${row?.original?.UploadedFileID}`}
+          to={`/repayment-tracker/${row?.original?.UploadedFileID}`}
           className="text-primary relative group w-fit font-bold text-sm flex items-center justify-center gap-0.5 hover:opacity-85"
         >
           <IoEye /> Details
@@ -94,9 +93,9 @@ const Dashboard = () => {
       </article>
       <Card className="mt-4 rounded-md">
         <div className="flex justify-between items-center my-2">
-          <h2 className="font-bold text-lg my-2">Bulk Repayments</h2>
+          <h2 className="font-bold text-lg my-2">Repayment Tracker</h2>
           <Link
-            to="/bulk-notifications"
+            to="/repayment-tracker"
             className="text-primary relative group w-fit font-semibold text-xs flex items-center justify-center gap-0.5 hover:opacity-85"
           >
             View All

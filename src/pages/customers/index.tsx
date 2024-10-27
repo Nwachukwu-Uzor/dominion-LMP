@@ -12,7 +12,6 @@ import { formatDate } from "date-fns";
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  FETCH_ALL_CUSTOMERS_PAGINATED,
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { AccountService } from "@/services/account-service";
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import * as XLSX from "xlsx";
 import { formatDataForReport } from "@/utils";
+import { FETCH_ALL_CUSTOMERS_PAGINATED } from "@/constants/query-keys";
 
 const initialPageConfig = {
   size: 10,

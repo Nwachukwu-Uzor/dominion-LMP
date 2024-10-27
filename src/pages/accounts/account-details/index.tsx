@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 // import { IoEye } from "react-icons/io5";
 import { formatDate } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { FETCH_ACCOUNT_DETAILS_BY_ID, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
 
@@ -18,6 +18,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { AccountService } from "@/services";
 import { FaEdit } from "react-icons/fa";
 import { formatCurrency } from "@/utils";
+import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 
 const GENDER_ENUM: Record<string, string> = {
   "0": "Male",

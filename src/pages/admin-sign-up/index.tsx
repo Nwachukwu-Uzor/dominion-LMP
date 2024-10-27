@@ -26,6 +26,10 @@ const schema = z
       })
       .email({ message: "Please provide a valid email" })
       .min(2, "Email is required"),
+    accountOfficerCode: z
+      .string()
+      .min(4, "Account officer code must be at least 4 characters")
+      .or(z.literal("")),
     password: z
       .string({
         required_error: "Password is required",
@@ -83,7 +87,7 @@ const AdminSignUp = () => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -92,10 +96,10 @@ const AdminSignUp = () => {
     <article>
       {isSuccess ? (
         <div>
-          <h2 className="text-green-700 font-bold my-2 text-center text-lg uppercase">
+          <h2 className="my-2 text-center text-lg font-bold uppercase text-green-700">
             Success
           </h2>
-          <div className="h-16 aspect-square mx-auto bg-green-100 rounded-full flex items-center justify-center">
+          <div className="mx-auto flex aspect-square h-16 items-center justify-center rounded-full bg-green-100">
             <FaThumbsUp className="text-2xl text-green-700" />
           </div>
           <p className="mt-2 text-center font-semibold">
@@ -105,17 +109,21 @@ const AdminSignUp = () => {
         </div>
       ) : (
         <>
-          <h3 className="scroll-m-20 text-xl text-center font-semibold tracking-tight">
+          <h3 className="scroll-m-20 text-center text-xl font-semibold tracking-tight">
             Signup
           </h3>
-          <p className="leading-7 mt-1 text-sm text-center">
+          <p className="mt-1 text-center text-sm leading-7">
             Please provide your credentials...
           </p>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-3 mt-7 mb-1">
+            <div className="mb-1 mt-7 flex flex-col gap-3">
               <Input
                 placeholder="Enter your full name"
-                label="Full Name"
+                label={
+                  <>
+                    Full Name <span className="text-xs text-red-500">*</span>
+                  </>
+                }
                 id="fullname"
                 {...register("fullName")}
                 error={errors?.fullName?.message}
@@ -124,15 +132,31 @@ const AdminSignUp = () => {
               />
               <Input
                 placeholder="Email"
-                label="Email"
+                label={
+                  <>
+                    Email <span className="text-xs text-red-500">*</span>
+                  </>
+                }
                 id="email"
                 {...register("email")}
                 error={errors?.email?.message}
                 disabled={isSubmitting}
               />
               <Input
+                placeholder="Account officer code"
+                label={<>Account Officer Code </>}
+                id="accountOfficerCode"
+                {...register("accountOfficerCode")}
+                error={errors?.accountOfficerCode?.message}
+                disabled={isSubmitting}
+              />
+              <Input
                 placeholder="Password"
-                label="Password"
+                label={
+                  <>
+                    Password <span className="text-xs text-red-500">*</span>
+                  </>
+                }
                 id="password"
                 type={showPassword ? "text" : "password"}
                 {...register("password")}
@@ -146,7 +170,12 @@ const AdminSignUp = () => {
               />
               <Input
                 placeholder="Confirm Password"
-                label="Confirm Password"
+                label={
+                  <>
+                    Confirm Password{" "}
+                    <span className="text-xs text-red-500">*</span>
+                  </>
+                }
                 id="confirm-password"
                 type={showConfirmPassword ? "text" : "password"}
                 rightIcon={
@@ -181,14 +210,14 @@ const AdminSignUp = () => {
               </Button>
             </div>
           </form>
-          <p className="text-xs mt-6 lg:mt-16 text-center">
+          <p className="mt-6 text-center text-xs lg:mt-10">
             Already have an account?{" "}
             <Link
               to="/auth/login"
-              className="text-primary font-medium hover:opacity-80 duration-200 relative group"
+              className="group relative font-medium text-primary duration-200 hover:opacity-80"
             >
               Login
-              <span className="absolute -bottom-0.5 left-0 w-0 group-hover:w-full duration-200 h-0.5 bg-primary"></span>
+              <span className="absolute -bottom-0.5 left-0 h-[0.25px] w-0 bg-primary duration-200 group-hover:w-full"></span>
             </Link>
           </p>
         </>

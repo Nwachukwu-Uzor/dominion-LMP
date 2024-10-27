@@ -11,7 +11,6 @@ import {
   GENDER_OPTIONS,
   SESSION_STORAGE_KEY,
   STATE_OPTIONS,
-  TITLE_OPTIONS,
 } from "@/constants";
 import {
   Select,
@@ -39,6 +38,17 @@ import { NonPaginatedTable } from "../shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
+};
+
+const GENDERS = {
+  MALE: "MALE",
+  FEMALE: "FEMALE",
+};
+
+const TITLES = {
+  MR: "MR",
+  MRS: "MRS",
+  MS: "MS",
 };
 
 const schema = z.object({
@@ -176,6 +186,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         }
       } else {
         const info = mainOneDetails.bvnDetails;
+
         if (info) {
           setValue("FirstName", capitalize(info?.FirstName) ?? "");
           setValue("LastName", capitalize(info?.LastName) ?? "");
@@ -203,7 +214,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   // }, [bvnDetails]);
 
-  const [Gender, state, title] = watch(["Gender", "state", "title"]);
+  const [Gender, state] = watch(["Gender", "state"]);
 
   const today = new Date();
   today.setDate(today.getDate() - 1);
@@ -339,40 +350,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         onSubmit={handleSubmit(onSubmit)}
       >
         <div>
-          <Label htmlFor="Title" className="mb-1 font-semibold">
-            Title
-          </Label>
-          <Select
-            disabled={
-              (bvnDetails?.customerInfo !== undefined &&
-                Object.keys(bvnDetails?.customerInfo).length > 0) ||
-              customerLoans.length > 0
-            }
-            value={title}
-            onValueChange={async (value) => {
-              setValue("title", value, { shouldValidate: true });
-              // await trigger("t");
-            }}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Title" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Title</SelectLabel>
-                {TITLE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.title?.message}
-          </p>
-        </div>
-        <div>
           <Input
             label="Enter BVN"
             {...register("BVN")}
@@ -388,6 +365,15 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               setCustomerLoans([]);
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+              sessionStorage.removeItem(
+                `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
+              );
+              sessionStorage.removeItem(
+                `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
+              );
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
               setValue("BVN", value);
               await trigger("BVN");
             }}
@@ -465,6 +451,11 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             value={Gender}
             onValueChange={async (value) => {
               setValue("Gender", value);
+              if (value.toUpperCase() === GENDERS.MALE) {
+                setValue("title", TITLES.MR);
+              } else {
+                setValue("title", TITLES.MRS);
+              }
               await trigger("Gender");
             }}
             disabled={

@@ -4,7 +4,7 @@ import { LoanRepaymentType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import * as XLSX from "xlsx";
-import { FETCH_ALL_LOAN_REPAYMENTS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "@/components/shared/pagination";
@@ -14,13 +14,14 @@ import { formatDate, isValid } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
+import { FETCH_ALL_LOAN_REPAYMENTS } from "@/constants/query-keys";
 const INITIAL_CONFIG = {
   page: 1,
   size: 10,
   totalPages: 0,
 };
 
-const BulkNotificationDetails = () => {
+const RepaymentDetails = () => {
   const { id } = useParams<{ id: string }>();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -172,7 +173,7 @@ const BulkNotificationDetails = () => {
 
   return (
     <Container>
-      <PageTitle title="Bulk Notification Details" />
+      <PageTitle title="Bulk Repayment Details" />
       <Card className="my-2 rounded-md">
         {isLoading ? (
           <div className="flex min-h-[25vh] items-center justify-center">
@@ -205,4 +206,4 @@ const BulkNotificationDetails = () => {
   );
 };
 
-export default BulkNotificationDetails;
+export default RepaymentDetails;

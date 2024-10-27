@@ -9,25 +9,13 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { IoEye } from "react-icons/io5";
 
-// import { toast } from "react-toastify";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectGroup,
-//   SelectItem,
-//   SelectLabel,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
-import { FETCH_ALL_LOAN_REPAYMENTS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
 import { Pagination } from "@/components/shared/pagination";
 import { formatDate } from "date-fns";
+import { FETCH_ALL_LOAN_REPAYMENTS } from "@/constants/query-keys";
 
 
 const INITIAL_CONFIG = {
@@ -36,7 +24,7 @@ const INITIAL_CONFIG = {
   totalPages: 0,
 };
 
-const BulkNotifications = () => {
+const RepaymentTracker = () => {
   
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -106,7 +94,7 @@ const BulkNotifications = () => {
         to="new"
         className="max-w-[180px] gap-1 rounded-md active:scale-75 hover:opacity-60 duration-150 py-2 px-1 mb-4 flex items-center justify-center ml-auto bg-[#7E21CF] text-white text-xs font-medium"
       >
-        New Bulk Notifications
+        New Repayment Upload
       </Link>
       <PageTitle title="Bulk Notifications" />
       <Card className="my-2 rounded-md">
@@ -138,4 +126,4 @@ const BulkNotifications = () => {
   );
 };
 
-export default BulkNotifications;
+export default RepaymentTracker;

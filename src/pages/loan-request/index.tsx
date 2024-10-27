@@ -4,8 +4,12 @@ import {
   Documents,
   RequestSucessful,
 } from "@/components/loan-request";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY, LINK_STATUS_OPTIONS } from "@/constants";
+import { FETCH_LINK_STATUS } from "@/constants/query-keys";
+import { SettingsService } from "@/services";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { ClipLoader } from "react-spinners";
 import Stepper from "react-stepper-horizontal";
 
 const steps = [
@@ -16,6 +20,16 @@ const steps = [
 
 const LoanRequest = () => {
   const [activeStep, setActiveStep] = useState(0);
+
+  const settingsService = new SettingsService();
+
+  const { data: linkStatus, isLoading: isLoadingLinkStatus } = useQuery({
+    queryKey: [FETCH_LINK_STATUS],
+    queryFn: async () => {
+      const data = await settingsService.getLinkStatus();
+      return data?.linkStatus;
+    },
+  });
 
   useEffect(() => {
     const stage = sessionStorage.getItem(`${SESSION_STORAGE_KEY}_STAGE`);
@@ -56,23 +70,38 @@ const LoanRequest = () => {
   }
   return (
     <main>
-      <h3 className="scroll-m-20 text-center text-xl font-semibold tracking-tight">
-        DMB IPPIS Loan
-      </h3>
-      <p className="mt-1 text-center text-sm leading-7">
-        Start your Loan Application today!
-      </p>
-      <div className="my-8">
-        <Stepper
-          steps={steps}
-          activeStep={activeStep}
-          completeColor="#7E21CF"
-          completeTitleColor="#7E21CF"
-          completeBarColor="#7E21CF"
-          activeColor="#E2CCF5"
-        />
-      </div>
-      <section>{getSectionComponent()}</section>
+      {isLoadingLinkStatus ? (
+        <article className="mt-2 flex min-h-[10vh] items-center justify-center rounded-sm bg-gray-50 px-2 py-4">
+          <ClipLoader size={16} color="#5b21b6" />
+        </article>
+      ) : linkStatus?.toUpperCase() === LINK_STATUS_OPTIONS.ON ? (
+        <>
+          <h3 className="scroll-m-20 text-center text-xl font-semibold tracking-tight">
+            DMB IPPIS Loan
+          </h3>
+          <p className="mt-1 text-center text-sm leading-7">
+            Start your Loan Application today!
+          </p>
+          <div className="my-8">
+            <Stepper
+              steps={steps}
+              activeStep={activeStep}
+              completeColor="#7E21CF"
+              completeTitleColor="#7E21CF"
+              completeBarColor="#7E21CF"
+              activeColor="#E2CCF5"
+            />
+          </div>
+          <section>{getSectionComponent()}</section>
+        </>
+      ) : (
+        <section className="text-center">
+          <h3 className="mb-2 text-xl font-semibold uppercase">Form Closed</h3>
+          <p className="text-sm font-light">
+            Sorry the form is no longer accepting response...
+          </p>
+        </section>
+      )}
     </main>
   );
 };

@@ -7,13 +7,14 @@ import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FaCheck } from "react-icons/fa";
-import { FETCH_ALL_ADMINS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { AdminService } from "@/services";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import { Label } from "../ui/label";
 import { MultiSelect } from "../ui/multi-select";
 import { useEffect, useState } from "react";
+import { FETCH_ALL_ADMINS } from "@/constants/query-keys";
 
 type Props = {
   openModal: boolean;
@@ -41,6 +42,16 @@ const ADMIN_OPTIONS = [
     id: 2,
     label: "Reviewer",
     value: "REVIEWER",
+  },
+  {
+    id: 3,
+    label: "Editor",
+    value: "Editor",
+  },
+  {
+    id: 4,
+    label: "Auditor",
+    value: "Auditor",
   },
 ];
 
@@ -108,7 +119,7 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
           "An error occurred",
       });
       toast.error(
-        error?.response?.data?.message ?? error?.message ?? "An error occurred"
+        error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
     }
   };
@@ -120,15 +131,15 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
           <div className="flex justify-end">
             <button disabled={isSubmitting}>
               <IoMdClose
-                className="cursor-pointer hover:scale-150 transition-all"
+                className="cursor-pointer transition-all hover:scale-150"
                 onClick={onClose}
               />
             </button>
           </div>
-          <div className="h-10 w-10 lg:h-[60px] lg:w-[60px] bg-green-100 rounded-full mx-auto flex justify-center items-center">
-            <FaCheck className="text-green-700 scale-150 text-xl lg:text-2xl" />
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-green-100 lg:h-[60px] lg:w-[60px]">
+            <FaCheck className="scale-150 text-xl text-green-700 lg:text-2xl" />
           </div>
-          <h3 className="text-lg font-bold mt-5 text-center">
+          <h3 className="mt-5 text-center text-lg font-bold">
             Confirm Activation
           </h3>
           <p className="mt-[5px] text-center">
@@ -147,20 +158,20 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
                 onChange={setSelectedRoles}
                 placeholder={
                   selectedRoles.length > 0
-                    ? "Please select an account..."
-                    : "No accounts to assign..."
+                    ? "Please select role(s)..."
+                    : "No roles to assign..."
                 }
                 disabled={isSubmitting}
               />
-              <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+              <p className="mt-0.5 h-1 text-[10px] text-red-500">
                 {errors?.roleType?.message}
               </p>
             </div>
-            <p className="h-1 mt-0.5 text-red-500 text-[10px]">
+            <p className="mt-0.5 h-1 text-[10px] text-red-500">
               {errors?.root?.message}
             </p>
             <Button
-              className="bg-green-600 w-full text-white mt-8"
+              className="mt-8 w-full bg-green-600 text-white"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -172,7 +183,7 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
               )}
             </Button>
             <Button
-              className="bg-[#2D2D2D] text-white mt-0 lg:mt-4 w-full"
+              className="mt-0 w-full bg-[#2D2D2D] text-white lg:mt-4"
               onClick={onClose}
               disabled={isSubmitting}
               type="button"

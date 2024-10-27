@@ -3,8 +3,6 @@ import {
   DashboardPage,
   AdminLoginPage,
   AdminSignUpPage,
-  BulkNotificationsPage,
-  NewBulkNotificationPage,
   SingleRequestPage,
   AdminPage,
   AccountsPage,
@@ -22,6 +20,9 @@ import {
   IPPISUploadPage,
   EditDetailsPage,
   LinkStatusPage,
+  RepaymentTrackerPage,
+  NewRepaymentUploadPage,
+  RejectedRequestsPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
         path: "/loan",
         children: [
           {
+            path: "requests/rejected",
+            element: <RejectedRequestsPage />,
+          },
+          {
             path: "requests/:stage",
             element: <LoanRequestsPage />,
           },
@@ -83,15 +88,15 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "/bulk-notifications",
+        path: "/repayment-tracker",
         children: [
           {
             index: true,
-            element: <BulkNotificationsPage />,
+            element: <RepaymentTrackerPage />,
           },
           {
             path: "new",
-            element: <NewBulkNotificationPage />,
+            element: <NewRepaymentUploadPage />,
           },
           {
             path: ":id",
@@ -130,7 +135,7 @@ const router = createBrowserRouter([
           {
             path: "link-status",
             element: <LinkStatusPage />,
-          }
+          },
         ],
       },
       {

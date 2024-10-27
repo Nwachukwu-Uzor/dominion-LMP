@@ -141,6 +141,34 @@ export class LoanService {
       };
     }
   }
+  async getRejectedLoanRequests(page = 1, size = 10) {
+    try {
+      const response = await axios.get<
+        APIResponseType<
+          PaginatedResponseType & {
+            requestRecords: UnCompletedLoanRequestType[];
+          }
+        >
+      >(
+        `${baseUrl}/account/view/all/request?size=${size}&page=${page}&option=stageStatus&gSearch=reject`,
+        {
+          headers: {
+            Authorization: `Bearer ${this._token}`,
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error: any) {
+      return {
+        payload: {
+          totalRecords: 0,
+          requestRecords: [],
+          totalPages: 0,
+        },
+      };
+    }
+  }
 
   async getRequestStats() {
     try {
@@ -253,19 +281,6 @@ export class LoanService {
       APIResponseType<PaginatedResponseType & { data: LoanFrequencyType[] }>
     >(
       `${baseUrl}/eligibility/view/all?size=10&page=1&sort=ASC&orderBy=createdAt&gSearch=active&option=status`,
-      {
-        headers: {
-          Authorization: `Bearer ${this._token}`,
-        },
-      },
-    );
-    return response?.data;
-  }
-
-  async updateLoanApplicationLink(payload: { type: string; status: string }) {
-    const response = await axios.post<APIResponseType<string>>(
-      `${baseUrl}/setting/link/status`,
-      payload,
       {
         headers: {
           Authorization: `Bearer ${this._token}`,

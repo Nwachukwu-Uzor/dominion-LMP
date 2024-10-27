@@ -4,8 +4,6 @@ import { AdminType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import { generateTransactionStatusStyle } from "@/utils";
-// import { toast } from "react-toastify";
-
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,12 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActivateAdmin, DisableAdmin } from "@/components/admins";
-import { FETCH_ALL_ADMINS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { AdminService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
 import { Pagination } from "@/components/shared/pagination";
 import { useRoleAccess } from "@/hooks";
+import { FETCH_ALL_ADMINS } from "@/constants/query-keys";
 
 const ADMIN_STATUS = {
   PENDING: "PENDING",

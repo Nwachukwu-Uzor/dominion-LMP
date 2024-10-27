@@ -29,7 +29,7 @@ const VALIDCOLUMNS = [
   "LOAN ID",
 ];
 
-const NewBulkNotification = () => {
+const NewRepaymentUpload = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -180,9 +180,9 @@ const NewBulkNotification = () => {
 
   return (
     <Container>
-      <PageTitle title="New Bulk Notification" />
+      <PageTitle title="New Repayment Upload" />
       <Link
-        to="/bulk-notifications"
+        to="/repayment-tracker"
         className="my-2 flex items-center gap-1 text-sm font-bold text-black hover:opacity-75"
       >
         <IoChevronBack /> Back
@@ -272,4 +272,4 @@ const NewBulkNotification = () => {
   );
 };
 
-export default NewBulkNotification;
+export default NewRepaymentUpload;

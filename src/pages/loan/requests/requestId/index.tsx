@@ -15,7 +15,7 @@ import { Container, FileViewer, PageTitle, Record } from "@/components/shared";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FETCH_ACCOUNT_DETAILS_BY_ID, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
 
@@ -29,6 +29,7 @@ import { useUser } from "@/hooks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { IoMdClose } from "react-icons/io";
+import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 
 const GENDER_ENUM: Record<string, string> = {
   "1": "Male",

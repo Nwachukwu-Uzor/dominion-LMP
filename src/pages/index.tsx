@@ -25,27 +25,27 @@ export const DashboardPage = () => (
 );
 
 // Bulk Notifications
-const BulkNotificationsComponent = lazy(() => import("./bulk-notifications"));
+const RepaymentTrackerComponent = lazy(() => import("./repayment-tracker"));
 
-export const BulkNotificationsPage = () => (
+export const RepaymentTrackerPage = () => (
   <Suspense fallback={<PageLoader />}>
-    <BulkNotificationsComponent />
+    <RepaymentTrackerComponent />
   </Suspense>
 );
 
 // New Bulk Notification
-const NewBulkNotificationComponent = lazy(
-  () => import("./bulk-notifications/new"),
+const NewRepaymentUploadComponent = lazy(
+  () => import("./repayment-tracker/new"),
 );
-export const NewBulkNotificationPage = () => (
+export const NewRepaymentUploadPage = () => (
   <Suspense fallback={<PageLoader />}>
-    <NewBulkNotificationComponent />
+    <NewRepaymentUploadComponent />
   </Suspense>
 );
 
 // Single Request
 const SingleRequestComponent = lazy(
-  () => import("./bulk-notifications/details"),
+  () => import("./repayment-tracker/details"),
 );
 
 export const SingleRequestPage = () => (
@@ -105,6 +105,16 @@ const LoanRequestsComponent = lazy(() => import("./loan/requests"));
 export const LoanRequestsPage = () => (
   <Suspense fallback={<PageLoader />}>
     <LoanRequestsComponent />
+  </Suspense>
+);
+
+// Rejected Request
+const RejectedRequestsComponent = lazy(
+  () => import("./loan/requests/rejected"),
+);
+export const RejectedRequestsPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <RejectedRequestsComponent />
   </Suspense>
 );
 

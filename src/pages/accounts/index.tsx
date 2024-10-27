@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { FETCH_ACCOUNTS_PAGINATED, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { AccountService } from "@/services/account-service";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
 import * as XLSX from "xlsx";
+import { FETCH_ACCOUNTS_PAGINATED } from "@/constants/query-keys";
 
 const initialPageConfig = {
   size: 10,

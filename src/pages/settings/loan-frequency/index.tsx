@@ -17,7 +17,6 @@ import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  FETCH_LOAN_FREQUENCY_SETTINGS,
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { LoanService } from "@/services";
@@ -26,6 +25,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaInfoCircle } from "react-icons/fa";
 import { formatDate } from "date-fns";
 import { RiExpandDiagonalFill } from "react-icons/ri";
+import { FETCH_LOAN_FREQUENCY_SETTINGS } from "@/constants/query-keys";
 
 const PERIOD_OPTIONS = [
   {

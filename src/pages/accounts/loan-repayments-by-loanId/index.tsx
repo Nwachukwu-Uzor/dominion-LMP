@@ -4,13 +4,14 @@ import { LoanRepaymentType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 
-import { FETCH_ALL_LOAN_REPAYMENTS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
 import { useParams } from "react-router-dom";
 import { formatDate } from "date-fns";
+import { FETCH_ALL_LOAN_REPAYMENTS } from "@/constants/query-keys";
 
 const INITIAL_CONFIG = {
   page: 1,

@@ -2,15 +2,13 @@ import { Dialog, DialogContent } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { IoMdClose } from "react-icons/io";
 import { FaExclamation } from "react-icons/fa6";
-
-// import { ClipLoader } from "react-spinners";
-// import { toast } from "react-toastify";
 import { AdminType } from "@/types/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FETCH_ALL_ADMINS, SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { AdminService } from "@/services";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
+import { FETCH_ALL_ADMINS } from "@/constants/query-keys";
 
 type Props = {
   openModal: boolean;
