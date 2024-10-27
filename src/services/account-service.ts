@@ -89,6 +89,13 @@ export class AccountService {
     );
     return response?.data;
   }
+  async editLoanRequest(data: Record<string, unknown>) {
+    const response = await axios.post<APIResponseType<string>>(
+      `${baseUrl}/account/modify/customer/account`,
+      data,
+    );
+    return response?.data;
+  }
 
   async validateBVN(data: { id: string }) {
     const response = await axios.post<APIResponseType<BVNValidationType>>(

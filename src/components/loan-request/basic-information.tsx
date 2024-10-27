@@ -9,8 +9,10 @@ import { formatDate, isValid } from "date-fns";
 import {
   GENDER_ENUM,
   GENDER_OPTIONS,
+  GENDERS,
   SESSION_STORAGE_KEY,
   STATE_OPTIONS,
+  TITLES,
 } from "@/constants";
 import {
   Select,
@@ -38,17 +40,6 @@ import { NonPaginatedTable } from "../shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
-};
-
-const GENDERS = {
-  MALE: "MALE",
-  FEMALE: "FEMALE",
-};
-
-const TITLES = {
-  MR: "MR",
-  MRS: "MRS",
-  MS: "MS",
 };
 
 const schema = z.object({

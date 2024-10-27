@@ -58,7 +58,6 @@ const RequestDetails = () => {
     stage: string;
     accountId: string;
   }>();
-  console.log({ accountId });
 
   const [openTokenModal, setOpenTokenModal] = useState(false);
   const [otp, setOtp] = useState<string[]>(new Array(4).fill(""));

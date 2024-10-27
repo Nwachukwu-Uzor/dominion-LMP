@@ -108,13 +108,23 @@ const RejectedRequests = () => {
       header: "Action",
       accessorKey: "id",
       cell: ({ row }) => (
-        <Link
-          to={`${row?.original?.accountDetails?.id}/${row?.original?.id}`}
-          className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
-        >
-          View Details
-          <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
-        </Link>
+        <div className="flex items-center gap-0.5">
+          <Link
+            to={`${row?.original?.accountDetails?.id}/${row?.original?.id}`}
+            className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
+          >
+            View Details
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+          </Link>
+          |
+          <Link
+            to={`edit/${row?.original?.accountDetails?.id}`}
+            className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
+          >
+            Edit
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+          </Link>
+        </div>
       ),
     },
   ];

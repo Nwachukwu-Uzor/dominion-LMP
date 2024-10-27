@@ -91,7 +91,7 @@ const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n }),
 );
 
-const initialLoanPayment = {
+const INITIAL_LOAN_PAYMENT = {
   monthlyRepayment: "0",
   totalPayment: "0",
 };
@@ -100,7 +100,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
-  const [loanRepayment, setLoanRepayment] = useState(initialLoanPayment);
+  const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
   const access_code = searchParams.get("access_code") as string | undefined;

@@ -38,6 +38,7 @@ export type LoanRequestType = {
   accountMessage: string;
   status: string;
   AccountOfficerCode: string;
+  AccountOfficerEmail: string;
   NotificationPreference: string;
   TransactionPermission: string;
   AccountTier: number;

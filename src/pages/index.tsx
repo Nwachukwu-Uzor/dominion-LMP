@@ -118,6 +118,16 @@ export const RejectedRequestsPage = () => (
   </Suspense>
 );
 
+// Edit Loan Request
+const EditRejectedRequestsComponent = lazy(
+  () => import("./loan/requests/rejected/edit"),
+);
+export const EditRejectedRequestsPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <EditRejectedRequestsComponent />
+  </Suspense>
+);
+
 // Loan Request Details
 const LoanRequestDetailsComponent = lazy(
   () => import("./loan/requests/requestId"),

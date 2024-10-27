@@ -150,7 +150,7 @@ export class LoanService {
           }
         >
       >(
-        `${baseUrl}/account/view/all/request?size=${size}&page=${page}&option=stageStatus&gSearch=reject`,
+        `${baseUrl}/account/view/all/request?size=${size}&page=${page}&option=stageStatus&gSearch=REJECT`,
         {
           headers: {
             Authorization: `Bearer ${this._token}`,

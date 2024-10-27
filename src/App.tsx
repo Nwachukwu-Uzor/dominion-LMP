@@ -23,6 +23,7 @@ import {
   RepaymentTrackerPage,
   NewRepaymentUploadPage,
   RejectedRequestsPage,
+  EditRejectedRequestsPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
           {
             path: "requests/rejected",
             element: <RejectedRequestsPage />,
+          },
+          {
+            path: "requests/rejected/edit/:accountId",
+            element: <EditRejectedRequestsPage />,
           },
           {
             path: "requests/:stage",

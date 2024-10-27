@@ -18,3 +18,15 @@ export const USER_ROLES = {
   AUDITOR: "Auditor",
   EDITOR: "Editor",
 };
+
+
+export const GENDERS = {
+  MALE: "MALE",
+  FEMALE: "FEMALE",
+};
+
+export const TITLES = {
+  MR: "MR",
+  MRS: "MRS",
+  MS: "MS",
+};
