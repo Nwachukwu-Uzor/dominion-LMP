@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   GENDER_ENUM,
   SESSION_STORAGE_KEY,
+  USER_ROLES,
 } from "@/constants";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
 import { FETCH_ALL_LOAN_REQUESTS_PAGINATED } from "@/constants/query-keys";
+import { useUser } from "@/hooks";
 
 const initialPageConfig = {
   size: 10,
@@ -29,6 +31,7 @@ const initialPageConfig = {
 
 const AccountRequests = () => {
   const [pageConfig, setPageConfig] = useState(initialPageConfig);
+  const { user } = useUser()
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
@@ -202,14 +205,17 @@ const AccountRequests = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
-                <div className="my-1 flex items-center justify-end">
-                  <Button
-                    className="rounded-sm bg-black text-xs text-white"
-                    onClick={handleDownload}
-                  >
-                    <IoMdDownload /> Export as CSV
-                  </Button>
-                </div>
+                {user?.role?.includes(USER_ROLES.SUPER_ADMIN) ||
+                user?.role?.includes(USER_ROLES.AUDITOR) ? (
+                  <div className="my-1 flex items-center justify-end">
+                    <Button
+                      className="rounded-sm bg-black text-xs text-white"
+                      onClick={handleDownload}
+                    >
+                      <IoMdDownload /> Export as CSV
+                    </Button>
+                  </div>
+                ) : null}
                 <NonPaginatedTable columns={columns} data={accounts} />
                 <div>
                   <Pagination

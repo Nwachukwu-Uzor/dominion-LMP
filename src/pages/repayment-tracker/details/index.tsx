@@ -4,7 +4,7 @@ import { LoanRepaymentType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import * as XLSX from "xlsx";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
 import { LoanService } from "@/services";
 import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "@/components/shared/pagination";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
 import { FETCH_ALL_LOAN_REPAYMENTS } from "@/constants/query-keys";
+import { useUser } from "@/hooks";
 const INITIAL_CONFIG = {
   page: 1,
   size: 10,
@@ -23,6 +24,7 @@ const INITIAL_CONFIG = {
 
 const RepaymentDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useUser()
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
@@ -181,14 +183,17 @@ const RepaymentDetails = () => {
           </div>
         ) : data?.accountRecords && data?.accountRecords?.length > 0 ? (
           <>
-            <div className="my-1 flex items-center justify-end">
-              <Button
-                className="rounded-sm bg-black text-xs text-white"
-                onClick={handleDownload}
-              >
-                <IoMdDownload /> Export as CSV
-              </Button>
-            </div>
+            {user?.role?.includes(USER_ROLES.SUPER_ADMIN) ||
+                user?.role?.includes(USER_ROLES.AUDITOR) ? (
+                  <div className="my-1 flex items-center justify-end">
+                    <Button
+                      className="rounded-sm bg-black text-xs text-white"
+                      onClick={handleDownload}
+                    >
+                      <IoMdDownload /> Export as CSV
+                    </Button>
+                  </div>
+                ) : null}
             <NonPaginatedTable columns={columns} data={data.accountRecords} />
             <div>
               <Pagination

@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
 import { AccountService } from "@/services/account-service";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
@@ -16,6 +16,7 @@ import { IoMdDownload } from "react-icons/io";
 import { formatDataForReport } from "@/utils";
 import * as XLSX from "xlsx";
 import { FETCH_ACCOUNTS_PAGINATED } from "@/constants/query-keys";
+import { useUser } from "@/hooks";
 
 const initialPageConfig = {
   size: 10,
@@ -25,6 +26,7 @@ const initialPageConfig = {
 
 const Accounts = () => {
   const [pageConfig, setPageConfig] = useState(initialPageConfig);
+  const { user } = useUser();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const accountsService = new AccountService(token);
@@ -150,7 +152,11 @@ const Accounts = () => {
     });
     try {
       const worksheet = XLSX.utils.json_to_sheet(
-        formatDataForReport(formattedData, ["workIdentification", "id", "profileId"]),
+        formatDataForReport(formattedData, [
+          "workIdentification",
+          "id",
+          "profileId",
+        ]),
       );
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
@@ -197,14 +203,17 @@ const Accounts = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
-                <div className="my-1 flex items-center justify-end">
-                  <Button
-                    className="rounded-sm bg-black text-xs text-white"
-                    onClick={handleDownload}
-                  >
-                    <IoMdDownload /> Export as CSV
-                  </Button>
-                </div>
+                {user?.role?.includes(USER_ROLES.SUPER_ADMIN) ||
+                user?.role?.includes(USER_ROLES.AUDITOR) ? (
+                  <div className="my-1 flex items-center justify-end">
+                    <Button
+                      className="rounded-sm bg-black text-xs text-white"
+                      onClick={handleDownload}
+                    >
+                      <IoMdDownload /> Export as CSV
+                    </Button>
+                  </div>
+                ) : null}
                 <NonPaginatedTable
                   columns={columns}
                   data={accounts.filter(
