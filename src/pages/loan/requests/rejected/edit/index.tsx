@@ -390,7 +390,14 @@ const EditInformation: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-      const response = await accountService.editLoanRequest(values);
+      const payload = {
+        ...values,
+        loanAmount: values.loanAmount.replace(/,/g, ""),
+        monthlyPayment: loanRepayment.monthlyRepayment.replace(/,/g, ""),
+        totalPayment: loanRepayment.totalPayment.replace(/,/g, ""),
+        AccountOpeningTrackingRef: accountInfo?.AccountOpeningTrackingRef ?? "",
+      };
+      const response = await accountService.editLoanRequest(payload);
       toast.success(response?.message ?? "Loan request edited successfully");
       setIsDone(true);
     } catch (error: any) {
@@ -975,6 +982,13 @@ const EditInformation: React.FC = () => {
                         className="max-h-[250px]"
                       />
                     )}
+                  </div>
+                  <div className="col-span-full">
+                    {errors?.root?.message?.split(";").map((error) => (
+                      <p key={error} className="text-sm text-red-500">
+                        {error}
+                      </p>
+                    ))}
                   </div>
                   <div className="lg:col-span-full">
                     <div className="col-span-full flex items-center gap-2">

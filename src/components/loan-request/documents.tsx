@@ -255,6 +255,11 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       }
       payload["loanAmount"] = Number(values?.loanAmount?.replace(/,/g, ""));
       payload["loanAgreement"] = "Agreed";
+      payload["monthlyPayment"] = loanRepayment.monthlyRepayment.replace(
+        /,/g,
+        "",
+      );
+      payload["totalPayment"] = loanRepayment.totalPayment.replace(/,/g, "");
 
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);

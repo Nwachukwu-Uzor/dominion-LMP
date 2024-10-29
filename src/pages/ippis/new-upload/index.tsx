@@ -223,8 +223,6 @@ const NewIPPIS = () => {
       "",
     );
 
-    console.log({ extractedData });
-
     if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {
       setUploadError(
         `The maximum number of records allowed is ${MAX_IPPIS_RECORD_COUNT} but you provided ${extractedData.length}`,
