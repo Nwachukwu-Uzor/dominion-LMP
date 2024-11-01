@@ -4,4 +4,5 @@ export type TokenType = {
   role: string[];
   UserId: string;
   linkStatus: string;
+  accountOfficerCode: string | null;
 };

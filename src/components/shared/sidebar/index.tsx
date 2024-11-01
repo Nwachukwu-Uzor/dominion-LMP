@@ -32,7 +32,6 @@ type Props = {
 export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
 
   const onLinkClick = () => {
     if (window.innerWidth > 768) {
@@ -204,7 +203,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
               </li>
             ))}
             <NavLink
-              to={`/loan-request?access_code=${token}`}
+              to={`/loan-request${user?.accountOfficerCode ? `?accountOfficerCode=${user.accountOfficerCode}` : ""}`}
               target="_blank"
               onClick={onLinkClick}
               className={({ isActive }) =>

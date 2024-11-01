@@ -332,6 +332,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             label="IPPIS Number"
             onChange={(e) => {
               setValue("ippisNumber", e.target.value, { shouldValidate: true });
+              setValue("organizationEmployer", "");
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
               resetIppisInfo();
             }}
@@ -346,7 +347,9 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               <span className="text-xs font-semibold italic">Loading...</span>
             </>
           ) : isIppisError ? (
-            <p>Unable to retrieve ippis information</p>
+            <p className="text-xs text-red-500">
+              Unable to retrieve ippis information
+            </p>
           ) : (
             ippisData && (
               <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
@@ -399,7 +402,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         </p>
         <div className="col-span-full flex items-center gap-2">
           <Button
-            className="w-full md:max-w-[200px] bg-black"
+            className="w-full bg-black md:max-w-[200px]"
             type="button"
             onClick={handleBackClick}
           >

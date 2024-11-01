@@ -12,6 +12,7 @@ const calculateLoan = (
       return {
         monthlyInstallment: "0",
         totalRepayment: "0",
+        InterestRate: 0
       };
     }
     const PERCENTAGE_TO_DECIMAL = 100.0;
@@ -23,11 +24,13 @@ const calculateLoan = (
     return {
       monthlyInstallment: monthlyInstallment.toFixed(2),
       totalRepayment: (monthlyInstallment * tenureInMonths).toFixed(2),
+      InterestRate: interestRate
     };
   } catch (error) {
     return {
       monthlyInstallment: "0",
       totalRepayment: "0",
+      InterestRate: 0
     };
   }
 };

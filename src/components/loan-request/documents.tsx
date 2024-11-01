@@ -94,6 +94,7 @@ const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
 const INITIAL_LOAN_PAYMENT = {
   monthlyRepayment: "0",
   totalPayment: "0",
+  InterestRate: 0,
 };
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
@@ -103,7 +104,9 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
-  const access_code = searchParams.get("access_code") as string | undefined;
+  const accountOfficerCode = searchParams.get("accountOfficerCode") as
+    | string
+    | undefined;
   const [agreedToTAC, setAgreedToTAC] = useState(false);
 
   const [showSignatureCanvas, setShowSignatureCanvas] = useState(false);
@@ -132,6 +135,12 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   ]);
 
   useEffect(() => {
+    if (accountOfficerCode) {
+      setValue("AccountOfficerCode", accountOfficerCode);
+    }
+  }, [accountOfficerCode, setValue]);
+
+  useEffect(() => {
     const data = sessionStorage.getItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
     const customerInfo = sessionStorage.getItem(
       `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
@@ -157,11 +166,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   }, [getValues, setValue]);
 
-  useEffect(() => {
-    if (!access_code) {
-      return;
-    }
-  }, [access_code]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -260,6 +264,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         "",
       );
       payload["totalPayment"] = loanRepayment.totalPayment.replace(/,/g, "");
+      payload["InterestRate"] = loanRepayment.InterestRate;
 
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
@@ -356,6 +361,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setLoanRepayment({
       monthlyRepayment: repaymentInfo.monthlyInstallment,
       totalPayment: repaymentInfo.totalRepayment,
+      InterestRate: repaymentInfo.InterestRate,
     });
   };
 
