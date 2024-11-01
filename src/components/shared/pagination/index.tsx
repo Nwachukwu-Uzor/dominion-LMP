@@ -83,7 +83,7 @@ export const Pagination: React.FC<Props> = ({
         !firstGroup.includes(page) &&
         !lastGroup.includes(page) &&
         page <= totalPages &&
-        page > 0
+        page > 0,
     );
 
     return filteredMiddleGroup;
@@ -98,11 +98,11 @@ export const Pagination: React.FC<Props> = ({
       {firstGroup.map((page) => (
         <span
           key={page}
-          className={`py-1 px-2 text-sm font-semibold ${
+          className={`px-2 py-1 text-sm font-semibold ${
             page === currentPage
-              ? "bg-primary rounded-sm text-white"
+              ? "rounded-sm bg-primary text-white"
               : "text-black"
-          } active:scale-90 active:opacity-75 duration-200 cursor-pointer`}
+          } cursor-pointer duration-200 active:scale-90 active:opacity-75`}
           onClick={() => handlePageClick(page)}
         >
           {page}
@@ -114,11 +114,11 @@ export const Pagination: React.FC<Props> = ({
           {middleGroup.map((page) => (
             <span
               key={page}
-              className={`py-1 px-2 text-sm font-semibold ${
+              className={`px-2 py-1 text-sm font-semibold ${
                 page === currentPage
-                  ? "bg-primary rounded-sm text-white"
+                  ? "rounded-sm bg-primary text-white"
                   : "text-black"
-              } active:scale-90 active:opacity-75 duration-200 cursor-pointer`}
+              } cursor-pointer duration-200 active:scale-90 active:opacity-75`}
               onClick={() => handlePageClick(page)}
             >
               {page}
@@ -130,11 +130,11 @@ export const Pagination: React.FC<Props> = ({
       {lastGroup.map((page) => (
         <span
           key={page}
-          className={`py-1 px-2 text-sm font-semibold ${
+          className={`px-2 py-1 text-sm font-semibold ${
             page === currentPage
-              ? "bg-primary rounded-sm text-white"
+              ? "rounded-sm bg-primary text-white"
               : "text-black"
-          } active:scale-90 active:opacity-75 duration-200 cursor-pointer`}
+          } cursor-pointer duration-200 active:scale-90 active:opacity-75`}
           onClick={() => handlePageClick(page)}
         >
           {page}
