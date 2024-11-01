@@ -11,7 +11,7 @@ export {
 } from "./link-status-options";
 
 export const USER_ROLES = {
-  SUPER_ADMIN: "SuperAdmin",
+  SUPER_ADMIN: "superAdmin",
   ADMIN: "Admin",
   REVIEWER: "Reviewer",
   AUTHORIZER: "Authorizer",

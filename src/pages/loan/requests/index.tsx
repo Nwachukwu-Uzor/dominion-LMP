@@ -205,8 +205,8 @@ const AccountRequests = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
-                {user?.role?.includes(USER_ROLES.SUPER_ADMIN) ||
-                user?.role?.includes(USER_ROLES.AUDITOR) ? (
+                {user?.role?.map(r => r.toUpperCase())?.includes(USER_ROLES.SUPER_ADMIN.toUpperCase()) ||
+                user?.role?.map(r => r.toUpperCase())?.includes(USER_ROLES.AUDITOR.toUpperCase()) ? (
                   <div className="my-1 flex items-center justify-end">
                     <Button
                       className="rounded-sm bg-black text-xs text-white"
