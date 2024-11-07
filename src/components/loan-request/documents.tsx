@@ -1,4 +1,10 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,59 +39,66 @@ type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
 };
 
-const schema = z.object({
-  loanAmount: z
-    .string({
-      required_error: "Loan amount is required",
-    })
-    .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-      message: "Loan amount must be a valid number",
-    })
-    .refine(
-      (value) => {
-        const numberValue = Number(value.replace(/,/g, ""));
-        return !Number.isNaN(numberValue) && numberValue > 0;
-      },
-      { message: "Loan amount must be greater than zero" },
-    ),
-  loanTenor: z
-    .string({
-      required_error: "Loan Tenure is required",
-    })
-    .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-    .refine(
-      (value) => {
-        return !Number.isNaN(value) && Number(value) > 0;
-      },
-      { message: "Loan amount must be greater than zero" },
-    ),
-  AccountOfficerCode: z.string({
-    required_error: "Account officer code is required",
-  }),
-  AccountOfficerEmail: z
-    .string({
-      required_error: "Account officer email is required",
-    })
-    .email("Please provide a valid email address"),
-  workIdentification: z
-    .instanceof(FileList, { message: "Please provide a valid file" })
-    // .optional()
-    .refine((files: FileList) => files.length > 0, "File is required"),
-  IdentificationImage: z.optional(z.instanceof(FileList)),
-  // .refine((files: FileList) => files.length > 0, "File is required"),
-  CustomerImage: z
-    .instanceof(FileList, { message: "Please provide a valid file" })
-    .refine((files: FileList) => files.length > 0, "File is required")
-    .refine((files) => files.length > 0 && files[0].type.startsWith("image/"), {
-      message: "Please upload an image file",
+const getLoanSchema = (maxLoanAmount: number) => {
+  return z.object({
+    loanAmount: z
+      .string({
+        required_error: "Loan amount is required",
+      })
+      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
+        message: "Loan amount must be a valid number",
+      })
+      .refine(
+        (value) => {
+          const numberValue = Number(value.replace(/,/g, ""));
+          return (
+            !Number.isNaN(numberValue) &&
+            numberValue <= maxLoanAmount
+          );
+        },
+        {
+          message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
+        },
+      ),
+    loanTenor: z
+      .string({
+        required_error: "Loan Tenure is required",
+      })
+      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
+      .refine(
+        (value) => {
+          return !Number.isNaN(value) && Number(value) > 0;
+        },
+        { message: "Loan amount must be greater than zero" },
+      ),
+    AccountOfficerCode: z.string({
+      required_error: "Account officer code is required",
     }),
-  otherDocument: z.optional(z.instanceof(FileList)),
-  CustomerSignature: z
-    .string({ required_error: "Signature is required" })
-    .min(10, "Please provide a valid signature"),
-});
+    AccountOfficerEmail: z
+      .string({
+        required_error: "Account officer email is required",
+      })
+      .email("Please provide a valid email address"),
+    workIdentification: z
+      .instanceof(FileList, { message: "Please provide a valid file" })
+      .refine((files: FileList) => files.length > 0, "File is required"),
+    IdentificationImage: z.optional(z.instanceof(FileList)),
+    CustomerImage: z
+      .instanceof(FileList, { message: "Please provide a valid file" })
+      .refine((files: FileList) => files.length > 0, "File is required")
+      .refine(
+        (files) => files.length > 0 && files[0].type.startsWith("image/"),
+        {
+          message: "Please upload an image file",
+        },
+      ),
+    otherDocument: z.optional(z.instanceof(FileList)),
+    CustomerSignature: z
+      .string({ required_error: "Signature is required" })
+      .min(10, "Please provide a valid signature"),
+  });
+};
 
-type FormFields = z.infer<typeof schema>;
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n }),
@@ -95,14 +108,14 @@ const INITIAL_LOAN_PAYMENT = {
   monthlyRepayment: "0",
   totalPayment: "0",
   InterestRate: 0,
-  eligibleAmount: "0"
+  eligibleAmount: "0",
 };
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
-  const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null)
+  const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null);
   const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
@@ -115,6 +128,13 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const sigCanvas = useRef<any>();
 
   const accountService = new AccountService();
+
+  const schema = useMemo(
+    () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
+    [loanRepayment.eligibleAmount],
+  );
+
+  type FormFields = z.infer<typeof schema>;
 
   const {
     register,
@@ -142,12 +162,12 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     }
 
     const dataFromStorage = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_IPPIS_INFO`
+      `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
     );
 
     if (dataFromStorage) {
       const parsedData = JSON.parse(dataFromStorage) as IPPISResponseType;
-      setIppisData(parsedData)
+      setIppisData(parsedData);
     }
   }, [accountOfficerCode, setValue]);
 
@@ -176,7 +196,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       return;
     }
   }, [getValues, setValue]);
-
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -368,13 +387,13 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       customerInfo?.organizationEmployer ?? "",
       Number(amount),
       Number(loanTenor),
-      Number(ippisData?.netPay) ?? 0
+      Number(ippisData?.netPay) ?? 0,
     );
     setLoanRepayment({
       monthlyRepayment: repaymentInfo.monthlyInstallment,
       totalPayment: repaymentInfo.totalRepayment,
       InterestRate: repaymentInfo.InterestRate,
-      eligibleAmount: repaymentInfo.eligibleAmount
+      eligibleAmount: repaymentInfo.eligibleAmount,
     });
   };
 
