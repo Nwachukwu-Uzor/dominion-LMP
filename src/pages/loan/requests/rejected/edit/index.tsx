@@ -15,7 +15,7 @@ import {
 import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 import { AccountService, LoanService } from "@/services";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { isValid } from "date-fns";
@@ -39,175 +39,183 @@ import {
 } from "@/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-const schema = z.object({
-  title: z
-    .string({
-      required_error: "Title is required",
-    })
-    .min(2, "Title is required"),
-  LastName: z
-    .string({
-      required_error: "Last Name is required",
-    })
-    .min(2, "Last Name is required")
-    .refine((value) => !/\d/.test(value), {
-      message: "Last Name must not contain any digits",
-    }),
-  FirstName: z
-    .string({
-      required_error: "First Name is required",
-    })
-    .min(2, "First Name is required")
-    .refine((value) => !/\d/.test(value), {
-      message: "First Name must not contain any digits",
-    }),
-  OtherNames: z.optional(
-    z.string().refine((value) => !/\d/.test(value), {
-      message: "Other Names must not contain any digits",
-    }),
-  ),
-  BVN: z
-    .string({ required_error: "Bvn is required" })
-    .length(11, "BVN must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
-  NationalIdentityNo: z
-    .string()
-    .length(11, "NIN must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "NIN must contain only digits" })
-    .optional()
-    .or(z.literal("")),
 
-  Gender: z
-    .string({ required_error: "Gender is required" })
-    .min(4, { message: "Gender is required" }),
-  DateOfBirth: z
-    .string({ required_error: "Date of Birth is required" })
-    .refine(
-      (value) => {
-        const date = new Date(value);
-
-        return isValid(date);
-      },
-      { message: "Date of Birth is required" },
-    )
-    .refine(
-      (value) => {
-        const date = new Date(value).setHours(0, 0, 0, 0);
-        if (!isValid(date)) {
-          return false;
-        }
-        const today = new Date().setHours(0, 0, 0, 0);
-        return date < today;
-      },
-      { message: "Date of Birth has to be before today's date" },
+const getLoanSchema = (maxLoanAmount: number) => {
+  return z.object({
+    title: z
+      .string({
+        required_error: "Title is required",
+      })
+      .min(2, "Title is required"),
+    LastName: z
+      .string({
+        required_error: "Last Name is required",
+      })
+      .min(2, "Last Name is required")
+      .refine((value) => !/\d/.test(value), {
+        message: "Last Name must not contain any digits",
+      }),
+    FirstName: z
+      .string({
+        required_error: "First Name is required",
+      })
+      .min(2, "First Name is required")
+      .refine((value) => !/\d/.test(value), {
+        message: "First Name must not contain any digits",
+      }),
+    OtherNames: z.optional(
+      z.string().refine((value) => !/\d/.test(value), {
+        message: "Other Names must not contain any digits",
+      }),
     ),
-  state: z.string({ required_error: "State of origin is required" }),
-  PhoneNo: z
-    .string({
-      required_error: "Phone Number is required",
-    })
-    .length(11, "Phone Number must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-  alternatePhoneNo: z
-    .string({
-      required_error: "Preferred Phone Number is required",
-    })
-    .length(11, "Phone Number must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-  Email: z
-    .string({
-      required_error: "Email is required",
-    })
-    .refine(
-      (value) => {
-        // Check if the string is a valid email
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (emailPattern.test(value)) {
-          return true;
-        }
+    BVN: z
+      .string({ required_error: "Bvn is required" })
+      .length(11, "BVN must be 11 characters long")
+      .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
+    NationalIdentityNo: z
+      .string()
+      .length(11, "NIN must be 11 characters long")
+      .regex(/^[\d*]+$/, { message: "NIN must contain only digits" })
+      .optional()
+      .or(z.literal("")),
 
-        // Check if the string contains at least 60% asterisks
-        const totalLength = value.length;
-        const asteriskCount = value.split("*").length - 1;
-        const asteriskPercentage = (asteriskCount / totalLength) * 100;
+    Gender: z
+      .string({ required_error: "Gender is required" })
+      .min(4, { message: "Gender is required" }),
+    DateOfBirth: z
+      .string({ required_error: "Date of Birth is required" })
+      .refine(
+        (value) => {
+          const date = new Date(value);
 
-        return asteriskPercentage >= 60;
-      },
-      {
-        message: "Please provide a valid email address",
-      },
-    ),
-  NotificationPreference: z.string({
-    required_error: "Notification Preference is required",
-  }),
-  NextOfKinFirstName: z
-    .string({ required_error: "Next of Kin first name is required" })
-    .min(2, "Next of Kin first name must be at least 2 characters")
-    .refine((value) => !/\d/.test(value), {
-      message: "Next of Kin first name must not contain any digits",
+          return isValid(date);
+        },
+        { message: "Date of Birth is required" },
+      )
+      .refine(
+        (value) => {
+          const date = new Date(value).setHours(0, 0, 0, 0);
+          if (!isValid(date)) {
+            return false;
+          }
+          const today = new Date().setHours(0, 0, 0, 0);
+          return date < today;
+        },
+        { message: "Date of Birth has to be before today's date" },
+      ),
+    state: z.string({ required_error: "State of origin is required" }),
+    PhoneNo: z
+      .string({
+        required_error: "Phone Number is required",
+      })
+      .length(11, "Phone Number must be 11 characters long")
+      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
+    alternatePhoneNo: z
+      .string({
+        required_error: "Preferred Phone Number is required",
+      })
+      .length(11, "Phone Number must be 11 characters long")
+      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
+    Email: z
+      .string({
+        required_error: "Email is required",
+      })
+      .refine(
+        (value) => {
+          // Check if the string is a valid email
+          const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (emailPattern.test(value)) {
+            return true;
+          }
+
+          // Check if the string contains at least 60% asterisks
+          const totalLength = value.length;
+          const asteriskCount = value.split("*").length - 1;
+          const asteriskPercentage = (asteriskCount / totalLength) * 100;
+
+          return asteriskPercentage >= 60;
+        },
+        {
+          message: "Please provide a valid email address",
+        },
+      ),
+    NotificationPreference: z.string({
+      required_error: "Notification Preference is required",
     }),
-  NextOfKinLastName: z
-    .string({ required_error: "Next of Kin last name is required" })
-    .min(2, "Next of Kin last name must be at least 2 characters")
-    .refine((value) => !/\d/.test(value), {
-      message: "Next of Kin last name must not contain any digits",
+    NextOfKinFirstName: z
+      .string({ required_error: "Next of Kin first name is required" })
+      .min(2, "Next of Kin first name must be at least 2 characters")
+      .refine((value) => !/\d/.test(value), {
+        message: "Next of Kin first name must not contain any digits",
+      }),
+    NextOfKinLastName: z
+      .string({ required_error: "Next of Kin last name is required" })
+      .min(2, "Next of Kin last name must be at least 2 characters")
+      .refine((value) => !/\d/.test(value), {
+        message: "Next of Kin last name must not contain any digits",
+      }),
+    NextOfKinPhoneNo: z
+      .string({ required_error: "Next of Kin phone number is required" })
+      .length(11, "Phone Number must be 11 characters long")
+      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
+    Address: z
+      .string({ required_error: "Address is required" })
+      .min(5, { message: "Address is required" }),
+    organizationEmployer: z
+      .string({ required_error: "Organization Employer is required" })
+      .min(2, "OrganizationEmployer must be at least 2 characters long"),
+    ippisNumber: z.string({ required_error: "IPPIS number is required" }),
+    loanAmount: z
+      .string({
+        required_error: "Loan amount is required",
+      })
+      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
+        message: "Loan amount must be a valid number",
+      })
+      .refine(
+        (value) => {
+          const numberValue = Number(value.replace(/,/g, ""));
+          return (
+            !Number.isNaN(numberValue) &&
+            numberValue <= maxLoanAmount &&
+            numberValue > 0
+          );
+        },
+        {
+          message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
+        },
+      ),
+    loanTenor: z
+      .string({
+        required_error: "Loan Tenure is required",
+      })
+      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
+      .refine(
+        (value) => {
+          return !Number.isNaN(value) && Number(value) > 0;
+        },
+        { message: "Loan amount must be greater than zero" },
+      ),
+    AccountOfficerCode: z.string({
+      required_error: "Account officer code is required",
     }),
-  NextOfKinPhoneNo: z
-    .string({ required_error: "Next of Kin phone number is required" })
-    .length(11, "Phone Number must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-  Address: z
-    .string({ required_error: "Address is required" })
-    .min(5, { message: "Address is required" }),
-  organizationEmployer: z
-    .string({ required_error: "Organization Employer is required" })
-    .min(2, "OrganizationEmployer must be at least 2 characters long"),
-  ippisNumber: z.string({ required_error: "IPPIS number is required" }),
-  loanAmount: z
-    .string({
-      required_error: "Loan amount is required",
-    })
-    .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-      message: "Loan amount must be a valid number",
-    })
-    .refine(
-      (value) => {
-        const numberValue = Number(value.replace(/,/g, ""));
-        return !Number.isNaN(numberValue) && numberValue > 0;
-      },
-      { message: "Loan amount must be greater than zero" },
-    ),
-  loanTenor: z
-    .string({
-      required_error: "Loan Tenure is required",
-    })
-    .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-    .refine(
-      (value) => {
-        return !Number.isNaN(value) && Number(value) > 0;
-      },
-      { message: "Loan amount must be greater than zero" },
-    ),
-  AccountOfficerCode: z.string({
-    required_error: "Account officer code is required",
-  }),
-  AccountOfficerEmail: z
-    .string({
-      required_error: "Account officer email is required",
-    })
-    .email("Please provide a valid email address"),
-  workIdentification: z.optional(z.string()),
-  IdentificationImage: z.optional(z.string()),
-  CustomerImage: z.optional(z.string()),
-  otherDocument: z.optional(z.string()),
-  CustomerSignature: z.optional(z.string()),
-});
-
-type FormFields = z.infer<typeof schema>;
+    AccountOfficerEmail: z
+      .string({
+        required_error: "Account officer email is required",
+      })
+      .email("Please provide a valid email address"),
+    workIdentification: z.optional(z.string()),
+    IdentificationImage: z.optional(z.string()),
+    CustomerImage: z.optional(z.string()),
+    otherDocument: z.optional(z.string()),
+    CustomerSignature: z.optional(z.string()),
+  });
+};
 
 const INITIAL_LOAN_PAYMENT = {
   monthlyRepayment: "0",
   totalPayment: "0",
+  eligibleAmount: "0",
 };
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
@@ -268,6 +276,13 @@ const EditInformation: React.FC = () => {
     validateBVN({ id: data?.profile?.BVN ?? "" });
     validateIppisData(data?.profile?.ippisNumber ?? "");
   };
+
+  const schema = useMemo(
+    () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
+    [loanRepayment.eligibleAmount],
+  );
+
+  type FormFields = z.infer<typeof schema>;
 
   const {
     register,
@@ -458,10 +473,12 @@ const EditInformation: React.FC = () => {
       ippisData?.employerOrganization ?? "",
       Number(amount),
       Number(loanTenor),
+      Number(ippisData?.netPay) ?? 0,
     );
     setLoanRepayment({
       monthlyRepayment: repaymentInfo.monthlyInstallment,
       totalPayment: repaymentInfo.totalRepayment,
+      eligibleAmount: repaymentInfo.eligibleAmount,
     });
   };
 
@@ -618,11 +635,6 @@ const EditInformation: React.FC = () => {
                         setValue("NationalIdentityNo", value);
                         await trigger("NationalIdentityNo");
                       }}
-                      // disabled={
-                      //   (bvnDetails?.customerInfo !== undefined &&
-                      //     Object.keys(bvnDetails?.customerInfo).length > 0) ||
-                      //   customerLoans.length > 0
-                      // }
                     />
                   </div>
                   <div>
@@ -635,11 +647,6 @@ const EditInformation: React.FC = () => {
                         setValue("state", value);
                         await trigger("state");
                       }}
-                      // disabled={
-                      //   (bvnDetails?.customerInfo !== undefined &&
-                      //     Object.keys(bvnDetails?.customerInfo).length > 0) ||
-                      //   customerLoans.length > 0
-                      // }
                     >
                       <SelectTrigger className="">
                         <SelectValue placeholder="State of Origin" />
@@ -846,7 +853,16 @@ const EditInformation: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="col-span-full">
+                  <div>
+                    <Input
+                      label="Eligible Amount"
+                      value={formatNumberWithCommasWithOptionPeriodSign(
+                        loanRepayment.eligibleAmount,
+                      )}
+                      disabled={true}
+                    />
+                  </div>
+                  <div>
                     <Input
                       label="Monthly Payment"
                       value={formatNumberWithCommasWithOptionPeriodSign(

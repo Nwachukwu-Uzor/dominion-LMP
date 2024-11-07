@@ -13,7 +13,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Container, FileViewer, PageTitle, Record } from "@/components/shared";
 import { Card } from "@/components/ui/card";
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { SESSION_STORAGE_KEY } from "@/constants";
 
@@ -328,10 +328,12 @@ const RequestDetails = () => {
                   <Record
                     header="Opened Date"
                     content={
-                      formatDate(
-                        accountInfo.createdAt,
-                        "dd-MM-yyyy hh:mm:ss a",
-                      ) ?? ""
+                      isValid(accountInfo?.createdAt)
+                        ? formatDate(
+                            accountInfo.createdAt,
+                            "dd-MM-yyyy hh:mm:ss a",
+                          )
+                        : accountInfo?.createdAt
                     }
                   />
                   <Record header="Request Stage" content={accountInfo?.stage} />
@@ -372,12 +374,12 @@ const RequestDetails = () => {
                   <Record
                     header="Date of Birth"
                     content={
-                      accountInfo?.profile?.DateOfBirth
+                      isValid(accountInfo?.profile?.DateOfBirth)
                         ? formatDate(
                             accountInfo?.profile?.DateOfBirth,
                             "dd-MM-yy",
                           )
-                        : ""
+                        : accountInfo?.profile?.DateOfBirth
                     }
                   />
                   <Record

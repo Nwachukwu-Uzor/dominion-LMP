@@ -70,6 +70,7 @@ export const calculateEligibleAmount = (
   tenor: number,
   interestRate: number,
 ): number => {
+  
   const numerator = netPay * 0.32 * tenor;
   const interestRateInDecimal = interestRate / 100;
   const denominator = 1 + interestRateInDecimal * tenor;

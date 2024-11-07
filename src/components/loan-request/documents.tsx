@@ -51,10 +51,7 @@ const getLoanSchema = (maxLoanAmount: number) => {
       .refine(
         (value) => {
           const numberValue = Number(value.replace(/,/g, ""));
-          return (
-            !Number.isNaN(numberValue) &&
-            numberValue <= maxLoanAmount
-          );
+          return !Number.isNaN(numberValue) && numberValue <= maxLoanAmount && numberValue > 0;
         },
         {
           message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
@@ -98,7 +95,6 @@ const getLoanSchema = (maxLoanAmount: number) => {
       .min(10, "Please provide a valid signature"),
   });
 };
-
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n }),
@@ -385,8 +381,8 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     const amount = loanAmount.replace(/[^0-9.]/g, "");
     const repaymentInfo = calculateLoanForOrganization(
       customerInfo?.organizationEmployer ?? "",
-      Number(amount),
-      Number(loanTenor),
+      Number(amount) ?? 0,
+      Number(loanTenor) ?? 0,
       Number(ippisData?.netPay) ?? 0,
     );
     setLoanRepayment({
@@ -427,7 +423,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           <Select
             value={loanTenor}
             onValueChange={async (value) => {
-              handleTenureAndAmountFieldBlur(loanAmount, value);
+              handleTenureAndAmountFieldBlur(loanAmount ?? 0, value);
               setValue("loanTenor", value, {
                 shouldValidate: true,
               });
