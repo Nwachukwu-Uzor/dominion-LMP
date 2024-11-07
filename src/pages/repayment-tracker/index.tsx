@@ -17,7 +17,6 @@ import { Pagination } from "@/components/shared/pagination";
 import { formatDate } from "date-fns";
 import { FETCH_ALL_LOAN_REPAYMENTS } from "@/constants/query-keys";
 
-
 const INITIAL_CONFIG = {
   page: 1,
   size: 10,
@@ -25,8 +24,6 @@ const INITIAL_CONFIG = {
 };
 
 const RepaymentTracker = () => {
-  
-
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
   const [pageConfig, setPageConfig] = useState(INITIAL_CONFIG);
@@ -35,11 +32,10 @@ const RepaymentTracker = () => {
     queryKey: [FETCH_ALL_LOAN_REPAYMENTS, pageConfig.page],
     queryFn: async ({ queryKey }) => {
       const page = queryKey[1];
-      
 
       const data = await loanService.getAllLoanRepayments(
         Number(page),
-        pageConfig.size
+        pageConfig.size,
       );
       if (data && data?.payload) {
         setPageConfig((current) => ({
@@ -50,7 +46,6 @@ const RepaymentTracker = () => {
       return data?.payload;
     },
   });
-
 
   const columns: ColumnDef<LoanRepaymentType>[] = [
     {
@@ -74,15 +69,14 @@ const RepaymentTracker = () => {
       cell: ({ row }) => (
         <Link
           to={`/bulk-notifications/${row?.original?.UploadedFileID}`}
-          className="text-primary relative group w-fit font-bold text-sm flex items-center justify-center gap-0.5 hover:opacity-85"
+          className="group relative flex w-fit items-center justify-center gap-0.5 text-sm font-bold text-primary hover:opacity-85"
         >
           <IoEye /> Details
-          <span className="absolute left-0 h-[1.25px] -bottom-0.5 w-0 group-hover:w-full bg-primary ease-linear duration-150 opacity-85"></span>
+          <span className="absolute -bottom-0.5 left-0 h-[1.25px] w-0 bg-primary opacity-85 duration-150 ease-linear group-hover:w-full"></span>
         </Link>
       ),
     },
   ];
-
 
   const handlePageNumberClick = (pageNumber: number) => {
     setPageConfig((current) => ({ ...current, page: pageNumber }));
@@ -92,15 +86,14 @@ const RepaymentTracker = () => {
     <Container>
       <Link
         to="new"
-        className="max-w-[180px] gap-1 rounded-md active:scale-75 hover:opacity-60 duration-150 py-2 px-1 mb-4 flex items-center justify-center ml-auto bg-[#7E21CF] text-white text-xs font-medium"
+        className="mb-4 ml-auto flex max-w-[180px] items-center justify-center gap-1 rounded-md bg-[#7E21CF] px-1 py-2 text-xs font-medium text-white duration-150 hover:opacity-60 active:scale-75"
       >
         New Repayment Upload
       </Link>
-      <PageTitle title="Bulk Notifications" />
+      <PageTitle title="Loan Repayment (SMS)" />
       <Card className="my-2 rounded-md">
-        
         {isLoading ? (
-          <div className="min-h-[25vh] flex items-center justify-center">
+          <div className="flex min-h-[25vh] items-center justify-center">
             <ClipLoader size={25} color="#5b21b6" />
           </div>
         ) : data?.loanRepaymentRecords &&

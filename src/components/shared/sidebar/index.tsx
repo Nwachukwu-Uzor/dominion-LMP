@@ -67,7 +67,7 @@ export const Sidebar: React.FC<Props> = ({ open, handleToggleSidebar }) => {
     },
     {
       id: 5,
-      title: "Repayment Tracker",
+      title: "Repayment Tracker (SMS)",
       path: "/repayment-tracker",
       icon: <IoNotificationsCircleOutline />,
     },

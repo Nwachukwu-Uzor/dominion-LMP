@@ -8,9 +8,7 @@ import { NonPaginatedTable } from "@/components/shared/data-table";
 
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import {
-  SESSION_STORAGE_KEY,
-} from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 import { ClipLoader } from "react-spinners";
 import { formatDate } from "date-fns";
@@ -59,10 +57,10 @@ const Dashboard = () => {
       cell: ({ row }) => (
         <Link
           to={`/repayment-tracker/${row?.original?.UploadedFileID}`}
-          className="text-primary relative group w-fit font-bold text-sm flex items-center justify-center gap-0.5 hover:opacity-85"
+          className="group relative flex w-fit items-center justify-center gap-0.5 text-sm font-bold text-primary hover:opacity-85"
         >
           <IoEye /> Details
-          <span className="absolute left-0 h-[1.25px] -bottom-0.5 w-0 group-hover:w-full bg-primary ease-linear duration-150 opacity-85"></span>
+          <span className="absolute -bottom-0.5 left-0 h-[1.25px] w-0 bg-primary opacity-85 duration-150 ease-linear group-hover:w-full"></span>
         </Link>
       ),
     },
@@ -71,7 +69,7 @@ const Dashboard = () => {
   return (
     <Container>
       <PageTitle title="Dashboard" />
-      <article className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <article className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         <DashboardCard
           count={stats?.completed ?? 0}
           title="Completed Requests"
@@ -92,18 +90,18 @@ const Dashboard = () => {
         />
       </article>
       <Card className="mt-4 rounded-md">
-        <div className="flex justify-between items-center my-2">
-          <h2 className="font-bold text-lg my-2">Repayment Tracker</h2>
+        <div className="my-2 flex items-center justify-between">
+          <h2 className="my-2 text-lg font-bold">Repayment Tracker (SMS)</h2>
           <Link
             to="/repayment-tracker"
-            className="text-primary relative group w-fit font-semibold text-xs flex items-center justify-center gap-0.5 hover:opacity-85"
+            className="group relative flex w-fit items-center justify-center gap-0.5 text-xs font-semibold text-primary hover:opacity-85"
           >
             View All
-            <span className="absolute left-0 h-[1.25px] -bottom-0.5 w-0 group-hover:w-full bg-primary ease-linear duration-150 opacity-85"></span>
+            <span className="absolute -bottom-0.5 left-0 h-[1.25px] w-0 bg-primary opacity-85 duration-150 ease-linear group-hover:w-full"></span>
           </Link>
         </div>
         {isLoading ? (
-          <div className="min-h-[25vh] flex items-center justify-center">
+          <div className="flex min-h-[25vh] items-center justify-center">
             <ClipLoader size={25} color="#5b21b6" />
           </div>
         ) : data?.loanRepaymentRecords &&
