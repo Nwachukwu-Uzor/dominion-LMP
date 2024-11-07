@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { CustomerInfoType } from "@/types/shared";
+import { CustomerInfoType, IPPISResponseType } from "@/types/shared";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { IoMdClose } from "react-icons/io";
 
@@ -95,12 +95,14 @@ const INITIAL_LOAN_PAYMENT = {
   monthlyRepayment: "0",
   totalPayment: "0",
   InterestRate: 0,
+  eligibleAmount: "0"
 };
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
+  const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null)
   const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
@@ -137,6 +139,15 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   useEffect(() => {
     if (accountOfficerCode) {
       setValue("AccountOfficerCode", accountOfficerCode);
+    }
+
+    const dataFromStorage = sessionStorage.getItem(
+      `${SESSION_STORAGE_KEY}_IPPIS_INFO`
+    );
+
+    if (dataFromStorage) {
+      const parsedData = JSON.parse(dataFromStorage) as IPPISResponseType;
+      setIppisData(parsedData)
     }
   }, [accountOfficerCode, setValue]);
 
@@ -357,11 +368,13 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       customerInfo?.organizationEmployer ?? "",
       Number(amount),
       Number(loanTenor),
+      Number(ippisData?.netPay) ?? 0
     );
     setLoanRepayment({
       monthlyRepayment: repaymentInfo.monthlyInstallment,
       totalPayment: repaymentInfo.totalRepayment,
       InterestRate: repaymentInfo.InterestRate,
+      eligibleAmount: repaymentInfo.eligibleAmount
     });
   };
 
@@ -421,7 +434,16 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           </p>
         </div>
 
-        <div className="col-span-full">
+        <div>
+          <Input
+            label="Eligible Amount"
+            value={formatNumberWithCommasWithOptionPeriodSign(
+              loanRepayment.eligibleAmount,
+            )}
+            disabled={true}
+          />
+        </div>
+        <div>
           <Input
             label="Monthly Payment"
             value={formatNumberWithCommasWithOptionPeriodSign(
