@@ -15,7 +15,7 @@ import {
 import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 import { AccountService, LoanService } from "@/services";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import React, { ChangeEvent, useMemo, useState } from "react";
+import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { isValid } from "date-fns";
@@ -314,6 +314,12 @@ const EditInformation: React.FC = () => {
     "loanTenor",
     "loanAmount",
   ]);
+
+  useEffect(() => {
+    if (loanTenor) {
+      trigger("loanAmount");
+    }
+  }, [loanTenor, trigger, loanRepayment]);
 
   const today = new Date();
   today.setDate(today.getDate() - 1);
@@ -811,8 +817,12 @@ const EditInformation: React.FC = () => {
                         setValue(
                           "loanAmount",
                           formatNumberWithCommasWithOptionPeriodSign(value),
+                          {
+                            shouldValidate:
+                              loanTenor !== undefined &&
+                              !Number.isNaN(loanTenor),
+                          },
                         );
-                        await trigger("loanAmount");
                       }}
                       disabled={isSubmitting}
                       onBlur={() =>
