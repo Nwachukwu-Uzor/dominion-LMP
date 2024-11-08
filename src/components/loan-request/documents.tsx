@@ -58,7 +58,7 @@ const getLoanSchema = (maxLoanAmount: number) => {
           );
         },
         {
-          message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
+          message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
         },
       ),
     loanTenor: z
@@ -131,7 +131,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const schema = useMemo(
     () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
-    [loanRepayment.eligibleAmount],
+    [loanRepayment],
   );
 
   type FormFields = z.infer<typeof schema>;
@@ -155,6 +155,12 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     "loanTenor",
     "loanAmount",
   ]);
+
+  useEffect(() => {
+    if (loanTenor) {
+      trigger("loanAmount");
+    }
+  }, [loanTenor, trigger, loanRepayment]);
 
   useEffect(() => {
     if (accountOfficerCode) {
@@ -378,7 +384,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setShowTACPopup((shown) => !shown);
   };
 
-  const handleTenureAndAmountFieldBlur = (
+  const handleTenureAndAmountFieldBlur = async (
     loanAmount: string,
     loanTenor: string,
   ) => {
@@ -395,9 +401,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       InterestRate: repaymentInfo.InterestRate,
       eligibleAmount: repaymentInfo.eligibleAmount,
     });
-    if (amount <= repaymentInfo.eligibleAmount) {
-      setError("loanAmount", { message: "" });
-    }
   };
 
   return (
@@ -416,8 +419,10 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
               setValue(
                 "loanAmount",
                 formatNumberWithCommasWithOptionPeriodSign(value),
+                {
+                  shouldValidate: loanTenor !== undefined && !Number.isNaN(loanTenor),
+                },
               );
-              await trigger("loanAmount");
             }}
             disabled={isSubmitting}
             onBlur={() => handleTenureAndAmountFieldBlur(loanAmount, loanTenor)}
