@@ -404,6 +404,14 @@ const RequestDetails = () => {
                     content={accountInfo?.profile?.state}
                   />
                   <Record
+                    header="BVN"
+                    content={accountInfo?.profile?.BVN}
+                  />
+                  <Record
+                    header="IPPIS Number"
+                    content={accountInfo?.profile?.ippisNumber}
+                  />
+                  <Record
                     header="NIN"
                     content={accountInfo?.profile?.NationalIdentityNo}
                   />

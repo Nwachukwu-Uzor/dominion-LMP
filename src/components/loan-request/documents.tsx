@@ -51,7 +51,11 @@ const getLoanSchema = (maxLoanAmount: number) => {
       .refine(
         (value) => {
           const numberValue = Number(value.replace(/,/g, ""));
-          return !Number.isNaN(numberValue) && numberValue <= maxLoanAmount && numberValue > 0;
+          return (
+            !Number.isNaN(numberValue) &&
+            numberValue <= maxLoanAmount &&
+            numberValue > 0
+          );
         },
         {
           message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
@@ -391,6 +395,9 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       InterestRate: repaymentInfo.InterestRate,
       eligibleAmount: repaymentInfo.eligibleAmount,
     });
+    if (amount <= repaymentInfo.eligibleAmount) {
+      setError("loanAmount", { message: "" });
+    }
   };
 
   return (
