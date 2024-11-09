@@ -8,6 +8,8 @@ const calculateLoan = (
   tenureInMonths: number,
   netPay: number,
 ) => {
+  console.log({loanAmount, interestRate, tenureInMonths, netPay});
+  
   try {
     if (!loanAmount || !interestRate || !tenureInMonths || !netPay) {
       return {

@@ -525,6 +525,28 @@ const EditInformation: React.FC = () => {
     });
   };
 
+  useEffect(() => {
+    if (!ippisData || isIppisError) {
+      setLoanRepayment(prev => ({...prev, eligibleAmount: "0"}))
+      return;
+    }
+    if (ippisData && loanAmount && loanTenor) {
+      const amount = loanAmount.replace(/[^0-9.]/g, "");
+      const repaymentInfo = calculateLoanForOrganization(
+        ippisData?.employerOrganization ?? "",
+        Number(amount) ?? 0,
+        Number(loanTenor),
+        Number(ippisData?.netPay) ?? 0,
+      );
+  
+      setLoanRepayment({
+        monthlyRepayment: repaymentInfo.monthlyInstallment,
+        totalPayment: repaymentInfo.totalRepayment,
+        eligibleAmount: repaymentInfo.eligibleAmount ?? 0,
+      });
+    }
+  }, [loanAmount, loanTenor, ippisData, isIppisError])
+
   return (
     <>
       <Container>
