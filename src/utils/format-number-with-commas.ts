@@ -3,14 +3,17 @@ export const formatNumberWithCommas = (amount: number | string) => {
 };
 
 export const formatNumberWithCommasWithOptionPeriodSign = (
-  amount: number | string
+  amount: number | string,
 ) => {
+  if (Number.isNaN(amount)) {
+    return "";
+  }
   const [integerPart, decimalPart] = amount.toString().split(".");
 
   // Format the integer part with commas
   const formattedIntegerPart = integerPart.replace(
     /\B(?=(\d{3})+(?!\d))/g,
-    ","
+    ",",
   );
 
   // Combine the formatted integer part with the decimal part if it exists
@@ -43,7 +46,7 @@ export const formatCurrency = (currency: string) => {
   // Add commas for thousands separator
   formattedCurrency = formattedCurrency.replace(
     /\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g,
-    ","
+    ",",
   );
 
   // Add negative sign back if necessary

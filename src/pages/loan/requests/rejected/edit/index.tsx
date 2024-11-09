@@ -315,12 +315,6 @@ const EditInformation: React.FC = () => {
     "loanAmount",
   ]);
 
-  useEffect(() => {
-    if (loanTenor) {
-      trigger("loanAmount");
-    }
-  }, [loanTenor, trigger, loanRepayment]);
-
   const today = new Date();
   today.setDate(today.getDate() - 1);
   const yesterday = today.toISOString().split("T")[0];
@@ -379,14 +373,38 @@ const EditInformation: React.FC = () => {
         `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
         JSON.stringify(ippisData),
       );
+
+      console.log({ accountInfo });
+
+      if (accountInfo) {
+        const repaymentInfo = calculateLoanForOrganization(
+          ippisData?.employerOrganization ?? "",
+          Number(accountInfo.profile.loanAmount),
+          Number(accountInfo.profile.loanTenor),
+          Number(ippisData?.netPay) ?? 0,
+        );
+        setLoanRepayment({
+          monthlyRepayment: repaymentInfo.monthlyInstallment,
+          totalPayment: repaymentInfo.totalRepayment,
+          eligibleAmount: repaymentInfo.eligibleAmount,
+        });
+      }
       return ippisData;
     },
   });
 
+  useEffect(() => {
+    if (loanTenor && ippisData && loanAmount) {
+      trigger("loanAmount");
+    }
+  }, [loanTenor, trigger, loanRepayment, ippisData, loanAmount]);
+
   const handleValidateIppisData = async (
     event: React.FocusEvent<HTMLInputElement>,
   ) => {
-    await validateIppisData(event.target.value);
+    if (accountInfo) {
+      await validateIppisData(event.target.value);
+    }
   };
 
   const {
@@ -404,10 +422,27 @@ const EditInformation: React.FC = () => {
       }
       const accountData = await loanService.getLoanRequestById(accountId);
       populateFieldsWithCustomInfo(accountData?.accountRecords);
-
       return accountData?.accountRecords;
     },
   });
+
+  // useEffect(() => {
+  //   console.log({ ippisData });
+
+  //   if (ippisData && loanTenor && loanAmount) {
+  //     const repaymentInfo = calculateLoanForOrganization(
+  //       ippisData?.employerOrganization ?? "",
+  //       Number(loanAmount),
+  //       Number(loanTenor),
+  //       Number(ippisData?.netPay) ?? 0,
+  //     );
+  //     setLoanRepayment({
+  //       monthlyRepayment: repaymentInfo.monthlyInstallment,
+  //       totalPayment: repaymentInfo.totalRepayment,
+  //       eligibleAmount: repaymentInfo.eligibleAmount,
+  //     });
+  //   }
+  // }, [ippisData, loanTenor, loanAmount]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -481,10 +516,12 @@ const EditInformation: React.FC = () => {
       Number(loanTenor),
       Number(ippisData?.netPay) ?? 0,
     );
+    console.log({ repaymentInfo });
+
     setLoanRepayment({
       monthlyRepayment: repaymentInfo.monthlyInstallment,
       totalPayment: repaymentInfo.totalRepayment,
-      eligibleAmount: repaymentInfo.eligibleAmount,
+      eligibleAmount: repaymentInfo.eligibleAmount ?? 0,
     });
   };
 
@@ -867,7 +904,7 @@ const EditInformation: React.FC = () => {
                     <Input
                       label="Eligible Amount"
                       value={formatNumberWithCommasWithOptionPeriodSign(
-                        loanRepayment.eligibleAmount,
+                        loanRepayment?.eligibleAmount ?? 0,
                       )}
                       disabled={true}
                     />

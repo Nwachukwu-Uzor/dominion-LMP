@@ -9,7 +9,7 @@ const calculateLoan = (
   netPay: number,
 ) => {
   try {
-    if (!loanAmount || !interestRate || !tenureInMonths) {
+    if (!loanAmount || !interestRate || !tenureInMonths || !netPay) {
       return {
         monthlyInstallment: "0",
         totalRepayment: "0",
