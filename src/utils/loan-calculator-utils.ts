@@ -8,8 +8,6 @@ const calculateLoan = (
   tenureInMonths: number,
   netPay: number,
 ) => {
-  console.log({loanAmount, interestRate, tenureInMonths, netPay});
-  
   try {
     if (!loanAmount || !interestRate || !tenureInMonths || !netPay) {
       return {
@@ -72,7 +70,6 @@ export const calculateEligibleAmount = (
   tenor: number,
   interestRate: number,
 ): number => {
-  
   const numerator = netPay * 0.32 * tenor;
   const interestRateInDecimal = interestRate / 100;
   const denominator = 1 + interestRateInDecimal * tenor;
@@ -81,4 +78,56 @@ export const calculateEligibleAmount = (
   const roundedResult = Math.floor(result / 1000) * 1000;
 
   return roundedResult;
+};
+
+const getInterestRateByOrganization = (organizationName: string) => {
+  let interestRate = OTHERS_INTEREST_RATE;
+
+  if (organizationName.toUpperCase() === NIGERIAN_POLICE_FORCE) {
+    interestRate = POLICE_INTEREST_RATE;
+  }
+  return interestRate;
+};
+
+export const calculateEligibleAmountByOrganization = (
+  netPay: number,
+  tenor: number,
+  organizationName: string,
+) => {
+  const interestRate = getInterestRateByOrganization(organizationName);
+  return calculateEligibleAmount(netPay, tenor, interestRate);
+};
+
+export const getLoanRepaymentInfo = (
+  loanAmount: number,
+  loanTenorInMonths: number,
+  organizationName: string,
+) => {
+  console.log({ loanAmount, loanTenorInMonths });
+
+  if (
+    !loanAmount ||
+    !loanTenorInMonths ||
+    Number.isNaN(loanAmount) ||
+    Number.isNaN(loanTenorInMonths)
+  ) {
+    return {
+      totalRepayment: "0",
+      monthlyRepayment: "0",
+      interestRate: 0,
+    };
+  }
+
+  const interestRate = getInterestRateByOrganization(organizationName);
+  const interestRateInDecimal = interestRate / 100;
+  console.log({ interestRate, interestRateInDecimal });
+
+  const monthlyRepayment =
+    ((1 + interestRateInDecimal * loanTenorInMonths) * loanAmount) /
+    loanTenorInMonths;
+  return {
+    totalRepayment: (monthlyRepayment * loanTenorInMonths).toFixed(2),
+    monthlyRepayment: monthlyRepayment.toFixed(2),
+    interestRate,
+  };
 };

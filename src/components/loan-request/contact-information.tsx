@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,7 @@ import {
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { Textarea } from "../ui/textarea";
-import { BVNType, CustomerInfoType } from "@/types/shared";
+import { CustomerInfoType } from "@/types/shared";
 import { Label } from "../ui/label";
 import {
   Select,
@@ -23,7 +23,6 @@ import {
 } from "../ui/select";
 // import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
-import { maskData, maskValue } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { AccountService } from "@/services";
 
@@ -89,16 +88,16 @@ const schema = z.object({
   Address: z
     .string({ required_error: "Address is required" })
     .min(5, { message: "Address is required" }),
-  organizationEmployer: z
-    .string({ required_error: "Organization Employer is required" })
-    .min(2, "OrganizationEmployer must be at least 2 characters long"),
-  ippisNumber: z.string({ required_error: "IPPIS number is required" }),
+  BVN: z
+    .string({ required_error: "Bvn is required" })
+    .length(11, "BVN must be 11 characters long")
+    .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
 });
 
 type FormFields = z.infer<typeof schema>;
 
 export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
+  const [customerInfo] = useState<CustomerInfoType | null>(
     null,
   );
 
@@ -115,109 +114,153 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [NotificationPreference, ippisNumber] = watch([
+  const [NotificationPreference] = watch([
     "NotificationPreference",
-    "ippisNumber",
   ]);
 
   const accountService = new AccountService();
 
+
   const {
-    reset: resetIppisInfo,
-    data: ippisData,
-    isError: isIppisError,
-    mutateAsync: validateIppisData,
-    isPending: isLoadingIppisInfo,
+    mutate: validateBVN,
+    data: bvnDetails,
+    isError: isBvnError,
+    error: bvnError,
+    reset: resetBvnDetails,
+    isPending: isLoadingBvnDetails,
   } = useMutation({
-    mutationFn: async (data: string) => {
-      const response = await accountService.validateIPPISNumber({
-        IppisNumber: data,
-      });
-      const ippisData = response?.payload;
-      setValue("organizationEmployer", ippisData?.employerOrganization ?? "");
-      sessionStorage.setItem(
-        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
-        JSON.stringify(ippisData),
-      );
-      return ippisData;
+    mutationFn: async (data: { id: string }) => {
+      const response = await accountService.validateBVN(data);
+      if (!response?.payload) {
+        return;
+      }
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
+      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+      // resetForm();
+      // setValue("BVN", data.id);
+      // const { customerInfo, mainOneDetails } = response.payload;
+      // if (customerInfo && Object.keys(customerInfo).length > 0) {
+      //   populateFieldsWithCustomInfo(customerInfo);
+      //   const loans: AccountLoanType[] = [];
+      //   const data = customerInfo?.accountInfo;
+      //   if (data) {
+      //     data?.forEach((info) => {
+      //       info.accountLoans?.forEach((inf) => {
+      //         loans.push(inf);
+      //       });
+      //     });
+      //     setCustomerLoans(loans);
+      //   }
+      // } else {
+      //   const info = mainOneDetails.bvnDetails;
+
+      //   if (info) {
+      //     setValue("FirstName", capitalize(info?.FirstName) ?? "");
+      //     setValue("LastName", capitalize(info?.LastName) ?? "");
+      //     setValue("OtherNames", capitalize(info?.OtherNames) ?? "");
+      //     const parsedDate = parseDateToInputFormat(info.DOB);
+
+      //     if (parsedDate) {
+      //       setValue("DateOfBirth", parsedDate);
+      //     }
+      //   }
+      // }
+      return response?.payload;
     },
   });
 
-  useEffect(() => {
-    const data = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
-    );
-
-    const customerInfo = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
-    );
-
-    if (customerInfo) {
-      const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
-      setCustomerInfo(infoFromStorage);
-    }
-
-    if (data) {
-      const parsedData = JSON.parse(data) as FormFields;
-      const fields = getValues();
-      for (const key in parsedData) {
-        if (key in fields) {
-          setValue(
-            key as keyof FormFields,
-            parsedData[key as keyof FormFields] ?? "",
-          );
-        }
-      }
-      if (parsedData.NotificationPreference) {
-        setValue("NotificationPreference", parsedData.NotificationPreference);
-      }
-      if (parsedData.ippisNumber) {
-        setValue("ippisNumber", parsedData.ippisNumber);
-      }
-      if (customerInfo) {
-        const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
-        validateIppisData(infoFromStorage.ippisNumber);
-      } else {
-        validateIppisData(parsedData.ippisNumber);
-      }
+  const handleValidateBvn = async () => {
+    const { BVN } = getValues();
+    if (BVN?.length !== 11) {
       return;
     }
 
-    if (customerInfo) {
-      const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
-      const parseInfo = maskData(infoFromStorage);
-      setValue("Address", parseInfo.Address ?? "");
-      setValue("Email", parseInfo.Email ?? "");
-      setValue("PhoneNo", parseInfo.PhoneNo ?? "");
-      if (parseInfo?.NextOfKinName) {
-        const [NextOfKinFirstName, NextOfKinLastName] =
-          infoFromStorage.NextOfKinName.split(" ");
-        setValue("NextOfKinFirstName", maskValue(NextOfKinFirstName) ?? "");
-        setValue("NextOfKinLastName", maskValue(NextOfKinLastName) ?? "");
-      }
-      setValue("alternatePhoneNo", parseInfo.alternatePhoneNo);
-      setValue("NextOfKinPhoneNo", parseInfo.NextOfKinPhoneNo);
-      setValue("organizationEmployer", parseInfo.organizationEmployer);
-      setValue("ippisNumber", parseInfo.ippisNumber ?? "");
-      validateIppisData(infoFromStorage.ippisNumber);
-      return;
-    }
+    validateBVN({ id: BVN });
+  };
 
-    const bvnDetails = JSON.parse(
-      sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string,
-    ) as BVNType;
-
-    if (bvnDetails) {
-      setValue("PhoneNo", bvnDetails.phoneNumber);
-    }
-    return;
-  }, [setValue, getValues, validateIppisData]);
-
-  const handleValidateIppisData = async (
+  const handleBvnInputBlur = async (
     event: React.FocusEvent<HTMLInputElement>,
   ) => {
-    await validateIppisData(event.target.value);
+    const { value } = event.target;
+    if (value?.length === 11) {
+      await handleValidateBvn();
+    }
   };
+
+  // useEffect(() => {
+  //   const data = sessionStorage.getItem(
+  //     `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
+  //   );
+
+  //   const customerInfo = sessionStorage.getItem(
+  //     `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
+  //   );
+
+  //   if (customerInfo) {
+  //     const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
+  //     setCustomerInfo(infoFromStorage);
+  //   }
+
+  //   if (data) {
+  //     const parsedData = JSON.parse(data) as FormFields;
+  //     const fields = getValues();
+  //     for (const key in parsedData) {
+  //       if (key in fields) {
+  //         setValue(
+  //           key as keyof FormFields,
+  //           parsedData[key as keyof FormFields] ?? "",
+  //         );
+  //       }
+  //     }
+  //     if (parsedData.NotificationPreference) {
+  //       setValue("NotificationPreference", parsedData.NotificationPreference);
+  //     }
+  //     if (parsedData.ippisNumber) {
+  //       setValue("ippisNumber", parsedData.ippisNumber);
+  //     }
+  //     if (customerInfo) {
+  //       const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
+  //       validateIppisData(infoFromStorage.ippisNumber);
+  //     } else {
+  //       validateIppisData(parsedData.ippisNumber);
+  //     }
+  //     return;
+  //   }
+
+  //   if (customerInfo) {
+  //     const infoFromStorage = JSON.parse(customerInfo) as CustomerInfoType;
+  //     const parseInfo = maskData(infoFromStorage);
+  //     setValue("Address", parseInfo.Address ?? "");
+  //     setValue("Email", parseInfo.Email ?? "");
+  //     setValue("PhoneNo", parseInfo.PhoneNo ?? "");
+  //     if (parseInfo?.NextOfKinName) {
+  //       const [NextOfKinFirstName, NextOfKinLastName] =
+  //         infoFromStorage.NextOfKinName.split(" ");
+  //       setValue("NextOfKinFirstName", maskValue(NextOfKinFirstName) ?? "");
+  //       setValue("NextOfKinLastName", maskValue(NextOfKinLastName) ?? "");
+  //     }
+  //     setValue("alternatePhoneNo", parseInfo.alternatePhoneNo);
+  //     setValue("NextOfKinPhoneNo", parseInfo.NextOfKinPhoneNo);
+  //     setValue("organizationEmployer", parseInfo.organizationEmployer);
+  //     setValue("ippisNumber", parseInfo.ippisNumber ?? "");
+  //     validateIppisData(infoFromStorage.ippisNumber);
+  //     return;
+  //   }
+
+  //   const bvnDetails = JSON.parse(
+  //     sessionStorage.getItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`) as string,
+  //   ) as BVNType;
+
+  //   if (bvnDetails) {
+  //     setValue("PhoneNo", bvnDetails.phoneNumber);
+  //   }
+  //   return;
+  // }, [setValue, getValues, validateIppisData]);
+
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -245,7 +288,7 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
   };
 
   const handleBackClick = () => {
-    sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "1");
+    sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "0");
     handleUpdateStep(false);
   };
 
@@ -255,6 +298,49 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
+        <div>
+          <Input
+            label="Enter BVN"
+            {...register("BVN")}
+            error={
+              isBvnError
+                ? (bvnError as any)?.response?.data?.payload?.error
+                : errors?.BVN?.message
+            }
+            type="number"
+            onChange={async (e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              resetBvnDetails();
+              // setCustomerLoans([]);
+              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
+              // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+              // sessionStorage.removeItem(
+              //   `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
+              // );
+              // sessionStorage.removeItem(
+              //   `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
+              // );
+              // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
+              // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
+              // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
+              setValue("BVN", value);
+              await trigger("BVN");
+            }}
+            disabled={isLoadingBvnDetails}
+            onBlur={handleBvnInputBlur}
+          />
+          {isLoadingBvnDetails ? (
+            <>
+              <ClipLoader size={12} color="#5b21b6" /> <span>Loading...</span>
+            </>
+          ) : (
+            bvnDetails && (
+              <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
+                Validation Successful
+              </p>
+            )
+          )}
+        </div>
         <div>
           <Input
             label="Phone No"
@@ -325,45 +411,6 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("Address")}
             error={errors?.Address?.message}
             disabled={customerInfo !== null}
-          />
-        </div>
-        <div>
-          <Input
-            label="IPPIS Number"
-            onChange={(e) => {
-              setValue("ippisNumber", e.target.value, { shouldValidate: true });
-              setValue("organizationEmployer", "");
-              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
-              resetIppisInfo();
-            }}
-            value={ippisNumber}
-            error={errors?.ippisNumber?.message}
-            disabled={customerInfo !== null || isLoadingIppisInfo}
-            onBlur={handleValidateIppisData}
-          />
-          {isLoadingIppisInfo ? (
-            <>
-              <ClipLoader size={12} color="#5b21b6" />{" "}
-              <span className="text-xs font-semibold italic">Loading...</span>
-            </>
-          ) : isIppisError ? (
-            <p className="text-xs text-red-500">
-              Unable to retrieve ippis information
-            </p>
-          ) : (
-            ippisData && (
-              <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
-                Validation Successful
-              </p>
-            )
-          )}
-        </div>
-        <div>
-          <Input
-            label="Employer (Organization)"
-            {...register("organizationEmployer")}
-            error={errors?.organizationEmployer?.message}
-            disabled
           />
         </div>
 
