@@ -8,7 +8,7 @@ import {
 import { CustomerType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 
 import { useQuery } from "@tanstack/react-query";
 import { SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
@@ -110,11 +110,11 @@ const Customers = () => {
     },
     {
       header: "Date of Birth",
-      accessorFn: (row) => formatDate(row.DateOfBirth, "dd-MM-yyyy"),
+      accessorFn: (row) => isValid(row?.DateOfBirth) ? formatDate(row?.DateOfBirth, "dd-MM-yyyy") : "",
     },
     {
       header: "Opened Date",
-      accessorFn: (row) => formatDate(row?.createdAt, "dd-MM-yyy hh:mm:ss a"),
+      accessorFn: (row) =>  isValid(row?.createdAt) ? formatDate(row?.createdAt, "dd-MM-yyy hh:mm:ss a") : "",
     },
     {
       header: "Action",

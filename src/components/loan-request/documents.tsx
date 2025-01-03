@@ -1,10 +1,4 @@
-import React, {
-  ChangeEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,23 +9,13 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import SignaturePad from "react-signature-canvas";
 import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
-import {
-  calculateLoanForOrganization,
-  formatNumberWithCommasWithOptionPeriodSign,
-} from "@/utils";
 import { useSearchParams } from "react-router-dom";
 import { Checkbox } from "../ui/checkbox";
-import { Label } from "../ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { CustomerInfoType, IPPISResponseType } from "@/types/shared";
+  CustomerInfoType,
+  EligibilityDataType,
+  IPPISResponseType,
+} from "@/types/shared";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { IoMdClose } from "react-icons/io";
 
@@ -39,84 +23,35 @@ type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
 };
 
-const getLoanSchema = (maxLoanAmount: number) => {
-  return z.object({
-    loanAmount: z
-      .string({
-        required_error: "Loan amount is required",
-      })
-      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-        message: "Loan amount must be a valid number",
-      })
-      .refine(
-        (value) => {
-          const numberValue = Number(value.replace(/,/g, ""));
-          return (
-            !Number.isNaN(numberValue) &&
-            numberValue <= maxLoanAmount &&
-            numberValue > 0
-          );
-        },
-        {
-          message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
-        },
-      ),
-    loanTenor: z
-      .string({
-        required_error: "Loan Tenure is required",
-      })
-      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-      .refine(
-        (value) => {
-          return !Number.isNaN(value) && Number(value) > 0;
-        },
-        { message: "Loan amount must be greater than zero" },
-      ),
-    AccountOfficerCode: z.string({
-      required_error: "Account officer code is required",
+const schema = z.object({
+  AccountOfficerCode: z.string({
+    required_error: "Account officer code is required",
+  }),
+  AccountOfficerEmail: z
+    .string({
+      required_error: "Account officer email is required",
+    })
+    .email("Please provide a valid email address"),
+  workIdentification: z
+    .instanceof(FileList, { message: "Please provide a valid file" })
+    .refine((files: FileList) => files.length > 0, "File is required"),
+  IdentificationImage: z.optional(z.instanceof(FileList)),
+  CustomerImage: z
+    .instanceof(FileList, { message: "Please provide a valid file" })
+    .refine((files: FileList) => files.length > 0, "File is required")
+    .refine((files) => files.length > 0 && files[0].type.startsWith("image/"), {
+      message: "Please upload an image file",
     }),
-    AccountOfficerEmail: z
-      .string({
-        required_error: "Account officer email is required",
-      })
-      .email("Please provide a valid email address"),
-    workIdentification: z
-      .instanceof(FileList, { message: "Please provide a valid file" })
-      .refine((files: FileList) => files.length > 0, "File is required"),
-    IdentificationImage: z.optional(z.instanceof(FileList)),
-    CustomerImage: z
-      .instanceof(FileList, { message: "Please provide a valid file" })
-      .refine((files: FileList) => files.length > 0, "File is required")
-      .refine(
-        (files) => files.length > 0 && files[0].type.startsWith("image/"),
-        {
-          message: "Please upload an image file",
-        },
-      ),
-    otherDocument: z.optional(z.instanceof(FileList)),
-    CustomerSignature: z
-      .string({ required_error: "Signature is required" })
-      .min(10, "Please provide a valid signature"),
-  });
-};
-
-const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
-  (n) => ({ id: n, value: n.toString(), label: n }),
-);
-
-const INITIAL_LOAN_PAYMENT = {
-  monthlyRepayment: "0",
-  totalPayment: "0",
-  InterestRate: 0,
-  eligibleAmount: "0",
-};
+  otherDocument: z.optional(z.instanceof(FileList)),
+  CustomerSignature: z
+    .string({ required_error: "Signature is required" })
+    .min(10, "Please provide a valid signature"),
+});
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
-  const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null);
-  const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
   const [showTACPopup, setShowTACPopup] = useState(false);
   const [searchParams] = useSearchParams();
   const accountOfficerCode = searchParams.get("accountOfficerCode") as
@@ -129,11 +64,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const accountService = new AccountService();
 
-  const schema = useMemo(
-    () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
-    [loanRepayment],
-  );
-
   type FormFields = z.infer<typeof schema>;
 
   const {
@@ -141,7 +71,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setError,
     handleSubmit,
     setValue,
-    trigger,
     getValues,
     watch,
     clearErrors,
@@ -150,30 +79,11 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [customerSignature, loanTenor, loanAmount] = watch([
-    "CustomerSignature",
-    "loanTenor",
-    "loanAmount",
-  ]);
-
-  useEffect(() => {
-    if (loanTenor) {
-      trigger("loanAmount");
-    }
-  }, [loanTenor, trigger, loanRepayment]);
+  const [customerSignature] = watch(["CustomerSignature"]);
 
   useEffect(() => {
     if (accountOfficerCode) {
       setValue("AccountOfficerCode", accountOfficerCode);
-    }
-
-    const dataFromStorage = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
-    );
-
-    if (dataFromStorage) {
-      const parsedData = JSON.parse(dataFromStorage) as IPPISResponseType;
-      setIppisData(parsedData);
     }
   }, [accountOfficerCode, setValue]);
 
@@ -219,6 +129,17 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "2");
 
       const payload: Record<string, unknown> = {};
+
+      const eligibilityInformation = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_ELIGIBILITY_INFORMATION`,
+      ) as string;
+      const parsedEligibilityInfo = JSON.parse(
+        eligibilityInformation,
+      ) as Record<string, string>;
+
+      for (const key in parsedEligibilityInfo) {
+        payload[key] = parsedEligibilityInfo[key];
+      }
 
       const basicInformation = sessionStorage.getItem(
         `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
@@ -293,23 +214,49 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           values.otherDocument[0],
         );
       }
-      payload["loanAmount"] = Number(values?.loanAmount?.replace(/,/g, ""));
-      payload["loanAgreement"] = "Agreed";
-      payload["monthlyPayment"] = loanRepayment.monthlyRepayment.replace(
-        /,/g,
-        "",
-      );
-      payload["totalPayment"] = loanRepayment.totalPayment.replace(/,/g, "");
-      payload["InterestRate"] = loanRepayment.InterestRate;
 
+      const loanRepayment = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_ELIGIBILITY`,
+      );
+      if (loanRepayment) {
+        const eligibilityInfo = JSON.parse(
+          loanRepayment,
+        ) as EligibilityDataType;
+        payload["monthlyPayment"] = eligibilityInfo.monthlyRepayment.replace(
+          /,/g,
+          "",
+        );
+        payload["totalPayment"] = eligibilityInfo.totalRepayment.replace(
+          /,/g,
+          "",
+        );
+        payload["InterestRate"] = eligibilityInfo.interestRate;
+      }
+
+      const loanAmount = parsedEligibilityInfo["loanAmount"];
+      payload["loanAmount"] =
+        loanAmount && typeof loanAmount === "string"
+          ? Number(loanAmount.replace(/,/g, ""))
+          : "";
+      payload["loanAgreement"] = "Agreed";
+
+      const ippisData = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
+      ) as string;
+      const parsedIppisInfo = JSON.parse(ippisData) as IPPISResponseType;
+      payload["bankName"] = parsedIppisInfo?.bankName;
+      payload["salaryAccountNumber"] = parsedIppisInfo?.accountNumber;
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_MESSAGE`,
         response?.message ?? "",
       );
+      sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "3");
       handleUpdateStep();
     } catch (error: any) {
+      console.log({ error });
+
       setError("root", {
         type: "deps",
         message:
@@ -384,101 +331,12 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setShowTACPopup((shown) => !shown);
   };
 
-  const handleTenureAndAmountFieldBlur = async (
-    loanAmount: string,
-    loanTenor: string,
-  ) => {
-    const amount = loanAmount.replace(/[^0-9.]/g, "");
-    const repaymentInfo = calculateLoanForOrganization(
-      customerInfo?.organizationEmployer ?? "",
-      Number(amount) ?? 0,
-      Number(loanTenor) ?? 0,
-      Number(ippisData?.netPay) ?? 0,
-    );
-    setLoanRepayment({
-      monthlyRepayment: repaymentInfo.monthlyInstallment,
-      totalPayment: repaymentInfo.totalRepayment,
-      InterestRate: repaymentInfo.InterestRate,
-      eligibleAmount: repaymentInfo.eligibleAmount,
-    });
-  };
-
   return (
     <>
       <form
         className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div>
-          <Input
-            label="Loan Amount"
-            {...register("loanAmount")}
-            error={errors?.loanAmount?.message}
-            onChange={async (e) => {
-              const value = e.target.value.replace(/[^0-9.]/g, "");
-              setValue(
-                "loanAmount",
-                formatNumberWithCommasWithOptionPeriodSign(value),
-                {
-                  shouldValidate: loanTenor !== undefined && !Number.isNaN(loanTenor),
-                },
-              );
-            }}
-            disabled={isSubmitting}
-            onBlur={() => handleTenureAndAmountFieldBlur(loanAmount, loanTenor)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Loan Tenure: <i className="text-sx font-light">Months</i>
-          </Label>
-          <Select
-            value={loanTenor}
-            onValueChange={async (value) => {
-              handleTenureAndAmountFieldBlur(loanAmount ?? 0, value);
-              setValue("loanTenor", value, {
-                shouldValidate: true,
-              });
-            }}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Loan Tenor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Loan Tenor: </SelectLabel>
-                {TENURE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.loanTenor?.message}
-          </p>
-        </div>
-
-        <div>
-          <Input
-            label="Eligible Amount"
-            value={formatNumberWithCommasWithOptionPeriodSign(
-              loanRepayment.eligibleAmount,
-            )}
-            disabled={true}
-          />
-        </div>
-        <div>
-          <Input
-            label="Monthly Payment"
-            value={formatNumberWithCommasWithOptionPeriodSign(
-              loanRepayment.monthlyRepayment,
-            )}
-            disabled={true}
-          />
-        </div>
         <div>
           <Input
             label="Account Officer Code"

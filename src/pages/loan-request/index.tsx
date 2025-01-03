@@ -2,6 +2,7 @@ import {
   BasicInformation,
   ContactInformation,
   Documents,
+  EligiblityCheck,
   RequestSucessful,
 } from "@/components/loan-request";
 import { SESSION_STORAGE_KEY, LINK_STATUS_OPTIONS } from "@/constants";
@@ -13,6 +14,7 @@ import { ClipLoader } from "react-spinners";
 import Stepper from "react-stepper-horizontal";
 
 const steps = [
+  { title: "Eligiblity Check" },
   { title: "Basic Information" },
   { title: "Contact Information" },
   { title: "Documents" },
@@ -52,17 +54,22 @@ const LoanRequest = () => {
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_ELIGIBILITY_INFORMATION`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_ELIGIBILITY`);
+    sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
   };
 
   function getSectionComponent() {
     switch (activeStep) {
       case 0:
-        return <BasicInformation handleUpdateStep={handleUpdateStep} />;
+        return <EligiblityCheck handleUpdateStep={handleUpdateStep} />;
       case 1:
-        return <ContactInformation handleUpdateStep={handleUpdateStep} />;
+        return <BasicInformation handleUpdateStep={handleUpdateStep} />;
       case 2:
-        return <Documents handleUpdateStep={handleUpdateStep} />;
+        return <ContactInformation handleUpdateStep={handleUpdateStep} />;
       case 3:
+        return <Documents handleUpdateStep={handleUpdateStep} />;
+      case 4:
         return <RequestSucessful handleClose={handleClose} />;
       default:
         return null;

@@ -403,10 +403,7 @@ const RequestDetails = () => {
                     header="State of Origin"
                     content={accountInfo?.profile?.state}
                   />
-                  <Record
-                    header="BVN"
-                    content={accountInfo?.profile?.BVN}
-                  />
+                  <Record header="BVN" content={accountInfo?.profile?.BVN} />
                   <Record
                     header="IPPIS Number"
                     content={accountInfo?.profile?.ippisNumber}
@@ -560,10 +557,12 @@ const RequestDetails = () => {
       <Dialog open={openTokenModal}>
         <DialogContent className="gap-0">
           <div className="flex justify-end">
-            <button disabled={isSubmitting}>
+            <button
+              disabled={isSubmitting}
+              onClick={() => setOpenTokenModal(false)}
+            >
               <IoMdClose
                 className="cursor-pointer transition-all hover:scale-150"
-                // onClick={onClose}
               />
             </button>
           </div>
