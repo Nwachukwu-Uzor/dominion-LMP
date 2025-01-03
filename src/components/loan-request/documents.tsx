@@ -14,6 +14,7 @@ import { Checkbox } from "../ui/checkbox";
 import {
   CustomerInfoType,
   EligibilityDataType,
+  IPPISResponseType,
 } from "@/types/shared";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { IoMdClose } from "react-icons/io";
@@ -84,7 +85,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     if (accountOfficerCode) {
       setValue("AccountOfficerCode", accountOfficerCode);
     }
-
   }, [accountOfficerCode, setValue]);
 
   useEffect(() => {
@@ -129,6 +129,17 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "2");
 
       const payload: Record<string, unknown> = {};
+
+      const eligibilityInformation = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_ELIGIBILITY_INFORMATION`,
+      ) as string;
+      const parsedEligibilityInfo = JSON.parse(
+        eligibilityInformation,
+      ) as Record<string, string>;
+
+      for (const key in parsedEligibilityInfo) {
+        payload[key] = parsedEligibilityInfo[key];
+      }
 
       const basicInformation = sessionStorage.getItem(
         `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
@@ -220,17 +231,21 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           "",
         );
         payload["InterestRate"] = eligibilityInfo.interestRate;
-      } 
+      }
 
-      const loanAmount = parsedBasicInfo["loanAmount"];
-      // console.log({ loanAmount });
-
+      const loanAmount = parsedEligibilityInfo["loanAmount"];
       payload["loanAmount"] =
         loanAmount && typeof loanAmount === "string"
           ? Number(loanAmount.replace(/,/g, ""))
           : "";
       payload["loanAgreement"] = "Agreed";
 
+      const ippisData = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
+      ) as string;
+      const parsedIppisInfo = JSON.parse(ippisData) as IPPISResponseType;
+      payload["bankName"] = parsedIppisInfo?.bankName;
+      payload["salaryAccountNumber"] = parsedIppisInfo?.accountNumber;
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
       sessionStorage.setItem(
