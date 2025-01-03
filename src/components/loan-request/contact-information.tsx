@@ -10,7 +10,7 @@ import {
   SESSION_STORAGE_KEY,
 } from "@/constants";
 import { Textarea } from "../ui/textarea";
-import { CustomerInfoType } from "@/types/shared";
+import { AccountLoanType, CustomerInfoType } from "@/types/shared";
 import { Label } from "../ui/label";
 import {
   Select,
@@ -25,6 +25,10 @@ import {
 import { ClipLoader } from "react-spinners";
 import { useMutation } from "@tanstack/react-query";
 import { AccountService } from "@/services";
+import { NonPaginatedTable } from "../shared";
+import { ColumnDef } from "@tanstack/react-table";
+import { formatCurrency } from "@/utils";
+import { formatDate } from "date-fns";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -97,9 +101,10 @@ const schema = z.object({
 type FormFields = z.infer<typeof schema>;
 
 export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
-  const [customerInfo] = useState<CustomerInfoType | null>(
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
+  const [customerLoans, setCustomerLoans] = useState<AccountLoanType[]>([]);
 
   const {
     register,
@@ -114,12 +119,32 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [NotificationPreference] = watch([
-    "NotificationPreference",
-  ]);
+  const [NotificationPreference] = watch(["NotificationPreference"]);
 
   const accountService = new AccountService();
 
+  const loanTableColumns: ColumnDef<AccountLoanType>[] = [
+    {
+      header: "#",
+      accessorFn: (_dat, index) => index + 1,
+    },
+    {
+      header: "Loan Amount",
+      accessorFn: (data) => formatCurrency(data?.Amount),
+    },
+    {
+      header: "Total Amount Paid",
+      accessorFn: (data) => formatCurrency(data?.paidAmount),
+    },
+    {
+      header: "Outstanding Amount",
+      accessorFn: (data) => formatCurrency(data?.outStandingLoanAmount),
+    },
+    {
+      header: "Created At",
+      accessorFn: (data) => formatDate(data.createdAt, "dd-MM-yyyy HH:mm:ss"),
+    },
+  ];
 
   const {
     mutate: validateBVN,
@@ -134,41 +159,24 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (!response?.payload) {
         return;
       }
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
-      // sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+
       // resetForm();
-      // setValue("BVN", data.id);
-      // const { customerInfo, mainOneDetails } = response.payload;
-      // if (customerInfo && Object.keys(customerInfo).length > 0) {
-      //   populateFieldsWithCustomInfo(customerInfo);
-      //   const loans: AccountLoanType[] = [];
-      //   const data = customerInfo?.accountInfo;
-      //   if (data) {
-      //     data?.forEach((info) => {
-      //       info.accountLoans?.forEach((inf) => {
-      //         loans.push(inf);
-      //       });
-      //     });
-      //     setCustomerLoans(loans);
-      //   }
-      // } else {
-      //   const info = mainOneDetails.bvnDetails;
-
-      //   if (info) {
-      //     setValue("FirstName", capitalize(info?.FirstName) ?? "");
-      //     setValue("LastName", capitalize(info?.LastName) ?? "");
-      //     setValue("OtherNames", capitalize(info?.OtherNames) ?? "");
-      //     const parsedDate = parseDateToInputFormat(info.DOB);
-
-      //     if (parsedDate) {
-      //       setValue("DateOfBirth", parsedDate);
-      //     }
-      //   }
-      // }
+      setValue("BVN", data.id);
+      const { customerInfo } = response.payload;
+      if (customerInfo && Object.keys(customerInfo).length > 0) {
+        // populateFieldsWithCustomInfo(customerInfo);
+        setCustomerInfo(customerInfo);
+        const loans: AccountLoanType[] = [];
+        const data = customerInfo?.accountInfo;
+        if (data) {
+          data?.forEach((info) => {
+            info.accountLoans?.forEach((inf) => {
+              loans.push(inf);
+            });
+          });
+          setCustomerLoans(loans);
+        }
+      }
       return response?.payload;
     },
   });
@@ -261,12 +269,15 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
   //   return;
   // }, [setValue, getValues, validateIppisData]);
 
-
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
       // await accountService.validateIPPISNumber({
       //   IppisNumber: values.ippisNumber,
       // });
+      if (!bvnDetails) {
+        toast.warn("Please provide a valid BVN to proccess....");
+        return;
+      }
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`,
         JSON.stringify(values),
@@ -444,6 +455,16 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             disabled={customerInfo !== null}
           />
         </div>
+        {customerLoans && customerLoans.length > 0 ? (
+          <div className="lg:col-span-full">
+            <h3 className="mb-2 text-sm font-medium">Loans</h3>
+            <NonPaginatedTable
+              isSearchable={false}
+              columns={loanTableColumns}
+              data={customerLoans}
+            />
+          </div>
+        ) : null}
         <p className="my-1 text-sm font-semibold text-red-600 lg:col-span-full">
           {errors?.root?.message}
         </p>

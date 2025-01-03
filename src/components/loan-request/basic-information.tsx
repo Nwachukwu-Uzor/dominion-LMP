@@ -331,15 +331,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         `${SESSION_STORAGE_KEY}_ELIGIBILITY`,
         JSON.stringify(loanRepayment),
       );
-      // if (
-      //   bvnDetails?.customerInfo &&
-      //   Object.keys(bvnDetails.customerInfo).length > 0
-      // ) {
-      //   sessionStorage.setItem(
-      //     `${SESSION_STORAGE_KEY}_CUSTOMER_INFO`,
-      //     JSON.stringify(bvnDetails.customerInfo),
-      //   );
-      // }
       handleUpdateStep();
     } catch (error: any) {
       setError("root", {
