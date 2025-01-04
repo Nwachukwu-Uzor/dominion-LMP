@@ -43,6 +43,10 @@ type Props = {
 };
 
 const schema = z.object({
+  BVN: z
+    .string({ required_error: "Bvn is required" })
+    .length(11, "BVN must be 11 characters long")
+    .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
   title: z
     .string({
       required_error: "Title is required",
@@ -69,10 +73,6 @@ const schema = z.object({
       message: "Other Names must not contain any digits",
     }),
   ),
-  BVN: z
-    .string({ required_error: "Bvn is required" })
-    .length(11, "BVN must be 11 characters long")
-    .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
   NationalIdentityNo: z
     .string()
     .length(11, "NIN must be 11 characters long")
@@ -107,10 +107,10 @@ const schema = z.object({
   state: z.string({ required_error: "State of origin is required" }),
 });
 
-type FormFields = z.infer<typeof schema>;
-
 export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerLoans, setCustomerLoans] = useState<AccountLoanType[]>([]);
+
+  type FormFields = z.infer<typeof schema>;
 
   const {
     register,
@@ -120,8 +120,8 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     trigger,
     getValues,
     watch,
-    reset: resetForm,
     formState: { errors },
+    reset: resetForm,
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
   });
@@ -130,13 +130,16 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const populateFieldsWithCustomInfo = (info: CustomerInfoType) => {
     const data = maskData(info);
+    console.log(info);
 
     setValue("FirstName", data?.FirstName ?? "");
     setValue("LastName", data?.LastName ?? "");
     setValue("Gender", GENDER_ENUM[info?.Gender] ?? "");
     setValue("NationalIdentityNo", data?.NationalIdentityNo ?? "");
     setValue("title", data?.title ?? "");
-    setValue("DateOfBirth", info?.DateOfBirth ?? "");
+    if (info.DateOfBirth) {
+      setValue("DateOfBirth", info.DateOfBirth ?? "");
+    }
     setValue("state", info?.state ?? "");
     sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION}`);
   };
@@ -154,27 +157,12 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (!response?.payload) {
         return;
       }
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BASIC_INFORMATION`);
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CONTACT_INFORMATION`);
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
-      sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_CUSTOMER_INFO`);
+
       resetForm();
       setValue("BVN", data.id);
       const { customerInfo, mainOneDetails } = response.payload;
       if (customerInfo && Object.keys(customerInfo).length > 0) {
         populateFieldsWithCustomInfo(customerInfo);
-        const loans: AccountLoanType[] = [];
-        const data = customerInfo?.accountInfo;
-        if (data) {
-          data?.forEach((info) => {
-            info.accountLoans?.forEach((inf) => {
-              loans.push(inf);
-            });
-          });
-          setCustomerLoans(loans);
-        }
       } else {
         const info = mainOneDetails.bvnDetails;
 
@@ -187,23 +175,40 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           if (parsedDate) {
             setValue("DateOfBirth", parsedDate);
           }
+
+          const loans: AccountLoanType[] = [];
+          const data = customerInfo?.accountInfo;
+          if (data) {
+            data?.forEach((info) => {
+              info.accountLoans?.forEach((inf) => {
+                loans.push(inf);
+              });
+            });
+            setCustomerLoans(loans);
+          }
         }
       }
       return response?.payload;
     },
   });
 
-  // const customerLoans = useMemo(() => {
-  //   const loans: AccountLoanType[] = [];
-  //   if (
-  //     !bvnDetails ||
-  //     !bvnDetails?.customerInfo ||
-  //     Object.keys(bvnDetails?.customerInfo).length === 0
-  //   ) {
-  //     return loans;
-  //   }
+  const handleValidateBvn = async () => {
+    const { BVN } = getValues();
+    if (BVN?.length !== 11) {
+      return;
+    }
 
-  // }, [bvnDetails]);
+    validateBVN({ id: BVN });
+  };
+
+  const handleBvnInputBlur = async (
+    event: React.FocusEvent<HTMLInputElement>,
+  ) => {
+    const { value } = event.target;
+    if (value?.length === 11) {
+      await handleValidateBvn();
+    }
+  };
 
   const [Gender, state] = watch(["Gender", "state"]);
 
@@ -239,6 +244,10 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       if (parsedData.title) {
         setValue("title", parsedData.title);
       }
+
+      if (parsedData.BVN) {
+        validateBVN({ id: parsedData.BVN });
+      }
     }
 
     const customerInfo = sessionStorage.getItem(
@@ -260,15 +269,21 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
         }
       }
     }
-  }, [setValue, getValues]);
+  }, [setValue, getValues, validateBVN]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
+      console.log("here");
+
+      if (!bvnDetails) {
+        toast.warn("Please provide valid BVN details to proceed...");
+        return;
+      }
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
         JSON.stringify(values),
       );
-      sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "1");
+      sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "2");
       if (
         bvnDetails?.customerInfo &&
         Object.keys(bvnDetails.customerInfo).length > 0
@@ -290,24 +305,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       toast.error(
         error?.response?.data?.message ?? error?.message ?? "An error occurred",
       );
-    }
-  };
-
-  const handleValidateBvn = async () => {
-    const { BVN } = getValues();
-    if (BVN?.length !== 11) {
-      return;
-    }
-
-    validateBVN({ id: BVN });
-  };
-
-  const handleBvnInputBlur = async (
-    event: React.FocusEvent<HTMLInputElement>,
-  ) => {
-    const { value } = event.target;
-    if (value?.length === 11) {
-      await handleValidateBvn();
     }
   };
 
@@ -333,6 +330,11 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       accessorFn: (data) => formatDate(data.createdAt, "dd-MM-yyyy HH:mm:ss"),
     },
   ];
+
+  const handleBackClick = () => {
+    sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "0");
+    handleUpdateStep(false);
+  };
 
   return (
     <>
@@ -364,7 +366,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
               );
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_MESSAGE`);
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_DOCUMENTS`);
-              sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
               setValue("BVN", value);
               await trigger("BVN");
             }}
@@ -539,10 +540,17 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             />
           </div>
         ) : null}
-        <div className="lg:col-span-full">
-          <div className="col-span-full flex items-center gap-2">
-            <Button className="w-full md:max-w-[250px]">Next</Button>
-          </div>
+        <div className="col-span-full flex items-center gap-2">
+          <Button
+            className="w-full bg-black md:max-w-[200px]"
+            type="button"
+            onClick={handleBackClick}
+          >
+            Back
+          </Button>
+          <Button className="w-full md:max-w-[200px]" type="submit">
+            Next
+          </Button>
         </div>
       </form>
     </>

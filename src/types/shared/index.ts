@@ -17,3 +17,4 @@ export type { IPPISInfoType, IPPISResponseType } from "./ippis-info-type";
 export type { BVNType, BVNValidationType } from "./bvn-validation-type"
 export type { LoanFrequencyType } from "./loan-frequency-type"
 export type { CustomerInfoType, AccountInfoType } from "./customer-info-type"
+export type { EligibilityDataType } from "./eligibility-data-type"

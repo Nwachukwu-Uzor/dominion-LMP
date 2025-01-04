@@ -17,4 +17,9 @@ export { getBase64FileType } from "./get-base-64-file-type";
 export { capitalize } from "./text-format-utils";
 export { maskData, maskValue } from "./mask-data";
 export { formatDataForReport } from "./report-download-utils";
-export { calculateLoanForOrganization, calculateEligibleAmount } from "./loan-calculator-utils";
+export {
+  calculateLoanForOrganization,
+  calculateEligibleAmount,
+  calculateEligibleAmountByOrganization,
+  getLoanRepaymentInfo
+} from "./loan-calculator-utils";
