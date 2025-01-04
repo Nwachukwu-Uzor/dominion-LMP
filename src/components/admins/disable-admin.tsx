@@ -21,7 +21,6 @@ export const DisableAdmin = ({ openModal, onClose, admin }: Props) => {
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const adminService = new AdminService(token);
-  console.log(admin);
 
   const { isPending, mutate, isError, error } = useMutation({
     mutationFn: async () => {

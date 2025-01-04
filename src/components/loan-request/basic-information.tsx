@@ -130,7 +130,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const populateFieldsWithCustomInfo = (info: CustomerInfoType) => {
     const data = maskData(info);
-    console.log(info);
 
     setValue("FirstName", data?.FirstName ?? "");
     setValue("LastName", data?.LastName ?? "");
@@ -273,7 +272,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-      console.log("here");
 
       if (!bvnDetails) {
         toast.warn("Please provide valid BVN details to proceed...");

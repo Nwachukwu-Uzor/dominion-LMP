@@ -21,5 +21,6 @@ export {
   calculateLoanForOrganization,
   calculateEligibleAmount,
   calculateEligibleAmountByOrganization,
-  getLoanRepaymentInfo
+  getLoanRepaymentInfo,
 } from "./loan-calculator-utils";
+export { convertToBase64 } from "./convert-to-base64";

@@ -1,10 +1,4 @@
-import React, {
-  ChangeEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,109 +9,65 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 import SignaturePad from "react-signature-canvas";
 import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
-import {
-  calculateLoanForOrganization,
-  formatNumberWithCommasWithOptionPeriodSign,
-} from "@/utils";
 import { useSearchParams } from "react-router-dom";
 import { Checkbox } from "../ui/checkbox";
-import { Label } from "../ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { CustomerInfoType, IPPISResponseType } from "@/types/shared";
+  CustomerInfoType,
+  EligibilityDataType,
+  IPPISResponseType,
+} from "@/types/shared";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { IoMdClose } from "react-icons/io";
+import { convertToBase64 } from "@/utils";
+import { AddDocumentForm, NonPaginatedTable } from "../shared";
+import { ColumnDef } from "@tanstack/react-table";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
 };
 
-const getLoanSchema = (maxLoanAmount: number) => {
-  return z.object({
-    loanAmount: z
-      .string({
-        required_error: "Loan amount is required",
-      })
-      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-        message: "Loan amount must be a valid number",
-      })
-      .refine(
-        (value) => {
-          const numberValue = Number(value.replace(/,/g, ""));
-          return (
-            !Number.isNaN(numberValue) &&
-            numberValue <= maxLoanAmount &&
-            numberValue > 0
-          );
-        },
-        {
-          message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
-        },
-      ),
-    loanTenor: z
-      .string({
-        required_error: "Loan Tenure is required",
-      })
-      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-      .refine(
-        (value) => {
-          return !Number.isNaN(value) && Number(value) > 0;
-        },
-        { message: "Loan amount must be greater than zero" },
-      ),
-    AccountOfficerCode: z.string({
-      required_error: "Account officer code is required",
+const schema = z.object({
+  AccountOfficerCode: z.string({
+    required_error: "Account officer code is required",
+  }),
+  AccountOfficerEmail: z
+    .string({
+      required_error: "Account officer email is required",
+    })
+    .email("Please provide a valid email address"),
+  workIdentification: z
+    .instanceof(FileList, { message: "Please provide a valid file" })
+    .refine((files: FileList) => files.length > 0, "File is required"),
+  IdentificationImage: z.optional(z.instanceof(FileList)),
+  CustomerImage: z
+    .instanceof(FileList, { message: "Please provide a valid file" })
+    .refine((files: FileList) => files.length > 0, "File is required")
+    .refine((files) => files.length > 0 && files[0].type.startsWith("image/"), {
+      message: "Please upload an image file",
     }),
-    AccountOfficerEmail: z
-      .string({
-        required_error: "Account officer email is required",
-      })
-      .email("Please provide a valid email address"),
-    workIdentification: z
-      .instanceof(FileList, { message: "Please provide a valid file" })
-      .refine((files: FileList) => files.length > 0, "File is required"),
-    IdentificationImage: z.optional(z.instanceof(FileList)),
-    CustomerImage: z
-      .instanceof(FileList, { message: "Please provide a valid file" })
-      .refine((files: FileList) => files.length > 0, "File is required")
-      .refine(
-        (files) => files.length > 0 && files[0].type.startsWith("image/"),
-        {
-          message: "Please upload an image file",
-        },
-      ),
-    otherDocument: z.optional(z.instanceof(FileList)),
-    CustomerSignature: z
-      .string({ required_error: "Signature is required" })
-      .min(10, "Please provide a valid signature"),
-  });
+  CustomerSignature: z
+    .string({ required_error: "Signature is required" })
+    .min(10, "Please provide a valid signature"),
+});
+
+type DocumentType = {
+  id: number;
+  title: string;
+  path: string;
 };
 
-const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
-  (n) => ({ id: n, value: n.toString(), label: n }),
-);
-
-const INITIAL_LOAN_PAYMENT = {
-  monthlyRepayment: "0",
-  totalPayment: "0",
-  InterestRate: 0,
-  eligibleAmount: "0",
+const MODAL_TYPES = {
+  TERMS_AND_CONDITIONS: "TERMS_AND_CONDITIONS",
+  ADD_DOCUMENT: "ADD_DOCUMENT",
 };
 
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
-  const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null);
-  const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
-  const [showTACPopup, setShowTACPopup] = useState(false);
+  const [otherDocuments, setOtherDocuments] = useState<DocumentType[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<string>("");
   const [searchParams] = useSearchParams();
   const accountOfficerCode = searchParams.get("accountOfficerCode") as
     | string
@@ -129,19 +79,38 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const accountService = new AccountService();
 
-  const schema = useMemo(
-    () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
-    [loanRepayment],
-  );
-
   type FormFields = z.infer<typeof schema>;
+
+  const otherDocumentsTableColumns: ColumnDef<DocumentType>[] = [
+    {
+      header: "Title",
+      accessorKey: "title",
+    },
+    {
+      header: "Action",
+      accessorKey: "id",
+      cell: ({ getValue }) => {
+        const id = getValue<number>();
+        return (
+          <div>
+            <button
+              className="text-xs font-semibold text-red-700 active:scale-75"
+              type="button"
+              onClick={() => handleRemoveDocument(id)}
+            >
+              Remove
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
 
   const {
     register,
     setError,
     handleSubmit,
     setValue,
-    trigger,
     getValues,
     watch,
     clearErrors,
@@ -150,30 +119,11 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     resolver: zodResolver(schema),
   });
 
-  const [customerSignature, loanTenor, loanAmount] = watch([
-    "CustomerSignature",
-    "loanTenor",
-    "loanAmount",
-  ]);
-
-  useEffect(() => {
-    if (loanTenor) {
-      trigger("loanAmount");
-    }
-  }, [loanTenor, trigger, loanRepayment]);
+  const [customerSignature] = watch(["CustomerSignature"]);
 
   useEffect(() => {
     if (accountOfficerCode) {
       setValue("AccountOfficerCode", accountOfficerCode);
-    }
-
-    const dataFromStorage = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
-    );
-
-    if (dataFromStorage) {
-      const parsedData = JSON.parse(dataFromStorage) as IPPISResponseType;
-      setIppisData(parsedData);
     }
   }, [accountOfficerCode, setValue]);
 
@@ -203,6 +153,19 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   }, [getValues, setValue]);
 
+  const handleAddDocument = (data: { title: string; path: string }) => {
+    setOtherDocuments((docs) => [
+      ...docs,
+      { ...data, id: new Date().getTime() },
+    ]);
+    handleToggleModal();
+  };
+
+  const handleRemoveDocument = (id: number) => {
+
+    setOtherDocuments((docs) => docs.filter((d) => d.id !== id));
+  };
+
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
       if (!agreedToTAC) {
@@ -219,6 +182,17 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "2");
 
       const payload: Record<string, unknown> = {};
+
+      const eligibilityInformation = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_ELIGIBILITY_INFORMATION`,
+      ) as string;
+      const parsedEligibilityInfo = JSON.parse(
+        eligibilityInformation,
+      ) as Record<string, string>;
+
+      for (const key in parsedEligibilityInfo) {
+        payload[key] = parsedEligibilityInfo[key];
+      }
 
       const basicInformation = sessionStorage.getItem(
         `${SESSION_STORAGE_KEY}_BASIC_INFORMATION`,
@@ -288,28 +262,51 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       payload["workIdentification"] = await convertToBase64(
         values?.workIdentification[0],
       );
-      if (values?.otherDocument && values?.otherDocument?.length > 0) {
-        payload["otherDocument"] = await convertToBase64(
-          values.otherDocument[0],
-        );
+      if (otherDocuments.length > 0) {
+        payload["otherDocument"] = otherDocuments.map(({path, title}) => ({path, title}));
       }
-      payload["loanAmount"] = Number(values?.loanAmount?.replace(/,/g, ""));
-      payload["loanAgreement"] = "Agreed";
-      payload["monthlyPayment"] = loanRepayment.monthlyRepayment.replace(
-        /,/g,
-        "",
-      );
-      payload["totalPayment"] = loanRepayment.totalPayment.replace(/,/g, "");
-      payload["InterestRate"] = loanRepayment.InterestRate;
 
+      const loanRepayment = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_ELIGIBILITY`,
+      );
+      if (loanRepayment) {
+        const eligibilityInfo = JSON.parse(
+          loanRepayment,
+        ) as EligibilityDataType;
+        payload["monthlyPayment"] = eligibilityInfo.monthlyRepayment.replace(
+          /,/g,
+          "",
+        );
+        payload["totalPayment"] = eligibilityInfo.totalRepayment.replace(
+          /,/g,
+          "",
+        );
+        payload["InterestRate"] = eligibilityInfo.interestRate;
+      }
+
+      const loanAmount = parsedEligibilityInfo["loanAmount"];
+      payload["loanAmount"] =
+        loanAmount && typeof loanAmount === "string"
+          ? Number(loanAmount.replace(/,/g, ""))
+          : "";
+      payload["loanAgreement"] = "Agreed";
+
+      const ippisData = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
+      ) as string;
+      const parsedIppisInfo = JSON.parse(ippisData) as IPPISResponseType;
+      payload["bankName"] = parsedIppisInfo?.bankName;
+      payload["salaryAccountNumber"] = parsedIppisInfo?.accountNumber;
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
       sessionStorage.setItem(
         `${SESSION_STORAGE_KEY}_MESSAGE`,
         response?.message ?? "",
       );
+      sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "3");
       handleUpdateStep();
     } catch (error: any) {
+
       setError("root", {
         type: "deps",
         message:
@@ -345,25 +342,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     setShowSignatureCanvas(false);
   };
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = () => {
-        if (reader.result) {
-          resolve(reader.result as string);
-        } else {
-          reject(new Error("Could not convert file to Base64"));
-        }
-      };
-
-      reader.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
-
   const handleUploadSignature = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
@@ -380,27 +358,22 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
     }
   };
 
-  const handleToggleTACPopup = () => {
-    setShowTACPopup((shown) => !shown);
+  const handleToggleModal = (modalType?: string) => {
+    if (!modalType) {
+      setShowModal(false);
+      setModalType("");
+      return;
+    }
+    setModalType(modalType);
+    setShowModal(true);
   };
 
-  const handleTenureAndAmountFieldBlur = async (
-    loanAmount: string,
-    loanTenor: string,
-  ) => {
-    const amount = loanAmount.replace(/[^0-9.]/g, "");
-    const repaymentInfo = calculateLoanForOrganization(
-      customerInfo?.organizationEmployer ?? "",
-      Number(amount) ?? 0,
-      Number(loanTenor) ?? 0,
-      Number(ippisData?.netPay) ?? 0,
-    );
-    setLoanRepayment({
-      monthlyRepayment: repaymentInfo.monthlyInstallment,
-      totalPayment: repaymentInfo.totalRepayment,
-      InterestRate: repaymentInfo.InterestRate,
-      eligibleAmount: repaymentInfo.eligibleAmount,
-    });
+  const handleToggleTACPopup = () => {
+    if (showModal) {
+      handleToggleModal();
+      return;
+    }
+    handleToggleModal(MODAL_TYPES.TERMS_AND_CONDITIONS);
   };
 
   return (
@@ -409,76 +382,6 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div>
-          <Input
-            label="Loan Amount"
-            {...register("loanAmount")}
-            error={errors?.loanAmount?.message}
-            onChange={async (e) => {
-              const value = e.target.value.replace(/[^0-9.]/g, "");
-              setValue(
-                "loanAmount",
-                formatNumberWithCommasWithOptionPeriodSign(value),
-                {
-                  shouldValidate: loanTenor !== undefined && !Number.isNaN(loanTenor),
-                },
-              );
-            }}
-            disabled={isSubmitting}
-            onBlur={() => handleTenureAndAmountFieldBlur(loanAmount, loanTenor)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Loan Tenure: <i className="text-sx font-light">Months</i>
-          </Label>
-          <Select
-            value={loanTenor}
-            onValueChange={async (value) => {
-              handleTenureAndAmountFieldBlur(loanAmount ?? 0, value);
-              setValue("loanTenor", value, {
-                shouldValidate: true,
-              });
-            }}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Loan Tenor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Loan Tenor: </SelectLabel>
-                {TENURE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.loanTenor?.message}
-          </p>
-        </div>
-
-        <div>
-          <Input
-            label="Eligible Amount"
-            value={formatNumberWithCommasWithOptionPeriodSign(
-              loanRepayment.eligibleAmount,
-            )}
-            disabled={true}
-          />
-        </div>
-        <div>
-          <Input
-            label="Monthly Payment"
-            value={formatNumberWithCommasWithOptionPeriodSign(
-              loanRepayment.monthlyRepayment,
-            )}
-            disabled={true}
-          />
-        </div>
         <div>
           <Input
             label="Account Officer Code"
@@ -544,22 +447,25 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <div>
-          <Input
-            label={
-              <>
-                Other Supporting Document{" "}
-                <i className="text-[10px] font-normal">
-                  Optional Image or PDF file
-                </i>
-              </>
-            }
-            {...register("otherDocument")}
-            type="file"
-            className="file:rounded-sm file:bg-black file:text-sm file:text-white"
-            disabled={isSubmitting}
-            accept="image/*, application/pdf"
-          />
+          <h3 className="text-sm font-semibold">Supporting Documents</h3>
+          <Button
+            className="mt-1 border-0 bg-transparent text-xs text-primary ring-0"
+            type="button"
+            onClick={() => handleToggleModal(MODAL_TYPES.ADD_DOCUMENT)}
+          >
+            Click to Add Supporting Document
+          </Button>
         </div>
+        {otherDocuments.length > 0 && (
+          <div className="col-span-full">
+            <h2>Documents</h2>
+            <NonPaginatedTable
+              columns={otherDocumentsTableColumns}
+              data={otherDocuments}
+              isSearchable={false}
+            />
+          </div>
+        )}
         <div className="lg:col-span-full">
           <hr />
           <h4 className="my-3 text-sm font-semibold">SIGNATURE: </h4>
@@ -673,8 +579,8 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           </Button>
         </div>
       </form>
-      <Dialog open={showTACPopup}>
-        <DialogContent className="w-[90vw] gap-0 md:max-w-[800px]">
+      <Dialog open={showModal}>
+        <DialogContent className="w-[90vw] gap-0 md:max-w-[600px]">
           <div className="flex justify-end">
             <button disabled={isSubmitting}>
               <IoMdClose
@@ -683,33 +589,43 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
               />
             </button>
           </div>
-
-          <h3 className="mt-5 text-center text-lg font-bold">
-            TERMS AND CONDITIONS
-          </h3>
-          <p className="mt-[5px] text-center">
-            <span className="font-semibold"> Loan Agreement *</span> <br />{" "}
-            <br />
-            <span className="font-semibold">CONFIRMATION</span> <br /> <br />
-            <span>
-              I confirm that the information given in this form is true,
-              complete and accurate I confirm that I have read and understood
-              Dominion Merchants and Partners Limited ("the Lender”) Terms and
-              Conditions Governing the Operations of Borrower-Lender
-              relationship and agree to abide and be bound by these terms and
-              conditions. I understand that my submission of this application
-              and acceptance of this application by Dominion Merchants and
-              Partners Limited shall in no way be construed as approval of my
-              application and that the Lender reserves the right to decline this
-              application without giving any reasons whatsoever.
-            </span>
-          </p>
-          <p className="mt-6 text-center text-sm font-semibold">
-            &copy; {new Date().getFullYear()}
-            <span className="ml-1 inline-block font-semibold">
-              Dominion Merchants and Partners Limited
-            </span>
-          </p>
+          {modalType === MODAL_TYPES.TERMS_AND_CONDITIONS && (
+            <>
+              <h3 className="mt-5 text-center text-lg font-bold">
+                TERMS AND CONDITIONS
+              </h3>
+              <p className="mt-[5px] text-center">
+                <span className="font-semibold"> Loan Agreement *</span> <br />{" "}
+                <br />
+                <span className="font-semibold">CONFIRMATION</span> <br />{" "}
+                <br />
+                <span>
+                  I confirm that the information given in this form is true,
+                  complete and accurate I confirm that I have read and
+                  understood Dominion Merchants and Partners Limited ("the
+                  Lender”) Terms and Conditions Governing the Operations of
+                  Borrower-Lender relationship and agree to abide and be bound
+                  by these terms and conditions. I understand that my submission
+                  of this application and acceptance of this application by
+                  Dominion Merchants and Partners Limited shall in no way be
+                  construed as approval of my application and that the Lender
+                  reserves the right to decline this application without giving
+                  any reasons whatsoever.
+                </span>
+              </p>
+              <p className="mt-6 text-center text-sm font-semibold">
+                &copy; {new Date().getFullYear()}
+                <span className="ml-1 inline-block font-semibold">
+                  Dominion Merchants and Partners Limited
+                </span>
+              </p>
+            </>
+          )}
+          {modalType === MODAL_TYPES.ADD_DOCUMENT && (
+            <>
+              <AddDocumentForm handleAddDocument={handleAddDocument} />
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>
