@@ -111,13 +111,26 @@ const INITIAL_LOAN_PAYMENT = {
   eligibleAmount: "0",
 };
 
+type DocumentType = {
+  id: number;
+  title: string;
+  path: string;
+};
+
+const MODAL_TYPES = {
+  TERMS_AND_CONDITIONS: "TERMS_AND_CONDITIONS",
+  ADD_DOCUMENT: "ADD_DOCUMENT",
+}
+
 export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfoType | null>(
     null,
   );
   const [ippisData, setIppisData] = useState<IPPISResponseType | null>(null);
+  const [otherDocuments, setOtherDocuments] = useState<DocumentType[]>([]);
   const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
-  const [showTACPopup, setShowTACPopup] = useState(false);
+  const [showModal, setshowModal] = useState(false);
+  const [modalType, setmodalType] = useState("")
   const [searchParams] = useSearchParams();
   const accountOfficerCode = searchParams.get("accountOfficerCode") as
     | string
@@ -202,6 +215,13 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
       return;
     }
   }, [getValues, setValue]);
+
+  const handleAddOtherDocument = (data: { title: string; path: string }) => {
+    setOtherDocuments((others) => [
+      ...others,
+      { ...data, id: new Date().getTime() },
+    ]);
+  };
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -381,7 +401,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
   };
 
   const handleToggleTACPopup = () => {
-    setShowTACPopup((shown) => !shown);
+    setshowModal((shown) => !shown);
   };
 
   const handleTenureAndAmountFieldBlur = async (
@@ -420,7 +440,8 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
                 "loanAmount",
                 formatNumberWithCommasWithOptionPeriodSign(value),
                 {
-                  shouldValidate: loanTenor !== undefined && !Number.isNaN(loanTenor),
+                  shouldValidate:
+                    loanTenor !== undefined && !Number.isNaN(loanTenor),
                 },
               );
             }}
@@ -673,7 +694,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           </Button>
         </div>
       </form>
-      <Dialog open={showTACPopup}>
+      <Dialog open={showModal}>
         <DialogContent className="w-[90vw] gap-0 md:max-w-[800px]">
           <div className="flex justify-end">
             <button disabled={isSubmitting}>
