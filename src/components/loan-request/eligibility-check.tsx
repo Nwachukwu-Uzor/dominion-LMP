@@ -6,16 +6,6 @@ import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
 import { SESSION_STORAGE_KEY } from "@/constants";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Label } from "../ui/label";
 import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
@@ -24,6 +14,7 @@ import {
   formatNumberWithCommasWithOptionPeriodSign,
   getLoanRepaymentInfo,
 } from "@/utils";
+import { ReactSelectCustomized } from "../shared";
 // import { BVNType } from "@/types/shared";
 
 type Props = {
@@ -43,6 +34,8 @@ const getBasicInfoSchema = (maxLoanAmount: number) =>
       .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
       .refine(
         (value) => {
+          console.log(value);
+          
           return !Number.isNaN(value) && Number(value) > 0;
         },
         { message: "Loan amount must be greater than 0" },
@@ -176,7 +169,8 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
       }
 
       if (parsedData.loanTenor) {
-        setValue("loanTenor", parsedData.loanTenor, { shouldValidate: true });
+        const tenor = parsedData.loanTenor.trim();
+        setValue("loanTenor", tenor, { shouldValidate: true });
       }
 
       if (parsedData.ippisNumber) {
@@ -276,6 +270,12 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     }));
   };
 
+  console.log({ loanTenor });
+
+  const selectedLoanTenor = TENURE_OPTIONS.find(
+    (opt) => Number(opt.value) === Number(loanTenor),
+  );
+
   return (
     <>
       <form
@@ -323,36 +323,24 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Loan Tenure: <i className="text-sx font-light">Months</i>
-          </Label>
-          <Select
-            onValueChange={async (value) => {
-              handleTenureAndAmountFieldBlur(value);
-              setValue("loanTenor", value, {
-                shouldValidate: true,
-              });
+          <ReactSelectCustomized
+            options={TENURE_OPTIONS}
+            label={
+              <>
+                Loan Tenure: <i className="text-sx font-light">Months</i>
+              </>
+            }
+            onChange={(data) => {
+              if (data) {
+                handleTenureAndAmountFieldBlur(data.value);
+                setValue("loanTenor", data.value, {
+                  shouldValidate: true,
+                });
+              }
             }}
-            value={loanTenor}
-            // disabled={isSubmitting}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Loan Tenor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Loan Tenor: </SelectLabel>
-                {TENURE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.loanTenor?.message}
-          </p>
+            value={selectedLoanTenor}
+            error={errors?.loanTenor?.message}
+          />
         </div>
         <div>
           <Input

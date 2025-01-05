@@ -11,19 +11,10 @@ import {
 } from "@/constants";
 import { Textarea } from "../ui/textarea";
 import { BVNType, CustomerInfoType } from "@/types/shared";
-import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 // import { AccountService } from "@/services";
 import { ClipLoader } from "react-spinners";
 import { maskData, maskValue } from "@/utils";
+import { ReactSelectCustomized } from "../shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
@@ -199,6 +190,11 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     handleUpdateStep(false);
   };
 
+  const selectedNotificationPreference = NOTIFICATION_PREFERENCE_OPTIONS.find(
+    (pref) =>
+      pref.value.toUpperCase() === NotificationPreference?.toUpperCase(),
+  );
+
   return (
     <>
       <form
@@ -240,34 +236,19 @@ export const ContactInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            Notification Preference:
-          </Label>
-          <Select
-            value={NotificationPreference}
-            onValueChange={async (value) => {
+          <ReactSelectCustomized
+            options={NOTIFICATION_PREFERENCE_OPTIONS}
+            label={<>Notification Preference</>}
+            placeholder="Notification Preference"
+            onChange={(data) => {
+              const value = data?.value ?? "";
               setValue("NotificationPreference", value, {
                 shouldValidate: true,
               });
             }}
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Notification Preference" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Notification Preference</SelectLabel>
-                {NOTIFICATION_PREFERENCE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.NotificationPreference?.message}
-          </p>
+            value={selectedNotificationPreference}
+            error={errors?.NotificationPreference?.message}
+          />
         </div>
         <div className="col-span-full">
           <Textarea

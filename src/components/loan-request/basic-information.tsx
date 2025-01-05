@@ -14,16 +14,6 @@ import {
   STATE_OPTIONS,
   TITLES,
 } from "@/constants";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Label } from "../ui/label";
 import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
@@ -35,7 +25,7 @@ import {
 } from "@/utils";
 import { AccountLoanType, CustomerInfoType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
-import { NonPaginatedTable } from "../shared";
+import { NonPaginatedTable, ReactSelectCustomized } from "../shared";
 // import { BVNType } from "@/types/shared";
 
 type Props = {
@@ -272,7 +262,6 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-
       if (!bvnDetails) {
         toast.warn("Please provide valid BVN details to proceed...");
         return;
@@ -333,6 +322,14 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     sessionStorage.setItem(`${SESSION_STORAGE_KEY}_STAGE`, "0");
     handleUpdateStep(false);
   };
+
+  const selectedGender = GENDER_OPTIONS.find(
+    (gender) => gender.value.toUpperCase() === Gender?.toUpperCase(),
+  );
+
+  const selectedState = STATE_OPTIONS.find(
+    (st) => st.value.toUpperCase() === state?.toUpperCase(),
+  );
 
   return (
     <>
@@ -434,43 +431,27 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <div>
-          <Label htmlFor="Gender" className="mb-1 font-semibold">
-            Gender
-          </Label>
-          <Select
-            value={Gender}
-            onValueChange={async (value) => {
-              setValue("Gender", value);
+          <ReactSelectCustomized
+            options={GENDER_OPTIONS}
+            label={<>Gender</>}
+            placeholder="Gender"
+            onChange={(data) => {
+              const value = data?.value ?? "";
+              setValue("Gender", value, { shouldValidate: true });
               if (value.toUpperCase() === GENDERS.MALE) {
                 setValue("title", TITLES.MR);
               } else {
                 setValue("title", TITLES.MRS);
               }
-              await trigger("Gender");
             }}
-            disabled={
+            value={selectedGender}
+            error={errors?.Gender?.message}
+            isDisabled={
               (bvnDetails?.customerInfo !== undefined &&
                 Object.keys(bvnDetails?.customerInfo).length > 0) ||
               customerLoans.length > 0
             }
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="Gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Gender</SelectLabel>
-                {GENDER_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.Gender?.message}
-          </p>
+          />
         </div>
         <div>
           <Input
@@ -495,38 +476,24 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
           />
         </div>
         <div>
-          <Label htmlFor="alertType" className="mb-1 font-semibold">
-            State of Origin
-          </Label>
-          <Select
-            value={state}
-            onValueChange={async (value) => {
-              setValue("state", value);
-              await trigger("state");
+          <ReactSelectCustomized
+            menuPosition="fixed"
+            options={STATE_OPTIONS}
+            label={<>State of Origin</>}
+            placeholder="State of Origin"
+            onChange={(data) => {
+              const value = data?.value ?? "";
+              setValue("state", value, { shouldValidate: true });
             }}
-            disabled={
+            value={selectedState}
+            error={errors?.state?.message}
+            isDisabled={
               (bvnDetails?.customerInfo !== undefined &&
                 Object.keys(bvnDetails?.customerInfo).length > 0) ||
               customerLoans.length > 0
             }
-          >
-            <SelectTrigger className="">
-              <SelectValue placeholder="State of Origin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>State of Origin</SelectLabel>
-                {STATE_OPTIONS?.map((opt) => (
-                  <SelectItem value={opt.value} key={opt.id}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <p className="mt-0.5 h-1 text-[10px] text-red-500">
-            {errors?.state?.message}
-          </p>
+            maxMenuHeight={300}
+          />
         </div>
         {customerLoans && customerLoans.length > 0 ? (
           <div className="lg:col-span-full">
