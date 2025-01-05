@@ -318,6 +318,14 @@ const RequestDetails = () => {
                   />
                   <Record header="BVN" content={accountInfo?.profile?.BVN} />
                   <Record
+                    header="Salary Account Number"
+                    content={accountInfo?.profile?.salaryAccountNumber}
+                  />
+                  <Record
+                    header="Bank Name"
+                    content={accountInfo?.profile?.bankName}
+                  />
+                  <Record
                     header="Product Code"
                     content={accountInfo?.ProductCode}
                   />
@@ -412,6 +420,7 @@ const RequestDetails = () => {
                     header="NIN"
                     content={accountInfo?.profile?.NationalIdentityNo}
                   />
+
                   <Record
                     header="Next of Kin"
                     content={accountInfo?.profile?.NextOfKinName}
@@ -463,16 +472,24 @@ const RequestDetails = () => {
                 </div>
                 <div
                   className={`mt-2 ${
-                    accountInfo?.profile?.otherDocument &&
+                    accountInfo?.profile?.otherDocuments &&
                     "border-b-[0.15px] border-b-gray-200 pb-2"
                   }`}
                 >
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Other Documents:{" "}
                   </h2>
-                  {accountInfo?.profile?.otherDocument && (
-                    <FileViewer url={accountInfo?.profile?.otherDocument} />
-                  )}
+                  {accountInfo?.profile?.otherDocuments &&
+                    accountInfo?.profile?.otherDocuments?.length > 0 &&
+                    accountInfo?.profile.otherDocuments?.map((doc, index) => (
+                      <div key={doc.title}>
+                        <h3 className="mb-2 text-xs font-medium uppercase text-gray-400">
+                          <span className="text-black">{index + 1}</span>.{" "}
+                          {doc.title}
+                        </h3>
+                        <FileViewer url={doc.otherDocument} />
+                      </div>
+                    ))}
                 </div>
                 {stage?.trim()?.toUpperCase() ===
                   accountInfo?.stage?.trim()?.toUpperCase() &&
@@ -561,9 +578,7 @@ const RequestDetails = () => {
               disabled={isSubmitting}
               onClick={() => setOpenTokenModal(false)}
             >
-              <IoMdClose
-                className="cursor-pointer transition-all hover:scale-150"
-              />
+              <IoMdClose className="cursor-pointer transition-all hover:scale-150" />
             </button>
           </div>
           <h3 className="mt-5 text-center text-lg font-bold">Confirm</h3>'

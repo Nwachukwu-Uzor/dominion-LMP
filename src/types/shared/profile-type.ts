@@ -27,7 +27,9 @@ export type ProfileType = {
   state: string;
   CustomerSignature?: string;
   IdentificationImage?: string;
-  otherDocument?: string;
+  otherDocuments?: {title: string, otherDocument: string}[];
   title: string;
   workIdentification: string;
+  salaryAccountNumber: string;
+  bankName: string;
 };

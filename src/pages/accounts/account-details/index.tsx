@@ -68,18 +68,18 @@ const AccountDetails = () => {
     {
       header: "Amount",
       accessorKey: "Amount",
-      cell: ({getValue}) => {
+      cell: ({ getValue }) => {
         const amount = getValue<string>();
         return amount ? formatCurrency(amount) : 0;
-      }
+      },
     },
     {
       header: "Paid Amount",
       accessorKey: "paidAmount",
-      cell: ({getValue}) => {
+      cell: ({ getValue }) => {
         const amount = getValue<string>();
         return amount ? formatCurrency(amount) : 0;
-      }
+      },
     },
     {
       header: "Product Code",
@@ -207,6 +207,14 @@ const AccountDetails = () => {
                   />
                   <Record header="BVN" content={accountInfo?.profile?.BVN} />
                   <Record
+                    header="Salary Account Number"
+                    content={accountInfo?.profile?.salaryAccountNumber}
+                  />
+                  <Record
+                    header="Bank Name"
+                    content={accountInfo?.profile?.bankName}
+                  />
+                  <Record
                     header="Product Code"
                     content={accountInfo?.ProductCode}
                   />
@@ -313,16 +321,23 @@ const AccountDetails = () => {
                 </div>
                 <div
                   className={`mt-2 ${
-                    accountInfo?.profile?.otherDocument &&
+                    accountInfo?.profile?.otherDocuments &&
                     "border-b-[0.15px] border-b-gray-200 pb-2"
                   }`}
                 >
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Other Documents:{" "}
                   </h2>
-                  {accountInfo?.profile?.otherDocument && (
-                    <FileViewer url={accountInfo?.profile?.otherDocument} />
-                  )}
+                  {accountInfo?.profile?.otherDocuments &&
+                    accountInfo?.profile?.otherDocuments?.length > 0 &&
+                    accountInfo?.profile.otherDocuments?.map((doc, index) => (
+                      <div key={doc.title}>
+                        <h3 className="mb-2 text-xs font-medium uppercase text-gray-400">
+                          <span className="text-black">{index + 1}</span>. {doc.title}
+                        </h3>
+                        <FileViewer url={doc.otherDocument} />
+                      </div>
+                    ))}
                 </div>
               </article>
               <article className="mt-10">

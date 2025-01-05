@@ -7,7 +7,7 @@ export { TITLE_OPTIONS } from "./title-options";
 export { NOTIFICATION_PREFERENCE_OPTIONS } from "./notification-preference-options";
 export {
   LINK_STATUS_UPDATE_VALUE,
-  LINK_STATUS_OPTIONS
+  LINK_STATUS_OPTIONS,
 } from "./link-status-options";
 
 export const USER_ROLES = {
@@ -19,7 +19,6 @@ export const USER_ROLES = {
   EDITOR: "Editor",
 };
 
-
 export const GENDERS = {
   MALE: "MALE",
   FEMALE: "FEMALE",
@@ -30,3 +29,5 @@ export const TITLES = {
   MRS: "MRS",
   MS: "MS",
 };
+
+export { BANKS_LIST } from "./banks";

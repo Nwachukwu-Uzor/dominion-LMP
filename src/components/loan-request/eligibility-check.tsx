@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { toast } from "react-toastify";
 import { Button } from "../ui/button";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { BANKS_LIST, SESSION_STORAGE_KEY } from "@/constants";
 import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
@@ -35,7 +35,7 @@ const getBasicInfoSchema = (maxLoanAmount: number) =>
       .refine(
         (value) => {
           console.log(value);
-          
+
           return !Number.isNaN(value) && Number(value) > 0;
         },
         { message: "Loan amount must be greater than 0" },
@@ -60,6 +60,13 @@ const getBasicInfoSchema = (maxLoanAmount: number) =>
           message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
         },
       ),
+    bankName: z
+      .string({ required_error: "Salary bank is required" })
+      .min(2, "Salary bank is required"),
+    salaryAccountNumber: z
+      .string({ required_error: "Account number is required" })
+      .min(10, "Account must be at least 10 digits")
+      .regex(/^\d+$/, { message: "Account number must contain only digits" }),
   });
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
@@ -144,10 +151,11 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     },
   });
 
-  const [ippisNumber, loanTenor, loanAmount] = watch([
+  const [ippisNumber, loanTenor, loanAmount, bankName] = watch([
     "ippisNumber",
     "loanTenor",
     "loanAmount",
+    "bankName",
   ]);
 
   useEffect(() => {
@@ -171,6 +179,10 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
       if (parsedData.loanTenor) {
         const tenor = parsedData.loanTenor.trim();
         setValue("loanTenor", tenor, { shouldValidate: true });
+      }
+
+      if (parsedData.bankName) {
+        setValue("bankName", parsedData.bankName, { shouldValidate: true });
       }
 
       if (parsedData.ippisNumber) {
@@ -270,10 +282,12 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     }));
   };
 
-  console.log({ loanTenor });
-
   const selectedLoanTenor = TENURE_OPTIONS.find(
     (opt) => Number(opt.value) === Number(loanTenor),
+  );
+
+  const selectedBank = BANKS_LIST.find(
+    (bank) => bank.label.toUpperCase() === bankName?.toUpperCase(),
   );
 
   return (
@@ -282,7 +296,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
         className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 lg:gap-4"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="col-span-full">
+        <div>
           <Input
             label="IPPIS Number"
             onChange={(e) => {
@@ -314,7 +328,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
             )
           )}
         </div>
-        <div className="col-span-full">
+        <div>
           <Input
             label="Employer (Organization)"
             {...register("organizationEmployer")}
@@ -377,6 +391,30 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
               loanRepayment.monthlyRepayment,
             )}
             disabled={true}
+          />
+        </div>
+        <div>
+          <ReactSelectCustomized
+            label={<>Salary Bank Number</>}
+            options={BANKS_LIST}
+            onChange={(data) => {
+              const value = data?.label ?? "";
+              setValue("bankName", value, { shouldValidate: true });
+            }}
+            error={errors?.bankName?.message}
+            menuPosition="fixed"
+            value={selectedBank}
+          />
+        </div>
+        <div>
+          <Input
+            label="Account Number"
+            {...register("salaryAccountNumber")}
+            error={errors?.salaryAccountNumber?.message}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "");
+              setValue("salaryAccountNumber", value, { shouldValidate: true });
+            }}
           />
         </div>
 

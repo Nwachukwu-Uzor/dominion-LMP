@@ -14,7 +14,6 @@ import { Checkbox } from "../ui/checkbox";
 import {
   CustomerInfoType,
   EligibilityDataType,
-  IPPISResponseType,
 } from "@/types/shared";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { IoMdClose } from "react-icons/io";
@@ -291,12 +290,7 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
           : "";
       payload["loanAgreement"] = "Agreed";
 
-      const ippisData = sessionStorage.getItem(
-        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
-      ) as string;
-      const parsedIppisInfo = JSON.parse(ippisData) as IPPISResponseType;
-      payload["bankName"] = parsedIppisInfo?.bankName;
-      payload["salaryAccountNumber"] = parsedIppisInfo?.accountNumber;
+
       const response = await accountService.createAccountRequest(payload);
       toast.success(response?.message);
       sessionStorage.setItem(
