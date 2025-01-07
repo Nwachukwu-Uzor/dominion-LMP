@@ -1,13 +1,20 @@
-import { Container, PageTitle } from "@/components/shared";
+import {
+  Container,
+  PageTitle,
+  ReactSelectCustomized,
+} from "@/components/shared";
 import { Card } from "@/components/ui/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  BANKS_LIST,
   GENDER_ENUM,
   GENDER_OPTIONS,
+  GENDERS,
   SESSION_STORAGE_KEY,
+  TITLES,
 } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
@@ -18,21 +25,15 @@ import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { isValid } from "date-fns";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FETCH_ACCOUNT_DETAILS_BY_ID, FETCH_PROFILE_INFORMATION_BY_CUSTOMER_ID } from "@/constants/query-keys";
+import {
+  FETCH_ACCOUNT_DETAILS_BY_ID,
+  FETCH_PROFILE_INFORMATION_BY_CUSTOMER_ID,
+} from "@/constants/query-keys";
 
 const schema = z.object({
+  title: z.optional(z.string()),
   Gender: z
     .string({ required_error: "Gender is required" })
     .min(4, { message: "Gender is required" }),
@@ -144,6 +145,13 @@ const schema = z.object({
       required_error: "Account officer email is required",
     })
     .email("Please provide a valid email address"),
+  bankName: z
+    .string({ required_error: "Salary bank is required" })
+    .min(2, "Salary bank is required"),
+  salaryAccountNumber: z
+    .string({ required_error: "Account number is required" })
+    .min(10, "Account must be at least 10 digits")
+    .regex(/^\d+$/, { message: "Account number must contain only digits" }),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -173,11 +181,7 @@ const EditDetails = () => {
     resolver: zodResolver(schema),
   });
 
-  const [
-    Gender
-  ] = watch([
-    "Gender"
-  ]);
+  const [Gender, bankName] = watch(["Gender", "bankName"]);
 
   const {
     data: accountInfo,
@@ -201,11 +205,12 @@ const EditDetails = () => {
   useEffect(() => {
     if (accountInfo && accountInfo?.profile) {
       const { profile } = accountInfo;
-
+      // eslint-disable-next-line
+      const { otherDocuments, ...profileInfo } = profile;
       const fields = getValues();
-      const parsedProfile = profile as Record<string, string>;
+      const parsedProfile = profileInfo as Record<string, string>;
 
-      for (const key in profile) {
+      for (const key in profileInfo) {
         if (key in fields) {
           setValue(key as keyof FormFields, parsedProfile[key] ?? "");
         }
@@ -287,6 +292,7 @@ const EditDetails = () => {
         return;
       }
       const payload = {
+        ...accountInfo?.profile,
         ...values,
         CustomerID: customerId,
         Gender: values?.Gender?.toLowerCase(),
@@ -317,6 +323,14 @@ const EditDetails = () => {
     }
   };
 
+  const selectedGender = GENDER_OPTIONS.find(
+    (gender) => gender.value.toUpperCase() === Gender?.toUpperCase(),
+  );
+
+  const selectedBank = BANKS_LIST.find(
+    (bank) => bank.label.toUpperCase() === bankName?.toUpperCase(),
+  );
+
   return (
     <>
       <Container>
@@ -332,64 +346,23 @@ const EditDetails = () => {
             <>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <article className="grid gap-4 py-4 lg:grid-cols-2 lg:gap-x-12">
-                  {/* <div>
-                    <Label htmlFor="Title" className="mb-1 font-semibold">
-                      Title
-                    </Label>
-                    <Select
-                      value={title}
-                      onValueChange={async (value) => {
-                        setValue("title", value, { shouldValidate: true });
-                        // await trigger("t");
-                      }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Title" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Title</SelectLabel>
-                          {TITLE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.title?.message}
-                    </p>
-                  </div> */}
                   <div>
-                    <Label htmlFor="Gender" className="mb-1 font-semibold">
-                      Gender
-                    </Label>
-                    <Select
-                      value={Gender}
-                      onValueChange={async (value) => {
-                        setValue("Gender", value);
-                        await trigger("Gender");
+                    <ReactSelectCustomized
+                      options={GENDER_OPTIONS}
+                      value={selectedGender}
+                      error={errors?.Gender?.message}
+                      label={<>Gender</>}
+                      placeholder="Gender"
+                      onChange={(data) => {
+                        const value = data?.value ?? "";
+                        setValue("Gender", value, { shouldValidate: true });
+                        if (value.toUpperCase() === GENDERS.MALE) {
+                          setValue("title", TITLES.MR);
+                        } else {
+                          setValue("title", TITLES.MRS);
+                        }
                       }}
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Gender</SelectLabel>
-                          {GENDER_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.Gender?.message}
-                    </p>
+                    />
                   </div>
                   <div>
                     <Input
@@ -580,6 +553,32 @@ const EditDetails = () => {
                       {...register("AccountOfficerEmail")}
                       error={errors?.AccountOfficerEmail?.message}
                       disabled={isSubmitting}
+                    />
+                  </div>
+                  <div>
+                    <ReactSelectCustomized
+                      label={<>Salary Bank Number</>}
+                      options={BANKS_LIST}
+                      onChange={(data) => {
+                        const value = data?.label ?? "";
+                        setValue("bankName", value, { shouldValidate: true });
+                      }}
+                      error={errors?.bankName?.message}
+                      menuPosition="fixed"
+                      value={selectedBank}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Account Number"
+                      {...register("salaryAccountNumber")}
+                      error={errors?.salaryAccountNumber?.message}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        setValue("salaryAccountNumber", value, {
+                          shouldValidate: true,
+                        });
+                      }}
                     />
                   </div>
                   <p className="my-1 text-sm font-semibold text-red-600 lg:col-span-full">
