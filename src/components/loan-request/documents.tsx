@@ -272,15 +272,15 @@ export const Documents: React.FC<Props> = ({ handleUpdateStep }) => {
         const eligibilityInfo = JSON.parse(
           loanRepayment,
         ) as EligibilityDataType;
-        payload["monthlyPayment"] = eligibilityInfo.monthlyRepayment.replace(
+        payload["monthlyPayment"] = eligibilityInfo?.monthlyRepayment?.replace(
           /,/g,
           "",
         );
-        payload["totalPayment"] = eligibilityInfo.totalRepayment.replace(
+        payload["totalPayment"] = eligibilityInfo?.totalRepayment?.replace(
           /,/g,
           "",
         );
-        payload["InterestRate"] = eligibilityInfo.interestRate;
+        payload["InterestRate"] = eligibilityInfo?.interestRate;
       }
 
       const loanAmount = parsedEligibilityInfo["loanAmount"];

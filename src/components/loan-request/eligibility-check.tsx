@@ -21,53 +21,82 @@ type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
 };
 
-const getBasicInfoSchema = (maxLoanAmount: number) =>
-  z.object({
-    ippisNumber: z.string({ required_error: "IPPIS number is required" }),
-    organizationEmployer: z
-      .string({ required_error: "Organization Employer is required" })
-      .min(2, "OrganizationEmployer must be at least 2 characters long"),
-    loanTenor: z
-      .string({
-        required_error: "Loan Tenure is required",
-      })
-      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-      .refine(
-        (value) => {
-          console.log(value);
+const ALLOW_PREFIXES_FOR_IPPIS_BY_PASS = ["NCS", "TI"];
 
-          return !Number.isNaN(value) && Number(value) > 0;
-        },
-        { message: "Loan amount must be greater than 0" },
-      ),
-    loanAmount: z
-      .string({
-        required_error: "Loan amount is required",
-      })
-      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-        message: "Loan amount must be a valid number",
-      })
-      .refine(
-        (value) => {
-          const numberValue = Number(value.replace(/,/g, ""));
-          return (
-            !Number.isNaN(numberValue) &&
-            numberValue <= maxLoanAmount &&
-            numberValue > 0
-          );
-        },
-        {
+const shouldAllowEligibilityByPass = (ippisNumber: string): boolean => {
+  // Convert ippisNumber to lowercase for case-insensitive comparison
+  const lowerCaseIppisNumber = ippisNumber?.trim()?.toLowerCase();
+  if (!lowerCaseIppisNumber || !(lowerCaseIppisNumber?.length > 0)) {
+    return false;
+  }
+
+  // Check if the ippisNumber starts with any of the allowed prefixes (case-insensitive)
+  const hasAllowedPrefix = ALLOW_PREFIXES_FOR_IPPIS_BY_PASS.some((prefix) =>
+    lowerCaseIppisNumber.startsWith(prefix.toLowerCase()),
+  );
+
+  // Check if the ippisNumber starts with a number
+  const startsWithNumber = /^\d/.test(ippisNumber);
+
+  // Return true if either condition is met
+  return hasAllowedPrefix || startsWithNumber;
+};
+
+const getBasicInfoSchema = (maxLoanAmount: number) =>
+  z
+    .object({
+      ippisNumber: z.string({ required_error: "IPPIS number is required" }),
+      organizationEmployer: z
+        .string({ required_error: "Organization Employer is required" })
+        .min(2, "OrganizationEmployer must be at least 2 characters long"),
+      loanTenor: z
+        .string({
+          required_error: "Loan Tenure is required",
+        })
+        .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
+        .refine(
+          (value) => {
+            return !Number.isNaN(value) && Number(value) > 0;
+          },
+          { message: "Loan amount must be greater than 0" },
+        ),
+      loanAmount: z
+        .string({
+          required_error: "Loan amount is required",
+        })
+        .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
+          message: "Loan amount must be a valid number",
+        }),
+      bankName: z
+        .string({ required_error: "Salary bank is required" })
+        .min(2, "Salary bank is required"),
+      salaryAccountNumber: z
+        .string({ required_error: "Account number is required" })
+        .min(10, "Account must be at least 10 digits")
+        .regex(/^\d+$/, { message: "Account number must contain only digits" }),
+    })
+    .superRefine((values, ctx) => {
+      const { loanAmount, ippisNumber } = values;
+      const shouldByPassValidation = shouldAllowEligibilityByPass(
+        ippisNumber ?? "",
+      );
+      if (shouldByPassValidation) {
+        return;
+      }
+      const numberValue = Number(loanAmount.replace(/,/g, ""));
+      const isEligible =
+        !Number.isNaN(numberValue) &&
+        numberValue <= maxLoanAmount &&
+        numberValue > 0;
+
+      if (!isEligible) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["loanAmount"],
           message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
-        },
-      ),
-    bankName: z
-      .string({ required_error: "Salary bank is required" })
-      .min(2, "Salary bank is required"),
-    salaryAccountNumber: z
-      .string({ required_error: "Account number is required" })
-      .min(10, "Account must be at least 10 digits")
-      .regex(/^\d+$/, { message: "Account number must contain only digits" }),
-  });
+        });
+      }
+    });
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n.toString() }),
@@ -97,9 +126,11 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     setValue,
     getValues,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
+    mode: "all",
   });
 
   const accountService = new AccountService();
@@ -196,7 +227,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
-      if (!ippisData) {
+      if (!ippisData && !shouldAllowEligibilityByPass(ippisNumber)) {
         return;
       }
       sessionStorage.setItem(
@@ -241,6 +272,10 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     if (!ippisData) {
       return;
     }
+
+    if (shouldAllowEligibilityByPass(ippisNumber)) {
+      return;
+    }
     const eligibleAmount = calculateEligibleAmountByOrganization(
       Number(ippisData.netPay),
       Number(loanTenor),
@@ -267,13 +302,17 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
 
   const handleAmountFieldBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const amount = event.target.value.replace(/,/g, "");
-    if (!ippisData || !loanTenor) {
+    if (
+      !shouldAllowEligibilityByPass(ippisNumber) &&
+      (!ippisData || !loanTenor)
+    ) {
       return;
     }
+
     const paymentInfo = getLoanRepaymentInfo(
       Number(amount),
       Number(loanTenor),
-      ippisData.employerOrganization,
+      ippisData?.employerOrganization ?? "",
     );
 
     setLoanRepayment((prev) => ({
@@ -301,7 +340,11 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
             label="IPPIS Number"
             onChange={(e) => {
               setValue("ippisNumber", e.target.value, { shouldValidate: true });
+
               setValue("organizationEmployer", "");
+              if (loanAmount && Number(loanAmount) > 0) {
+                trigger("loanAmount");
+              }
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_IPPIS_INFO`);
               resetIppisInfo();
               setLoanRepayment(INITIAL_LOAN_PAYMENT);
@@ -317,9 +360,11 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
               <span className="text-xs font-semibold italic">Loading...</span>
             </>
           ) : isIppisError ? (
-            <p className="text-xs text-red-500">
-              Unable to retrieve ippis information
-            </p>
+            shouldAllowEligibilityByPass(ippisNumber) ? null : (
+              <p className="text-xs text-red-500">
+                Unable to retrieve ippis information
+              </p>
+            )
           ) : (
             ippisData && (
               <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
@@ -333,7 +378,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
             label="Employer (Organization)"
             {...register("organizationEmployer")}
             error={errors?.organizationEmployer?.message}
-            disabled
+            disabled={!shouldAllowEligibilityByPass(ippisNumber)}
           />
         </div>
         <div>
