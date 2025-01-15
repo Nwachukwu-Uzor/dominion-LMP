@@ -389,7 +389,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
                 Loan Tenure: <i className="text-sx font-light">Months</i>
               </>
             }
-            onChange={(data) => {
+            onChange={(data: any) => {
               if (data) {
                 handleTenureAndAmountFieldBlur(data.value);
                 setValue("loanTenor", data.value, {
@@ -442,7 +442,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
           <ReactSelectCustomized
             label={<>Salary Bank Number</>}
             options={BANKS_LIST}
-            onChange={(data) => {
+            onChange={(data: any) => {
               const value = data?.label ?? "";
               setValue("bankName", value, { shouldValidate: true });
             }}
