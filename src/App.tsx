@@ -177,7 +177,7 @@ const router = createBrowserRouter([
     element: <LoanRequestLayout />,
     children: [
       {
-        index: true,
+        path: "",
         element: <LoanRequestPage />,
       },
     ],
