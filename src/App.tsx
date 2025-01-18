@@ -1,4 +1,7 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createHashRouter,
+  RouterProvider,
+} from "react-router-dom";
 import {
   DashboardPage,
   AdminLoginPage,
@@ -27,7 +30,7 @@ import {
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <MainLayout />,

@@ -1,0 +1,1 @@
+export const WHITE_LISTED_PATHS = ["/loan-request"];

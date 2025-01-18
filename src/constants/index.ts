@@ -31,3 +31,4 @@ export const TITLES = {
 };
 
 export { BANKS_LIST } from "./banks";
+export { WHITE_LISTED_PATHS } from "./white-listed-url";
