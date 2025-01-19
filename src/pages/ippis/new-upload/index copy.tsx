@@ -1,5 +1,7 @@
-import { Container, PageTitle } from "@/components/shared";
+import { Container, DataTable, PageTitle } from "@/components/shared";
+import { extractDataFromFile, ExtractedData } from "@/utils";
 import { useRef, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "react-toastify";
 import sampleUploadFile from "@/assets/documents/ippis-upload-sample.xlsx";
 import { Button } from "@/components/ui/button";
@@ -10,25 +12,122 @@ import { MdOutlineCloudUpload } from "react-icons/md";
 import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 
+const VALID_IPPIS_COLUMNS = [
+  "IPPIS_NO",
+  "STAFF_ID",
+  "FULL_NAME",
+  "EMPLOYMENT_STATUS",
+  "ASSIGNMENT_STATUS",
+  "HIRE_DATE",
+  "BIRTH_DATE",
+  "JOB_TITLE",
+  "COMMAND",
+  "TELEPHONE_NUMBER",
+  "BANK_NAME",
+  "ACCOUNT_NUMBER",
+  "STAFF_CATEGORY",
+  "EMPLOYEE_TYPE",
+  "NETPAY",
+  "PERIOD",
+  "EMPLOYER",
+];
+
+const MAX_IPPIS_RECORD_COUNT = 1000;
+
 const NewIPPIS = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [data, setData] = useState<ExtractedData[]>([]);
   const [uploadError, setUploadError] = useState("");
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
 
+  const columns: ColumnDef<ExtractedData>[] = [
+    {
+      header: "IPPIS Number",
+      accessorKey: "ippisNumber",
+    },
+    {
+      header: "Staff ID",
+      accessorKey: "staffId",
+    },
+    {
+      header: "Full Name",
+      accessorKey: "fullName",
+    },
+    {
+      header: "Employeement Status",
+      accessorKey: "employeeStatus",
+    },
+    {
+      header: "Assignment Status",
+      accessorKey: "assignmentStatus",
+    },
+    {
+      header: "Hire Date",
+      accessorKey: "hireDate",
+    },
+    {
+      header: "Birth Date",
+      accessorKey: "birthDate",
+    },
+    {
+      header: "Job Title",
+      accessorKey: "jobTitle",
+    },
+    {
+      header: "Employer",
+      accessorKey: "employerOrganization",
+    },
+    {
+      header: "Command",
+      accessorKey: "command",
+    },
+    {
+      header: "Phone Number",
+      accessorKey: "Number",
+    },
+    {
+      header: "Bank Name",
+      accessorKey: "bankName",
+    },
+    {
+      header: "Account Number",
+      accessorKey: "accountNumber",
+    },
+    {
+      header: "Staff Category",
+      accessorKey: "staffCategory",
+    },
+    {
+      header: "Employee Type",
+      accessorKey: "employeeType",
+    },
+    {
+      header: "Net Pay",
+      accessorKey: "netPay",
+    },
+    {
+      header: "Period",
+      accessorKey: "period",
+    },
+  ];
+
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
       try {
         const formData = new FormData();
-        if (!uploadedFile) {
+        if (!uploadedFile || !(data.length > 0)) {
           return;
         }
 
+        console.log(data);
+
         formData.append("documentUpload", uploadedFile);
-        const response = await loanService.uploadIPPISRecordFileOnly(formData);
+        formData.append("bulkUpload", JSON.stringify(data));
+        const response = await loanService.uploadIPPISRecord(formData);
         toast.success(response.message);
         handleClearFile();
       } catch (error: any) {
@@ -45,6 +144,7 @@ const NewIPPIS = () => {
     const file = event.target.files[0];
     try {
       if (file) {
+        await handleDataExtraction(file);
         setUploadedFile(file);
       }
     } catch (error: unknown) {
@@ -58,6 +158,7 @@ const NewIPPIS = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    setData([]);
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>): void => {
@@ -86,11 +187,51 @@ const NewIPPIS = () => {
     try {
       if (file) {
         setUploadedFile(file);
+        await handleDataExtraction(file);
       }
     } catch (error: unknown) {
       toast.error(error as string);
       setUploadError(error as string);
     }
+  };
+
+  const handleDataExtraction = async (file: File) => {
+    setUploadError("");
+    const extractedData = await extractDataFromFile(
+      file,
+      VALID_IPPIS_COLUMNS,
+      {
+        STAFF_ID: "staffId",
+        FULL_NAME: "fullName",
+        EMPLOYMENT_ID: "employeeId",
+        ASSIGNMENT_STATUS: "assignmentStatus",
+        HIRE_DATE: "hireDate",
+        BIRTH_DATE: "birthDate",
+        JOB_TITLE: "jobTitle",
+        COMMAND: "command",
+        TELEPHONE_NUMBER: "phoneNumber",
+        BANK_NAME: "bankName",
+        ACCOUNT_NUMBER: "accountNumber",
+        STAFF_CATEGORY: "staffCategory",
+        EMPLOYEE_TYPE: "employeeType",
+        NETPAY: "netPay",
+        PERIOD: "period",
+        EMPLOYMENT_STATUS: "employmentStatus",
+        IPPIS_NO: "ippisNumber",
+        EMPLOYER: "employerOrganization",
+      },
+      "",
+    );
+
+    if (extractedData.length > MAX_IPPIS_RECORD_COUNT) {
+      setUploadError(
+        `The maximum number of records allowed is ${MAX_IPPIS_RECORD_COUNT} but you provided ${extractedData.length}`,
+      );
+      setUploadedFile(null);
+      return;
+    }
+
+    setData(extractedData);
   };
 
   return (
@@ -99,6 +240,11 @@ const NewIPPIS = () => {
       <Card className="rounded-sm">
         <p className="text-sm font-medium">
           Upload IPPIS records in the approved CSV format. <br /> <br />
+          <span className="font-light">
+            <strong>Note: </strong> You can only upload{" "}
+            <strong className="font-black">{MAX_IPPIS_RECORD_COUNT}</strong>{" "}
+            records a time.{" "}
+          </span>
           <br />
         </p>
         <a
@@ -179,6 +325,7 @@ const NewIPPIS = () => {
             </>
           )}
         </div>
+        {data.length > 0 && <DataTable columns={columns} data={data} />}
       </Card>
     </Container>
   );

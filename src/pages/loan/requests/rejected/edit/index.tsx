@@ -1,9 +1,14 @@
-import { Container, PageTitle } from "@/components/shared";
+import {
+  Container,
+  PageTitle,
+  ReactSelectCustomized,
+} from "@/components/shared";
 import { Card } from "@/components/ui/card";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  BANKS_LIST,
   GENDER_ENUM,
   GENDER_OPTIONS,
   GENDERS,
@@ -21,195 +26,211 @@ import { ClipLoader } from "react-spinners";
 import { isValid } from "date-fns";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { LoanRequestType } from "@/types/shared";
 import {
+  calculateEligibleAmountByOrganization,
   calculateLoanForOrganization,
   formatNumberWithCommasWithOptionPeriodSign,
+  getLoanRepaymentInfo,
+  shouldAllowEligibilityByPass,
 } from "@/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 const getLoanSchema = (maxLoanAmount: number) => {
-  return z.object({
-    title: z
-      .string({
-        required_error: "Title is required",
-      })
-      .min(2, "Title is required"),
-    LastName: z
-      .string({
-        required_error: "Last Name is required",
-      })
-      .min(2, "Last Name is required")
-      .refine((value) => !/\d/.test(value), {
-        message: "Last Name must not contain any digits",
-      }),
-    FirstName: z
-      .string({
-        required_error: "First Name is required",
-      })
-      .min(2, "First Name is required")
-      .refine((value) => !/\d/.test(value), {
-        message: "First Name must not contain any digits",
-      }),
-    OtherNames: z.optional(
-      z.string().refine((value) => !/\d/.test(value), {
-        message: "Other Names must not contain any digits",
-      }),
-    ),
-    BVN: z
-      .string({ required_error: "Bvn is required" })
-      .length(11, "BVN must be 11 characters long")
-      .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
-    NationalIdentityNo: z
-      .string()
-      .length(11, "NIN must be 11 characters long")
-      .regex(/^[\d*]+$/, { message: "NIN must contain only digits" })
-      .optional()
-      .or(z.literal("")),
-
-    Gender: z
-      .string({ required_error: "Gender is required" })
-      .min(4, { message: "Gender is required" }),
-    DateOfBirth: z
-      .string({ required_error: "Date of Birth is required" })
-      .refine(
-        (value) => {
-          const date = new Date(value);
-
-          return isValid(date);
-        },
-        { message: "Date of Birth is required" },
-      )
-      .refine(
-        (value) => {
-          const date = new Date(value).setHours(0, 0, 0, 0);
-          if (!isValid(date)) {
-            return false;
-          }
-          const today = new Date().setHours(0, 0, 0, 0);
-          return date < today;
-        },
-        { message: "Date of Birth has to be before today's date" },
+  return z
+    .object({
+      title: z
+        .string({
+          required_error: "Title is required",
+        })
+        .min(2, "Title is required"),
+      LastName: z
+        .string({
+          required_error: "Last Name is required",
+        })
+        .min(2, "Last Name is required")
+        .refine((value) => !/\d/.test(value), {
+          message: "Last Name must not contain any digits",
+        }),
+      FirstName: z
+        .string({
+          required_error: "First Name is required",
+        })
+        .min(2, "First Name is required")
+        .refine((value) => !/\d/.test(value), {
+          message: "First Name must not contain any digits",
+        }),
+      OtherNames: z.optional(
+        z.string().refine((value) => !/\d/.test(value), {
+          message: "Other Names must not contain any digits",
+        }),
       ),
-    state: z.string({ required_error: "State of origin is required" }),
-    PhoneNo: z
-      .string({
-        required_error: "Phone Number is required",
-      })
-      .length(11, "Phone Number must be 11 characters long")
-      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-    alternatePhoneNo: z
-      .string({
-        required_error: "Preferred Phone Number is required",
-      })
-      .length(11, "Phone Number must be 11 characters long")
-      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-    Email: z
-      .string({
-        required_error: "Email is required",
-      })
-      .refine(
-        (value) => {
-          // Check if the string is a valid email
-          const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (emailPattern.test(value)) {
-            return true;
-          }
+      BVN: z
+        .string({ required_error: "Bvn is required" })
+        .length(11, "BVN must be 11 characters long")
+        .regex(/^[\d*]+$/, { message: "BVN must contain only digits" }),
+      NationalIdentityNo: z
+        .string()
+        .length(11, "NIN must be 11 characters long")
+        .regex(/^[\d*]+$/, { message: "NIN must contain only digits" })
+        .optional()
+        .or(z.literal("")),
 
-          // Check if the string contains at least 60% asterisks
-          const totalLength = value.length;
-          const asteriskCount = value.split("*").length - 1;
-          const asteriskPercentage = (asteriskCount / totalLength) * 100;
+      Gender: z
+        .string({ required_error: "Gender is required" })
+        .min(4, { message: "Gender is required" }),
+      DateOfBirth: z
+        .string({ required_error: "Date of Birth is required" })
+        .refine(
+          (value) => {
+            const date = new Date(value);
 
-          return asteriskPercentage >= 60;
-        },
-        {
-          message: "Please provide a valid email address",
-        },
-      ),
-    NotificationPreference: z.string({
-      required_error: "Notification Preference is required",
-    }),
-    NextOfKinFirstName: z
-      .string({ required_error: "Next of Kin first name is required" })
-      .min(2, "Next of Kin first name must be at least 2 characters")
-      .refine((value) => !/\d/.test(value), {
-        message: "Next of Kin first name must not contain any digits",
+            return isValid(date);
+          },
+          { message: "Date of Birth is required" },
+        )
+        .refine(
+          (value) => {
+            const date = new Date(value).setHours(0, 0, 0, 0);
+            if (!isValid(date)) {
+              return false;
+            }
+            const today = new Date().setHours(0, 0, 0, 0);
+            return date < today;
+          },
+          { message: "Date of Birth has to be before today's date" },
+        ),
+      state: z.string({ required_error: "State of origin is required" }),
+      PhoneNo: z
+        .string({
+          required_error: "Phone Number is required",
+        })
+        .length(11, "Phone Number must be 11 characters long")
+        .regex(/^[\d*]+$/, {
+          message: "Phone number must contain only digits",
+        }),
+      alternatePhoneNo: z
+        .string({
+          required_error: "Preferred Phone Number is required",
+        })
+        .length(11, "Phone Number must be 11 characters long")
+        .regex(/^[\d*]+$/, {
+          message: "Phone number must contain only digits",
+        }),
+      Email: z
+        .string({
+          required_error: "Email is required",
+        })
+        .refine(
+          (value) => {
+            // Check if the string is a valid email
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailPattern.test(value)) {
+              return true;
+            }
+
+            // Check if the string contains at least 60% asterisks
+            const totalLength = value.length;
+            const asteriskCount = value.split("*").length - 1;
+            const asteriskPercentage = (asteriskCount / totalLength) * 100;
+
+            return asteriskPercentage >= 60;
+          },
+          {
+            message: "Please provide a valid email address",
+          },
+        ),
+      NotificationPreference: z.string({
+        required_error: "Notification Preference is required",
       }),
-    NextOfKinLastName: z
-      .string({ required_error: "Next of Kin last name is required" })
-      .min(2, "Next of Kin last name must be at least 2 characters")
-      .refine((value) => !/\d/.test(value), {
-        message: "Next of Kin last name must not contain any digits",
+      NextOfKinFirstName: z
+        .string({ required_error: "Next of Kin first name is required" })
+        .min(2, "Next of Kin first name must be at least 2 characters")
+        .refine((value) => !/\d/.test(value), {
+          message: "Next of Kin first name must not contain any digits",
+        }),
+      NextOfKinLastName: z
+        .string({ required_error: "Next of Kin last name is required" })
+        .min(2, "Next of Kin last name must be at least 2 characters")
+        .refine((value) => !/\d/.test(value), {
+          message: "Next of Kin last name must not contain any digits",
+        }),
+      NextOfKinPhoneNo: z
+        .string({ required_error: "Next of Kin phone number is required" })
+        .length(11, "Phone Number must be 11 characters long")
+        .regex(/^[\d*]+$/, {
+          message: "Phone number must contain only digits",
+        }),
+      Address: z
+        .string({ required_error: "Address is required" })
+        .min(5, { message: "Address is required" }),
+      organizationEmployer: z
+        .string({ required_error: "Organization Employer is required" })
+        .min(2, "OrganizationEmployer must be at least 2 characters long"),
+      ippisNumber: z.string({ required_error: "IPPIS number is required" }),
+      bankName: z
+        .string({ required_error: "Salary bank is required" })
+        .min(2, "Salary bank is required"),
+      salaryAccountNumber: z
+        .string({ required_error: "Account number is required" })
+        .min(10, "Account must be at least 10 digits")
+        .regex(/^\d+$/, { message: "Account number must contain only digits" }),
+      loanAmount: z
+        .string({
+          required_error: "Loan amount is required",
+        })
+        .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
+          message: "Loan amount must be a valid number",
+        }),
+      loanTenor: z
+        .string({
+          required_error: "Loan Tenure is required",
+        })
+        .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
+        .refine(
+          (value) => {
+            return !Number.isNaN(value) && Number(value) > 0;
+          },
+          { message: "Loan amount must be greater than zero" },
+        ),
+      AccountOfficerCode: z.string({
+        required_error: "Account officer code is required",
       }),
-    NextOfKinPhoneNo: z
-      .string({ required_error: "Next of Kin phone number is required" })
-      .length(11, "Phone Number must be 11 characters long")
-      .regex(/^[\d*]+$/, { message: "Phone number must contain only digits" }),
-    Address: z
-      .string({ required_error: "Address is required" })
-      .min(5, { message: "Address is required" }),
-    organizationEmployer: z
-      .string({ required_error: "Organization Employer is required" })
-      .min(2, "OrganizationEmployer must be at least 2 characters long"),
-    ippisNumber: z.string({ required_error: "IPPIS number is required" }),
-    loanAmount: z
-      .string({
-        required_error: "Loan amount is required",
-      })
-      .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
-        message: "Loan amount must be a valid number",
-      })
-      .refine(
-        (value) => {
-          const numberValue = Number(value.replace(/,/g, ""));
-          return (
-            !Number.isNaN(numberValue) &&
-            numberValue <= maxLoanAmount &&
-            numberValue > 0
-          );
-        },
-        {
-          message: `Loan amount must be less than eligible amount ${maxLoanAmount}`,
-        },
-      ),
-    loanTenor: z
-      .string({
-        required_error: "Loan Tenure is required",
-      })
-      .regex(/^\d+$/, { message: "Loan Tenure must contain only digits" })
-      .refine(
-        (value) => {
-          return !Number.isNaN(value) && Number(value) > 0;
-        },
-        { message: "Loan amount must be greater than zero" },
-      ),
-    AccountOfficerCode: z.string({
-      required_error: "Account officer code is required",
-    }),
-    AccountOfficerEmail: z
-      .string({
-        required_error: "Account officer email is required",
-      })
-      .email("Please provide a valid email address"),
-    workIdentification: z.optional(z.string()),
-    IdentificationImage: z.optional(z.string()),
-    CustomerImage: z.optional(z.string()),
-    otherDocument: z.optional(z.string()),
-    CustomerSignature: z.optional(z.string()),
-  });
+      AccountOfficerEmail: z
+        .string({
+          required_error: "Account officer email is required",
+        })
+        .email("Please provide a valid email address"),
+      workIdentification: z.optional(z.string()),
+      IdentificationImage: z.optional(z.string()),
+      CustomerImage: z.optional(z.string()),
+      otherDocument: z.optional(z.string()),
+      CustomerSignature: z.optional(z.string()),
+    })
+    .superRefine((values, ctx) => {
+      const { loanAmount, ippisNumber } = values;
+      const shouldByPassValidation = shouldAllowEligibilityByPass(
+        ippisNumber ?? "",
+      );
+      if (shouldByPassValidation) {
+        return;
+      }
+      const numberValue = Number(loanAmount.replace(/,/g, ""));
+      const isEligible =
+        !Number.isNaN(numberValue) &&
+        numberValue <= maxLoanAmount &&
+        numberValue > 0;
+
+      if (!isEligible) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["loanAmount"],
+          message: `Loan amount must be less than eligible amount ${formatNumberWithCommasWithOptionPeriodSign(maxLoanAmount)}`,
+        });
+      }
+    });
 };
 
 const INITIAL_LOAN_PAYMENT = {
@@ -219,7 +240,7 @@ const INITIAL_LOAN_PAYMENT = {
 };
 
 const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
-  (n) => ({ id: n, value: n.toString(), label: n }),
+  (n) => ({ id: n, value: n.toString(), label: n.toString() }),
 );
 
 const EditInformation: React.FC = () => {
@@ -269,10 +290,10 @@ const EditInformation: React.FC = () => {
       ),
     );
     setValue("loanTenor", data?.profile?.loanTenor ?? "");
-    handleTenureAndAmountFieldBlur(
-      data?.profile?.loanAmount,
-      data?.profile?.loanTenor,
-    );
+    setValue("bankName", data?.profile?.bankName ?? "");
+    setValue("salaryAccountNumber", data?.profile?.salaryAccountNumber ?? "");
+    handleTenorFieldBlur(data?.profile?.loanTenor);
+    handleAmountFieldBlur(data?.profile?.loanAmount ?? "");
     validateBVN({ id: data?.profile?.BVN ?? "" });
     validateIppisData(data?.profile?.ippisNumber ?? "");
   };
@@ -305,6 +326,7 @@ const EditInformation: React.FC = () => {
     customerSignature,
     loanTenor,
     loanAmount,
+    bankName,
   ] = watch([
     "Gender",
     "state",
@@ -313,6 +335,7 @@ const EditInformation: React.FC = () => {
     "CustomerSignature",
     "loanTenor",
     "loanAmount",
+    "bankName",
   ]);
 
   const today = new Date();
@@ -374,8 +397,6 @@ const EditInformation: React.FC = () => {
         JSON.stringify(ippisData),
       );
 
-      console.log({ accountInfo });
-
       if (accountInfo) {
         const repaymentInfo = calculateLoanForOrganization(
           ippisData?.employerOrganization ?? "",
@@ -425,24 +446,6 @@ const EditInformation: React.FC = () => {
       return accountData?.accountRecords;
     },
   });
-
-  // useEffect(() => {
-  //   console.log({ ippisData });
-
-  //   if (ippisData && loanTenor && loanAmount) {
-  //     const repaymentInfo = calculateLoanForOrganization(
-  //       ippisData?.employerOrganization ?? "",
-  //       Number(loanAmount),
-  //       Number(loanTenor),
-  //       Number(ippisData?.netPay) ?? 0,
-  //     );
-  //     setLoanRepayment({
-  //       monthlyRepayment: repaymentInfo.monthlyInstallment,
-  //       totalPayment: repaymentInfo.totalRepayment,
-  //       eligibleAmount: repaymentInfo.eligibleAmount,
-  //     });
-  //   }
-  // }, [ippisData, loanTenor, loanAmount]);
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
@@ -505,29 +508,89 @@ const EditInformation: React.FC = () => {
     }
   };
 
-  const handleTenureAndAmountFieldBlur = (
-    loanAmount: string,
-    loanTenor: string,
-  ) => {
-    const amount = loanAmount.replace(/[^0-9.]/g, "");
-    const repaymentInfo = calculateLoanForOrganization(
-      ippisData?.employerOrganization ?? "",
+  const handleAmountFieldBlur = (data: string) => {
+    const amount = data.replace(/,/g, "");
+    if (
+      !shouldAllowEligibilityByPass(ippisNumber) &&
+      (!ippisData || !loanTenor)
+    ) {
+      return;
+    }
+
+    const paymentInfo = getLoanRepaymentInfo(
       Number(amount),
       Number(loanTenor),
-      Number(ippisData?.netPay) ?? 0,
+      ippisData?.employerOrganization ?? "",
     );
-    console.log({ repaymentInfo });
 
-    setLoanRepayment({
-      monthlyRepayment: repaymentInfo.monthlyInstallment,
-      totalPayment: repaymentInfo.totalRepayment,
-      eligibleAmount: repaymentInfo.eligibleAmount ?? 0,
-    });
+    setLoanRepayment((prev) => ({
+      ...prev,
+      ...paymentInfo,
+    }));
+  };
+
+  const handleTenorFieldBlur = async (loanTenor: string) => {
+    if (!ippisData && shouldAllowEligibilityByPass(ippisNumber) && loanAmount) {
+      const paymentInfo = getLoanRepaymentInfo(
+        Number(loanAmount.replace(/,/g, "")),
+        Number(loanTenor),
+        "",
+      );
+
+      setLoanRepayment((prev) => ({
+        ...prev,
+        ...paymentInfo,
+      }));
+    }
+
+    if (!ippisData) {
+      return;
+    }
+
+    if (shouldAllowEligibilityByPass(ippisNumber)) {
+      return;
+    }
+    const eligibleAmount = calculateEligibleAmountByOrganization(
+      Number(ippisData.netPay),
+      Number(loanTenor),
+      ippisData.employerOrganization,
+    );
+    setLoanRepayment((prev) => ({
+      ...prev,
+      eligibleAmount: eligibleAmount.toString(),
+    }));
+
+    const amount = loanAmount.replace(/[^0-9.]/g, "");
+
+    const paymentInfo = getLoanRepaymentInfo(
+      Number(amount),
+      Number(loanTenor),
+      ippisData.employerOrganization,
+    );
+
+    setLoanRepayment((prev) => ({
+      ...prev,
+      ...paymentInfo,
+    }));
   };
 
   useEffect(() => {
-    if (!ippisData || isIppisError) {
-      setLoanRepayment(prev => ({...prev, eligibleAmount: "0"}))
+    if (
+      (!ippisData || isIppisError) &&
+      shouldAllowEligibilityByPass(ippisNumber) &&
+      loanAmount &&
+      loanTenor
+    ) {
+      const paymentInfo = getLoanRepaymentInfo(
+        Number(loanAmount?.replace(/,/g, "")),
+        Number(loanTenor),
+        "",
+      );
+
+      setLoanRepayment((prev) => ({
+        ...prev,
+        ...paymentInfo,
+      }));
       return;
     }
     if (ippisData && loanAmount && loanTenor) {
@@ -538,14 +601,35 @@ const EditInformation: React.FC = () => {
         Number(loanTenor),
         Number(ippisData?.netPay) ?? 0,
       );
-  
+
       setLoanRepayment({
         monthlyRepayment: repaymentInfo.monthlyInstallment,
         totalPayment: repaymentInfo.totalRepayment,
         eligibleAmount: repaymentInfo.eligibleAmount ?? 0,
       });
     }
-  }, [loanAmount, loanTenor, ippisData, isIppisError])
+  }, [loanAmount, loanTenor, ippisData, isIppisError, ippisNumber]);
+
+  const selectedLoanTenor = TENURE_OPTIONS.find(
+    (opt) => Number(opt.value) === Number(loanTenor),
+  );
+
+  const selectedBank = BANKS_LIST.find(
+    (bank) => bank.label.toUpperCase() === bankName?.toUpperCase(),
+  );
+
+  const selectedGender = GENDER_OPTIONS.find(
+    (gender) => gender.value.toUpperCase() === Gender?.toUpperCase(),
+  );
+
+  const selectedState = STATE_OPTIONS.find(
+    (st) => st.value.toUpperCase() === state?.toUpperCase(),
+  );
+
+  const selectedNotificationPreference = NOTIFICATION_PREFERENCE_OPTIONS.find(
+    (pref) =>
+      pref.value.toUpperCase() === NotificationPreference?.toUpperCase(),
+  );
 
   return (
     <>
@@ -647,43 +731,22 @@ const EditInformation: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="Gender" className="mb-1 font-semibold">
-                      Gender
-                    </Label>
-                    <Select
-                      value={Gender}
-                      onValueChange={async (value) => {
-                        setValue("Gender", value);
+                    <ReactSelectCustomized
+                      options={GENDER_OPTIONS}
+                      label={<>Gender</>}
+                      placeholder="Gender"
+                      onChange={(data) => {
+                        const value = data?.value ?? "";
+                        setValue("Gender", value, { shouldValidate: true });
                         if (value.toUpperCase() === GENDERS.MALE) {
                           setValue("title", TITLES.MR);
                         } else {
                           setValue("title", TITLES.MRS);
                         }
-                        await trigger("Gender");
                       }}
-                      // disabled={
-                      //   (bvnDetails?.customerInfo !== undefined &&
-                      //     Object.keys(bvnDetails?.customerInfo).length > 0) ||
-                      //   customerLoans.length > 0
-                      // }
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Gender</SelectLabel>
-                          {GENDER_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.Gender?.message}
-                    </p>
+                      value={selectedGender}
+                      error={errors?.Gender?.message}
+                    />
                   </div>
                   <div>
                     <Input
@@ -703,33 +766,19 @@ const EditInformation: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="alertType" className="mb-1 font-semibold">
-                      State of Origin
-                    </Label>
-                    <Select
-                      value={state}
-                      onValueChange={async (value) => {
-                        setValue("state", value);
-                        await trigger("state");
+                    <ReactSelectCustomized
+                      menuPosition="fixed"
+                      options={STATE_OPTIONS}
+                      label={<>State of Origin</>}
+                      placeholder="State of Origin"
+                      onChange={(data) => {
+                        const value = data?.value ?? "";
+                        setValue("state", value, { shouldValidate: true });
                       }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="State of Origin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>State of Origin</SelectLabel>
-                          {STATE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.state?.message}
-                    </p>
+                      value={selectedState}
+                      error={errors?.state?.message}
+                      maxMenuHeight={300}
+                    />
                   </div>
                   <div>
                     <Input
@@ -763,34 +812,19 @@ const EditInformation: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="alertType" className="mb-1 font-semibold">
-                      Notification Preference:
-                    </Label>
-                    <Select
-                      value={NotificationPreference}
-                      onValueChange={async (value) => {
+                    <ReactSelectCustomized
+                      options={NOTIFICATION_PREFERENCE_OPTIONS}
+                      label={<>Notification Preference</>}
+                      placeholder="Notification Preference"
+                      onChange={(data) => {
+                        const value = data?.value ?? "";
                         setValue("NotificationPreference", value, {
                           shouldValidate: true,
                         });
                       }}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Notification Preference" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Notification Preference</SelectLabel>
-                          {NOTIFICATION_PREFERENCE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.NotificationPreference?.message}
-                    </p>
+                      value={selectedNotificationPreference}
+                      error={errors?.NotificationPreference?.message}
+                    />
                   </div>
                   <div className="col-span-full">
                     <Textarea
@@ -821,7 +855,11 @@ const EditInformation: React.FC = () => {
                         </span>
                       </>
                     ) : isIppisError ? (
-                      <p>Unable to retrieve ippis information</p>
+                      shouldAllowEligibilityByPass(ippisNumber) ? null : (
+                        <p className="text-xs text-red-500">
+                          Unable to retrieve ippis information
+                        </p>
+                      )
                     ) : (
                       ippisData && (
                         <p className="rounded-sm bg-green-100 p-1 text-sm font-bold text-green-900">
@@ -835,10 +873,35 @@ const EditInformation: React.FC = () => {
                       label="Employer (Organization)"
                       {...register("organizationEmployer")}
                       error={errors?.organizationEmployer?.message}
-                      disabled
+                      disabled={!shouldAllowEligibilityByPass(ippisNumber)}
                     />
                   </div>
-
+                  <div>
+                    <ReactSelectCustomized
+                      label={<>Salary Bank Number</>}
+                      options={BANKS_LIST}
+                      onChange={(data: any) => {
+                        const value = data?.label ?? "";
+                        setValue("bankName", value, { shouldValidate: true });
+                      }}
+                      error={errors?.bankName?.message}
+                      menuPosition="fixed"
+                      value={selectedBank}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Account Number"
+                      {...register("salaryAccountNumber")}
+                      error={errors?.salaryAccountNumber?.message}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "");
+                        setValue("salaryAccountNumber", value, {
+                          shouldValidate: true,
+                        });
+                      }}
+                    />
+                  </div>
                   <div>
                     <Input
                       label="Next of Kin First Name: "
@@ -884,42 +947,29 @@ const EditInformation: React.FC = () => {
                         );
                       }}
                       disabled={isSubmitting}
-                      onBlur={() =>
-                        handleTenureAndAmountFieldBlur(loanAmount, loanTenor)
-                      }
+                      onBlur={(e) => handleAmountFieldBlur(e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="alertType" className="mb-1 font-semibold">
-                      Loan Tenure: <i className="text-sx font-light">Months</i>
-                    </Label>
-                    <Select
-                      value={loanTenor}
-                      onValueChange={async (value) => {
-                        handleTenureAndAmountFieldBlur(loanAmount, value);
-                        setValue("loanTenor", value, {
-                          shouldValidate: true,
-                        });
+                    <ReactSelectCustomized
+                      options={TENURE_OPTIONS}
+                      label={
+                        <>
+                          Loan Tenure:{" "}
+                          <i className="text-sx font-light">Months</i>
+                        </>
+                      }
+                      onChange={(data: any) => {
+                        if (data) {
+                          handleTenorFieldBlur(data.value);
+                          setValue("loanTenor", data.value, {
+                            shouldValidate: true,
+                          });
+                        }
                       }}
-                      disabled={isSubmitting}
-                    >
-                      <SelectTrigger className="">
-                        <SelectValue placeholder="Loan Tenor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Loan Tenor: </SelectLabel>
-                          {TENURE_OPTIONS?.map((opt) => (
-                            <SelectItem value={opt.value} key={opt.id}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <p className="mt-0.5 h-1 text-[10px] text-red-500">
-                      {errors?.loanTenor?.message}
-                    </p>
+                      value={selectedLoanTenor}
+                      error={errors?.loanTenor?.message}
+                    />
                   </div>
 
                   <div>

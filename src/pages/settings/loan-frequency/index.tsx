@@ -16,9 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  SESSION_STORAGE_KEY,
-} from "@/constants";
+import { SESSION_STORAGE_KEY } from "@/constants";
 import { LoanService } from "@/services";
 import { ClipLoader } from "react-spinners";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -99,7 +97,7 @@ const LoanFrequency = () => {
       const response = await loanService.updateLoanFrequency(values);
       toast.success(response?.message);
       reset();
-      queryClient.invalidateQueries({
+      queryClient.resetQueries({
         queryKey: [FETCH_LOAN_FREQUENCY_SETTINGS],
       });
     } catch (error: any) {

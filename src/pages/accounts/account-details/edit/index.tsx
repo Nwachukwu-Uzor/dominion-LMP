@@ -224,18 +224,6 @@ const EditDetails = () => {
         setValue("NextOfKinPhoneNumber", profile.NextOfKinPhoneNo);
       }
 
-      // if (profile.state) {
-      //   setValue("state", profile.state);
-      // }
-
-      // if (profile.title) {
-      //   setValue("title", profile.title);
-      // }
-
-      // if (accountInfo?.NotificationPreference) {
-      //   setValue("NotificationPreference", accountInfo.NotificationPreference);
-      // }
-
       if (profile?.NextOfKinName) {
         const [nextOfKinFirstName, nextOfKinLastName] =
           profile.NextOfKinName.split(" ");
@@ -299,7 +287,7 @@ const EditDetails = () => {
       };
       const response = await accountService.editCustomerInfo(payload);
       toast.success(response?.message);
-      queryClient.invalidateQueries({
+      queryClient.resetQueries({
         queryKey: [FETCH_ACCOUNT_DETAILS_BY_ID],
       });
       navigate(`/accounts/${customerId}`);

@@ -47,7 +47,7 @@ export const DisableAdmin = ({ openModal, onClose, admin }: Props) => {
       }
 
       toast.success(message);
-      queryClient.invalidateQueries({
+      queryClient.resetQueries({
         queryKey: [FETCH_ALL_ADMINS],
       });
       onClose();
@@ -61,15 +61,15 @@ export const DisableAdmin = ({ openModal, onClose, admin }: Props) => {
           <div className="flex justify-end">
             <button disabled={isPending}>
               <IoMdClose
-                className="cursor-pointer hover:scale-150 transition-all"
+                className="cursor-pointer transition-all hover:scale-150"
                 onClick={onClose}
               />
             </button>
           </div>
-          <div className="h-10 w-10 lg:h-[60px] lg:w-[60px] bg-red-100 rounded-full mx-auto flex justify-center items-center">
-            <FaExclamation className="text-red-700 scale-150 text-xl lg:text-2xl" />
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-red-100 lg:h-[60px] lg:w-[60px]">
+            <FaExclamation className="scale-150 text-xl text-red-700 lg:text-2xl" />
           </div>
-          <h3 className="text-lg font-bold mt-5 text-center">
+          <h3 className="mt-5 text-center text-lg font-bold">
             Confirm Deactivation
           </h3>
           <p className="mt-[5px] text-center">
@@ -77,14 +77,14 @@ export const DisableAdmin = ({ openModal, onClose, admin }: Props) => {
             <strong>{admin?.fullName ?? admin?.email}</strong>?
           </p>
 
-          <p className="h-1 my-1 text-red-500 text-xs">
+          <p className="my-1 h-1 text-xs text-red-500">
             {(isError && (error as any)?.response?.data?.message) ??
               error?.message ??
               "An error occurred"}
           </p>
 
           <Button
-            className="bg-red-500 text-white mt-8 lg:mt-4"
+            className="mt-8 bg-red-500 text-white lg:mt-4"
             onClick={() => mutate()}
             disabled={isPending}
           >
@@ -97,7 +97,7 @@ export const DisableAdmin = ({ openModal, onClose, admin }: Props) => {
             )}
           </Button>
           <Button
-            className="bg-[#2D2D2D] text-white mt-0 lg:mt-4"
+            className="mt-0 bg-[#2D2D2D] text-white lg:mt-4"
             onClick={onClose}
             disabled={isPending}
           >

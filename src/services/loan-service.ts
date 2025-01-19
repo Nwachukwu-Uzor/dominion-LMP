@@ -44,6 +44,20 @@ export class LoanService {
 
     return response?.data;
   }
+  async uploadIPPISRecordFileOnly(data: FormData) {
+    const response = await axios.post<APIResponseType<string>>(
+      `${baseUrl}/IPPIS/bulk/ippis/upload`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${this._token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response?.data;
+  }
 
   async getAllLoanRepayments(page = 1, size = 10) {
     const response = await axios.get<

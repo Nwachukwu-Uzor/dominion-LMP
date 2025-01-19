@@ -13,33 +13,13 @@ import {
   calculateEligibleAmountByOrganization,
   formatNumberWithCommasWithOptionPeriodSign,
   getLoanRepaymentInfo,
+  shouldAllowEligibilityByPass,
 } from "@/utils";
 import { ReactSelectCustomized } from "../shared";
 // import { BVNType } from "@/types/shared";
 
 type Props = {
   handleUpdateStep: (isForward?: boolean) => void;
-};
-
-const ALLOW_PREFIXES_FOR_IPPIS_BY_PASS = ["NCS", "TI"];
-
-const shouldAllowEligibilityByPass = (ippisNumber: string): boolean => {
-  // Convert ippisNumber to lowercase for case-insensitive comparison
-  const lowerCaseIppisNumber = ippisNumber?.trim()?.toLowerCase();
-  if (!lowerCaseIppisNumber || !(lowerCaseIppisNumber?.length > 0)) {
-    return false;
-  }
-
-  // Check if the ippisNumber starts with any of the allowed prefixes (case-insensitive)
-  const hasAllowedPrefix = ALLOW_PREFIXES_FOR_IPPIS_BY_PASS.some((prefix) =>
-    lowerCaseIppisNumber.startsWith(prefix.toLowerCase()),
-  );
-
-  // Check if the ippisNumber starts with a number
-  const startsWithNumber = /^\d/.test(ippisNumber);
-
-  // Return true if either condition is met
-  return hasAllowedPrefix || startsWithNumber;
 };
 
 const getBasicInfoSchema = (maxLoanAmount: number) =>
@@ -196,6 +176,24 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
 
     if (data) {
       const parsedData = JSON.parse(data) as FormFields;
+      const { ippisNumber, loanAmount, loanTenor } = parsedData;
+
+      if (
+        shouldAllowEligibilityByPass(ippisNumber) &&
+        loanAmount &&
+        loanTenor
+      ) {
+        const paymentInfo = getLoanRepaymentInfo(
+          Number(loanAmount?.replace(/,/g, "")),
+          Number(loanTenor),
+          "",
+        );
+
+        setLoanRepayment((prev) => ({
+          ...prev,
+          ...paymentInfo,
+        }));
+      }
 
       const fields = getValues();
       for (const key in parsedData) {
@@ -269,6 +267,19 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
   };
 
   const handleTenureAndAmountFieldBlur = async (loanTenor: string) => {
+    if (!ippisData && shouldAllowEligibilityByPass(ippisNumber) && loanAmount) {
+      const paymentInfo = getLoanRepaymentInfo(
+        Number(loanAmount.replace(/,/g, "")),
+        Number(loanTenor),
+        "",
+      );
+
+      setLoanRepayment((prev) => ({
+        ...prev,
+        ...paymentInfo,
+      }));
+    }
+
     if (!ippisData) {
       return;
     }

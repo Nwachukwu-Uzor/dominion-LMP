@@ -73,7 +73,7 @@ const LinkStatus = () => {
       const response = await settingsService.updateLoanApplicationLink(values);
       toast.success(response?.message);
       reset();
-      queryClient.invalidateQueries({
+      queryClient.resetQueries({
         queryKey: [FETCH_LINK_STATUS],
       });
     } catch (error: any) {

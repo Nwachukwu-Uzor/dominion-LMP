@@ -105,7 +105,7 @@ export const ActivateAdmin = ({ openModal, onClose, admin }: Props) => {
         message = response.message ?? "";
       }
       toast.success(message);
-      queryClient.invalidateQueries({
+      queryClient.resetQueries({
         queryKey: [FETCH_ALL_ADMINS],
       });
       setSelectedRoles([]);

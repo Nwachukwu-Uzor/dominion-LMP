@@ -24,3 +24,4 @@ export {
   getLoanRepaymentInfo,
 } from "./loan-calculator-utils";
 export { convertToBase64 } from "./convert-to-base64";
+export { shouldAllowEligibilityByPass } from "./should-bypass-eligibility-check";
