@@ -49,6 +49,8 @@ const Accounts = () => {
         ...prev,
         total: data?.payload?.totalPages ?? 1,
       }));
+      console.log({ data: data?.payload?.accountRecords });
+
       if (!data?.payload?.accountRecords) {
         return [];
       }
@@ -106,15 +108,20 @@ const Accounts = () => {
     {
       header: "Action",
       accessorKey: "id",
-      cell: ({ row }) => (
-        <Link
-          to={`${row?.original?.customerNumber}`}
-          className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
-        >
-          View Details
-          <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
-        </Link>
-      ),
+      cell: ({ row }) => {
+        const { customerNumber } = row.original;
+        return customerNumber ? (
+          <Link
+            to={`${row?.original?.customerNumber}`}
+            className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
+          >
+            View Details
+            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+          </Link>
+        ) : (
+          <></>
+        );
+      },
     },
   ];
 
@@ -214,13 +221,7 @@ const Accounts = () => {
                     </Button>
                   </div>
                 ) : null}
-                <NonPaginatedTable
-                  columns={columns}
-                  data={accounts.filter(
-                    (acc) =>
-                      acc.customerNumber !== null && acc.accountNumber !== null,
-                  )}
-                />
+                <NonPaginatedTable columns={columns} data={accounts} />
                 <div>
                   <Pagination
                     totalPages={pageConfig.total}
