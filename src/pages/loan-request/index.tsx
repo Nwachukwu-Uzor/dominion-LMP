@@ -83,8 +83,8 @@ const LoanRequest = () => {
         </article>
       ) : linkStatus?.toUpperCase() === LINK_STATUS_OPTIONS.ON ? (
         <>
-          <h3 className="scroll-m-20 text-center text-xl font-semibold tracking-tight">
-            DMB IPPIS Loan
+          <h3 className="scroll-m-20 text-center text-sm md:text-base lg:text-lg font-semibold uppercase tracking-tight">
+            DMB IPPIS SWIFT CASH LOAN
           </h3>
           <p className="mt-1 text-center text-sm leading-7">
             Start your Loan Application today!

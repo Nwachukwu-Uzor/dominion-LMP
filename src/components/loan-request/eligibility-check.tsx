@@ -10,7 +10,7 @@ import { AccountService } from "@/services";
 import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
 import {
-  calculateEligibleAmountByOrganization,
+  calculateEligibleAmountByOrganizationUsingIppisPrefix,
   formatNumberWithCommasWithOptionPeriodSign,
   getLoanRepaymentInfo,
   shouldAllowEligibilityByPass,
@@ -148,11 +148,12 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
       }
 
       if (ippisData && loanTenor) {
-        const eligibleAmount = calculateEligibleAmountByOrganization(
-          Number(ippisData.netPay),
-          Number(loanTenor),
-          ippisData.employerOrganization,
-        );
+        const eligibleAmount =
+          calculateEligibleAmountByOrganizationUsingIppisPrefix(
+            Number(ippisData.netPay),
+            Number(loanTenor),
+            ippisNumber,
+          );
         setLoanRepayment((prev) => ({
           ...prev,
           eligibleAmount: eligibleAmount.toString(),
@@ -287,11 +288,12 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     if (shouldAllowEligibilityByPass(ippisNumber)) {
       return;
     }
-    const eligibleAmount = calculateEligibleAmountByOrganization(
-      Number(ippisData.netPay),
-      Number(loanTenor),
-      ippisData.employerOrganization,
-    );
+    const eligibleAmount =
+      calculateEligibleAmountByOrganizationUsingIppisPrefix(
+        Number(ippisData.netPay),
+        Number(loanTenor),
+        ippisNumber,
+      );
     setLoanRepayment((prev) => ({
       ...prev,
       eligibleAmount: eligibleAmount.toString(),
@@ -323,7 +325,7 @@ export const EligiblityCheck: React.FC<Props> = ({ handleUpdateStep }) => {
     const paymentInfo = getLoanRepaymentInfo(
       Number(amount),
       Number(loanTenor),
-      ippisData?.employerOrganization ?? "",
+      ippisNumber ?? "",
     );
 
     setLoanRepayment((prev) => ({

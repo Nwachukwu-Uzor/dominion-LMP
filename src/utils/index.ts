@@ -18,9 +18,9 @@ export { capitalize } from "./text-format-utils";
 export { maskData, maskValue } from "./mask-data";
 export { formatDataForReport } from "./report-download-utils";
 export {
-  calculateLoanForOrganization,
+  calculateLoanForOrganizationForIppisPrefix,
   calculateEligibleAmount,
-  calculateEligibleAmountByOrganization,
+  calculateEligibleAmountByOrganizationUsingIppisPrefix,
   getLoanRepaymentInfo,
 } from "./loan-calculator-utils";
 export { convertToBase64 } from "./convert-to-base64";

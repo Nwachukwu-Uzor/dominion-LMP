@@ -29,8 +29,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoanRequestType } from "@/types/shared";
 import {
-  calculateEligibleAmountByOrganization,
-  calculateLoanForOrganization,
+  calculateEligibleAmountByOrganizationUsingIppisPrefix,
+  calculateLoanForOrganizationForIppisPrefix,
   formatNumberWithCommasWithOptionPeriodSign,
   getLoanRepaymentInfo,
   shouldAllowEligibilityByPass,
@@ -398,8 +398,8 @@ const EditInformation: React.FC = () => {
       );
 
       if (accountInfo) {
-        const repaymentInfo = calculateLoanForOrganization(
-          ippisData?.employerOrganization ?? "",
+        const repaymentInfo = calculateLoanForOrganizationForIppisPrefix(
+          ippisNumber ?? "",
           Number(accountInfo.profile.loanAmount),
           Number(accountInfo.profile.loanTenor),
           Number(ippisData?.netPay) ?? 0,
@@ -520,7 +520,7 @@ const EditInformation: React.FC = () => {
     const paymentInfo = getLoanRepaymentInfo(
       Number(amount),
       Number(loanTenor),
-      ippisData?.employerOrganization ?? "",
+      ippisNumber ?? "",
     );
 
     setLoanRepayment((prev) => ({
@@ -550,11 +550,12 @@ const EditInformation: React.FC = () => {
     if (shouldAllowEligibilityByPass(ippisNumber)) {
       return;
     }
-    const eligibleAmount = calculateEligibleAmountByOrganization(
-      Number(ippisData.netPay),
-      Number(loanTenor),
-      ippisData.employerOrganization,
-    );
+    const eligibleAmount =
+      calculateEligibleAmountByOrganizationUsingIppisPrefix(
+        Number(ippisData.netPay),
+        Number(loanTenor),
+        ippisNumber,
+      );
     setLoanRepayment((prev) => ({
       ...prev,
       eligibleAmount: eligibleAmount.toString(),
@@ -595,8 +596,8 @@ const EditInformation: React.FC = () => {
     }
     if (ippisData && loanAmount && loanTenor) {
       const amount = loanAmount.replace(/[^0-9.]/g, "");
-      const repaymentInfo = calculateLoanForOrganization(
-        ippisData?.employerOrganization ?? "",
+      const repaymentInfo = calculateLoanForOrganizationForIppisPrefix(
+        ippisNumber ?? "",
         Number(amount) ?? 0,
         Number(loanTenor),
         Number(ippisData?.netPay) ?? 0,
