@@ -109,10 +109,10 @@ const Accounts = () => {
       header: "Action",
       accessorKey: "id",
       cell: ({ row }) => {
-        const { customerNumber } = row.original;
-        return customerNumber ? (
+        const { id } = row.original;
+        return id ? (
           <Link
-            to={`${row?.original?.customerNumber}`}
+            to={`${row?.original?.id}`}
             className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
           >
             View Details
