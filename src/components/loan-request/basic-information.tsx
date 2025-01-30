@@ -19,11 +19,16 @@ import { useMutation } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
 import {
   capitalize,
+  compareFullNames,
   formatCurrency,
   maskData,
   parseDateToInputFormat,
 } from "@/utils";
-import { AccountLoanType, CustomerInfoType } from "@/types/shared";
+import {
+  AccountLoanType,
+  CustomerInfoType,
+  IPPISResponseType,
+} from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { NonPaginatedTable, ReactSelectCustomized } from "../shared";
 // import { BVNType } from "@/types/shared";
@@ -112,6 +117,7 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
     watch,
     formState: { errors },
     reset: resetForm,
+    clearErrors,
   } = useForm<FormFields>({
     resolver: zodResolver(schema),
   });
@@ -150,6 +156,29 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
       resetForm();
       setValue("BVN", data.id);
       const { customerInfo, mainOneDetails } = response.payload;
+      // Compare name from BVN validation to name in IPPIS
+      const fullNameFromBvn = `${mainOneDetails?.bvnDetails?.FirstName ?? ""} ${mainOneDetails?.bvnDetails?.OtherNames} ${mainOneDetails?.bvnDetails?.LastName ?? ""}`;
+      const IppisInfo = sessionStorage.getItem(
+        `${SESSION_STORAGE_KEY}_IPPIS_INFO`,
+      );
+      if (!IppisInfo) {
+        throw new Error("No IPPIS info found");
+      }
+
+      const parseIppisInfo = JSON.parse(IppisInfo) as IPPISResponseType;
+      const fullNameFromIppis = parseIppisInfo.fullName;
+
+      const areNamesEqual = compareFullNames(
+        fullNameFromIppis,
+        fullNameFromBvn,
+      );
+
+      if (!areNamesEqual) {
+        const errorMessage = `Name from BVN ${fullNameFromBvn} does not match name from IPPIS Record ${fullNameFromIppis}`;
+        setError("BVN", { type: "deps", message: errorMessage });
+        throw new Error(errorMessage);
+      }
+
       if (customerInfo && Object.keys(customerInfo).length > 0) {
         populateFieldsWithCustomInfo(customerInfo);
       } else {
@@ -343,12 +372,14 @@ export const BasicInformation: React.FC<Props> = ({ handleUpdateStep }) => {
             {...register("BVN")}
             error={
               isBvnError
-                ? (bvnError as any)?.response?.data?.payload?.error
+                ? (bvnError as any)?.response?.data?.payload?.error ||
+                  (bvnError as any)?.message
                 : errors?.BVN?.message
             }
             type="number"
             onChange={async (e) => {
               const value = e.target.value.replace(/\D/g, "");
+              clearErrors("BVN");
               resetBvnDetails();
               setCustomerLoans([]);
               sessionStorage.removeItem(`${SESSION_STORAGE_KEY}_BVN_DETAILS`);

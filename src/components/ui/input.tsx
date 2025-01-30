@@ -63,7 +63,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </span>
           ) : null}
         </div>
-        <p className="mt-0.5 h-1 text-[10px] text-red-500">{error}</p>
+        <p className="mt-0.5 min-h-1 text-[10px] text-red-500">{error}</p>
       </div>
     );
   },
