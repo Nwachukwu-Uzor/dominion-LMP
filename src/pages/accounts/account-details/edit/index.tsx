@@ -208,7 +208,7 @@ const EditDetails = () => {
       // eslint-disable-next-line
       const { otherDocuments, ...profileInfo } = profile;
       const fields = getValues();
-      const parsedProfile = profileInfo as Record<string, string>;
+      const parsedProfile = profileInfo as unknown as  Record<string, string>;
 
       for (const key in profileInfo) {
         if (key in fields) {

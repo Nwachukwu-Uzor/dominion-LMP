@@ -1,3 +1,6 @@
+import { AccountLoanType } from "./account-loan-type";
+import { ProfileType } from "./profile-type";
+
 export type AccountType = {
   id: string;
   TransactionTrackingRef: string;
@@ -30,4 +33,6 @@ export type AccountType = {
   approved?: string;
   createdAt: string;
   updatedAt: string;
+  profile: ProfileType,
+  accountLoans?: AccountLoanType[]
 };
