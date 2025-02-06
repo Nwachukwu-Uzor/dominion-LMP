@@ -199,7 +199,7 @@ export class LoanService {
           (await this.getLoanRequestForStage(LOAN_STAGES.AUTHORIZER, 1, 1))
             ?.payload?.totalRecords ?? 0,
         completed:
-          (await this.getAllLoanRequests(LOAN_STAGES.COMPLETED, 1, 1))?.payload
+          (await this.getAllLoanRequests(`${LOAN_STAGES.COMPLETED}&location=dashboard`, 1, 1))?.payload
             ?.totalRecords ?? 0,
       };
 
