@@ -9,3 +9,4 @@ export { FileViewer } from "./file-viewer";
 export { Record } from "./record";
 export { AddDocumentForm } from "./add-document-form";
 export { ReactSelectCustomized } from "./react-select-customized";
+export { FullScreenLoader } from "./full-screen-loader"

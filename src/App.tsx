@@ -1,7 +1,4 @@
-import {
-  createHashRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import {
   DashboardPage,
   AdminLoginPage,
@@ -27,6 +24,7 @@ import {
   NewRepaymentUploadPage,
   RejectedRequestsPage,
   EditRejectedRequestsPage,
+  CustomerDetailsPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -72,6 +70,10 @@ const router = createHashRouter([
             index: true,
             element: <CustomersPage />,
           },
+          {
+            path: ":customerId",
+            element: <CustomerDetailsPage />,
+          },
         ],
       },
       {
@@ -90,7 +92,7 @@ const router = createHashRouter([
             element: <LoanRequestsPage />,
           },
           {
-            path: "requests/:stage/:requestId/:accountId",
+            path: "requests/:stage/:requestId",
             element: <LoanRequestDetailsPage />,
           },
         ],

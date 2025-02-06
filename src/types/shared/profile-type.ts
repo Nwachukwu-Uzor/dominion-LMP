@@ -3,7 +3,7 @@ export type ProfileType = {
   profileId: string;
   LastName: string;
   FirstName: string;
-  OtherNames?: string;
+  OtherName?: string;
   BVN: string;
   PhoneNo: string;
   alternatePhoneNo?: string;
@@ -28,6 +28,7 @@ export type ProfileType = {
   CustomerSignature?: string;
   IdentificationImage?: string;
   otherDocuments?: {title: string, otherDocument: string}[];
+  additionalOtherDocuments?: {title: string, otherDocument: string}[];
   title: string;
   workIdentification: string;
   salaryAccountNumber: string;

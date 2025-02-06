@@ -1,4 +1,5 @@
 import { AccountLoanType } from "./account-loan-type";
+import { ProfileType } from "./profile-type";
 
 export interface CustomerInfoType {
   id: string;
@@ -64,3 +65,7 @@ export interface AccountInfoType {
   updatedAt: string;
   accountLoans: AccountLoanType[];
 }
+
+export type CustomerDetailsType = AccountInfoType & {
+  profile: ProfileType;
+};

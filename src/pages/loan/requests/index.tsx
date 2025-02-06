@@ -3,15 +3,11 @@ import { Container, NonPaginatedTable, PageTitle } from "@/components/shared";
 import { UnCompletedLoanRequestType } from "@/types/shared";
 import { ColumnDef } from "@tanstack/react-table";
 import { Card } from "@/components/ui/card";
-import { formatDate } from "date-fns";
+import { formatDate, isValid } from "date-fns";
 import * as XLSX from "xlsx";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  GENDER_ENUM,
-  SESSION_STORAGE_KEY,
-  USER_ROLES,
-} from "@/constants";
+import { GENDER_ENUM, SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
 import { Pagination } from "@/components/shared/pagination";
 import { ClipLoader } from "react-spinners";
 import { Link, useParams } from "react-router-dom";
@@ -31,7 +27,7 @@ const initialPageConfig = {
 
 const AccountRequests = () => {
   const [pageConfig, setPageConfig] = useState(initialPageConfig);
-  const { user } = useUser()
+  const { user } = useUser();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
@@ -99,20 +95,51 @@ const AccountRequests = () => {
     },
     {
       header: "Request Date",
-      accessorFn: (row) => formatDate(row?.createdAt, "dd-MM-yyy hh:mm:ss a"),
+      accessorFn: (row) =>
+        isValid(row?.loanAccountDetails?.createdAt)
+          ? formatDate(
+              row?.loanAccountDetails?.createdAt,
+              "dd-MM-yyy hh:mm:ss a",
+            )
+          : row?.loanAccountDetails?.createdAt,
     },
     {
-      header: "Loan Amount",
-      accessorKey: "customerDetails.loanAmount",
-      cell: ({ getValue }) => <>{formatCurrency(getValue() as string)}</>,
+      header: "Requested Amount",
+      accessorKey: "loanAccountDetails.loanAmount",
+      cell: ({ row }) => {
+        const { loanAccountDetails } = row.original;
+        const  oldAmount  = loanAccountDetails?.oldAmount;
+        const  Amount  = loanAccountDetails?.Amount;
+
+        return (
+          <>{oldAmount ? formatCurrency(oldAmount) : formatCurrency(Amount)}</>
+        );
+      },
+    },
+    {
+      header: "Approved Amount",
+      accessorKey: "loanAccountDetails.approvedAmount",
+      cell: ({ row }) => {
+        const { loanAccountDetails } = row.original;
+      const approvedAmount = loanAccountDetails?.approvedAmount;
+
+        return (
+          <>{approvedAmount ? formatCurrency(approvedAmount) : "N/A"}</>
+        );
+      },
     },
     {
       header: "Loan Tenor",
-      accessorKey: "customerDetails.loanTenor",
+      accessorKey: "loanAccountDetails.Tenure",
+    },
+    {
+      header: "Monthly Repayment",
+      accessorKey: "loanAccountDetails.rePaymentAmount",
+      cell: ({ getValue }) => <>{formatCurrency(getValue() as string)}</>,
     },
     {
       header: "Stage",
-      accessorKey: "stage",
+      accessorKey: "loanAccountDetails.stage",
       cell: ({ getValue }) => (
         <span className="text-xs font-semibold">{getValue() as string}</span>
       ),
@@ -122,7 +149,7 @@ const AccountRequests = () => {
       accessorKey: "id",
       cell: ({ row }) => (
         <Link
-          to={`${row?.original?.accountDetails?.id}/${row?.original?.id}`}
+          to={`${row?.original?.id}`}
           className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
         >
           View Details
@@ -141,14 +168,15 @@ const AccountRequests = () => {
       return;
     }
     const formattedData = accounts.map((account) => {
-      const { customerDetails } = account;
+      const { customerDetails, loanAccountDetails } = account;
       const { state, createdAt, Gender, ...rest } = customerDetails;
 
       return {
         ...rest,
+        ...loanAccountDetails,
         stateOfOrigin: state,
         createdAt: formatDate(createdAt, "dd-MM-yyy hh:mm:ss a"),
-        gender: GENDER_ENUM[Gender] ?? ""
+        gender: GENDER_ENUM[Gender] ?? "",
       };
     });
     try {
@@ -157,7 +185,7 @@ const AccountRequests = () => {
           "workIdentification",
           "id",
           "profileId",
-          "updatedAt"
+          "updatedAt",
         ]),
       );
       const workbook = XLSX.utils.book_new();
@@ -205,8 +233,12 @@ const AccountRequests = () => {
           ) : accounts ? (
             accounts?.length > 0 ? (
               <>
-                {user?.role?.map(r => r.toUpperCase())?.includes(USER_ROLES.SUPER_ADMIN.toUpperCase()) ||
-                user?.role?.map(r => r.toUpperCase())?.includes(USER_ROLES.AUDITOR.toUpperCase()) ? (
+                {user?.role
+                  ?.map((r) => r.toUpperCase())
+                  ?.includes(USER_ROLES.SUPER_ADMIN.toUpperCase()) ||
+                user?.role
+                  ?.map((r) => r.toUpperCase())
+                  ?.includes(USER_ROLES.AUDITOR.toUpperCase()) ? (
                   <div className="my-1 flex items-center justify-end">
                     <Button
                       className="rounded-sm bg-black text-xs text-white"

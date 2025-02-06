@@ -19,7 +19,7 @@ import { SESSION_STORAGE_KEY } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
 
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { LoanService } from "@/services";
 import { formatCurrency } from "@/utils/format-number-with-commas";
 import { toast } from "react-toastify";
@@ -32,8 +32,8 @@ import { IoMdClose } from "react-icons/io";
 import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 
 const GENDER_ENUM: Record<string, string> = {
-  "1": "Male",
-  "2": "Female",
+  "0": "Male",
+  "1": "Female",
 };
 
 const schema = z.object({
@@ -53,10 +53,9 @@ const VALID_STAGES: Record<string, string> = {
 };
 
 const RequestDetails = () => {
-  const { requestId, stage, accountId } = useParams<{
+  const { requestId, stage } = useParams<{
     requestId: string;
     stage: string;
-    accountId: string;
   }>();
 
   const [openTokenModal, setOpenTokenModal] = useState(false);
@@ -192,7 +191,7 @@ const RequestDetails = () => {
   };
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
-    if (!requestId || !user?.UserId || !accountId) {
+    if (!requestId || !user?.UserId) {
       return;
     }
     try {
@@ -204,7 +203,7 @@ const RequestDetails = () => {
         }
         const payload = {
           ...values,
-          requestId: accountId,
+          requestId: requestId,
           reviewerUserId: user?.UserId,
         };
         const response = await loanService.reviewLoanRequest(payload);
@@ -215,7 +214,7 @@ const RequestDetails = () => {
       if (stage?.toUpperCase() === VALID_STAGES.AUTHORIZER) {
         const payload = {
           ...values,
-          requestId: accountId,
+          requestId: requestId,
           approvalUserId: user?.UserId,
         };
         const response = await loanService.reviewLoanRequestAuthorizer(payload);
@@ -245,12 +244,12 @@ const RequestDetails = () => {
     mutate: handleSubmitOtp,
   } = useMutation({
     mutationFn: async () => {
-      if (!requestId || !user?.UserId || !accountId) {
+      if (!requestId || !user?.UserId) {
         return;
       }
       const token = otp.join("");
       const otpPayload = {
-        userCode: accountInfo?.profile?.profileId ?? "",
+        userCode: accountInfo?.profileId ?? "",
         token: token,
       };
 
@@ -261,7 +260,7 @@ const RequestDetails = () => {
       const data = getValues();
       const payload = {
         ...data,
-        requestId: accountId,
+        requestId: requestId,
         reviewerUserId: user?.UserId,
       };
       const response = await loanService.reviewLoanRequest(payload);
@@ -286,7 +285,7 @@ const RequestDetails = () => {
             <>
               <div>
                 <img
-                  src={accountInfo?.profile?.CustomerImage}
+                  src={accountInfo?.customerDetails?.CustomerImage}
                   alt="Customer Photo"
                   className="mb-4 aspect-square h-10 rounded-sm object-center md:h-20 lg:h-32"
                 />
@@ -298,40 +297,63 @@ const RequestDetails = () => {
                 <div className="md:grid-col-2 mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   <Record
                     header="Title"
-                    content={accountInfo?.profile?.title}
+                    content={accountInfo?.customerDetails?.title}
                   />
                   <Record
                     header="First Names"
-                    content={accountInfo?.profile?.FirstName}
+                    content={accountInfo?.customerDetails?.FirstName}
                   />
                   <Record
                     header="Last Name"
-                    content={accountInfo?.profile?.LastName}
+                    content={accountInfo?.customerDetails?.LastName}
                   />
                   <Record
-                    header="Loan Amount"
-                    content={formatCurrency(accountInfo?.profile?.loanAmount)}
+                    header="Requested Loan Amount"
+                    content={formatCurrency(
+                      accountInfo?.loanAccountDetails?.oldAmount,
+                    )}
+                  />
+                  <Record
+                    header="Approved Loan Amount"
+                    content={formatCurrency(
+                      accountInfo?.loanAccountDetails?.approvedAmount ??
+                        accountInfo?.loanAccountDetails?.Amount,
+                    )}
+                  />
+
+                  <Record
+                    header="Monthly Repayment"
+                    content={formatCurrency(
+                      accountInfo?.loanAccountDetails?.monthlyPayment ?? "",
+                    )}
                   />
                   <Record
                     header="Loan Tenor"
-                    content={accountInfo?.profile?.loanTenor}
+                    content={accountInfo?.loanAccountDetails?.Tenure}
                   />
-                  <Record header="BVN" content={accountInfo?.profile?.BVN} />
+                  <Record
+                    header="BVN"
+                    content={accountInfo?.customerDetails?.BVN}
+                  />
                   <Record
                     header="Salary Account Number"
-                    content={accountInfo?.profile?.salaryAccountNumber}
+                    content={accountInfo?.customerDetails?.salaryAccountNumber}
                   />
                   <Record
                     header="Bank Name"
-                    content={accountInfo?.profile?.bankName}
+                    content={accountInfo?.customerDetails?.bankName}
                   />
                   <Record
                     header="Product Code"
-                    content={accountInfo?.ProductCode}
+                    content={accountInfo?.loanAccountDetails?.LoanProductCode}
                   />
                   <Record
-                    header="Account Officer"
-                    content={accountInfo?.AccountOfficerCode}
+                    header="Account Officer Code"
+                    content={accountInfo?.accountDetails?.AccountOfficerCode}
+                  />
+                  <Record
+                    header="Account Officer Email"
+                    content={accountInfo?.accountDetails?.AccountOfficerEmail}
                   />
                   <Record
                     header="Opened Date"
@@ -350,11 +372,11 @@ const RequestDetails = () => {
                     <>
                       <Record
                         header="Reviewer Recommendation"
-                        content={accountInfo?.reviewerRecommendation}
+                        content={accountInfo?.reviewerRecommendation ?? ""}
                       />
                       <Record
                         header="Reviewer Note"
-                        content={accountInfo?.reviewerNote}
+                        content={accountInfo?.reviewerNote ?? ""}
                       />
                     </>
                   )}
@@ -364,11 +386,11 @@ const RequestDetails = () => {
                       <>
                         <Record
                           header="Reviewer Recommendation"
-                          content={accountInfo?.authorizerRecommendation}
+                          content={accountInfo?.authorizerRecommendation ?? ""}
                         />
                         <Record
                           header="Reviewer Note"
-                          content={accountInfo?.authorizerNote}
+                          content={accountInfo?.authorizerNote ?? ""}
                         />
                       </>
                     )}
@@ -382,56 +404,59 @@ const RequestDetails = () => {
                   <Record
                     header="Date of Birth"
                     content={
-                      isValid(accountInfo?.profile?.DateOfBirth)
+                      isValid(accountInfo?.customerDetails?.DateOfBirth)
                         ? formatDate(
-                            accountInfo?.profile?.DateOfBirth,
+                            accountInfo?.customerDetails?.DateOfBirth,
                             "dd-MM-yy",
                           )
-                        : accountInfo?.profile?.DateOfBirth
+                        : accountInfo?.customerDetails?.DateOfBirth
                     }
                   />
                   <Record
                     header="Gender"
                     content={
-                      accountInfo?.profile?.Gender
-                        ? (GENDER_ENUM[accountInfo?.profile?.Gender] ??
-                          accountInfo?.profile?.Gender)
+                      accountInfo?.customerDetails?.Gender
+                        ? (GENDER_ENUM[accountInfo?.customerDetails?.Gender] ??
+                          accountInfo?.customerDetails?.Gender)
                         : ""
                     }
                   />
                   <Record
                     header="Address"
-                    content={accountInfo?.profile?.Address}
+                    content={accountInfo?.customerDetails?.Address}
                   />
                   <Record
                     header="Email"
-                    content={accountInfo?.profile?.Email}
+                    content={accountInfo?.customerDetails?.Email}
+                  />
+                  <Record
+                    header="Phone Number"
+                    content={accountInfo?.customerDetails?.PhoneNo}
                   />
                   <Record
                     header="State of Origin"
-                    content={accountInfo?.profile?.state}
+                    content={accountInfo?.customerDetails?.state}
                   />
-                  <Record header="BVN" content={accountInfo?.profile?.BVN} />
+                  <Record
+                    header="BVN"
+                    content={accountInfo?.customerDetails?.BVN}
+                  />
                   <Record
                     header="IPPIS Number"
-                    content={accountInfo?.profile?.ippisNumber}
+                    content={accountInfo?.customerDetails?.ippisNumber}
                   />
                   <Record
                     header="NIN"
-                    content={accountInfo?.profile?.NationalIdentityNo}
+                    content={accountInfo?.customerDetails?.NationalIdentityNo}
                   />
 
                   <Record
                     header="Next of Kin"
-                    content={accountInfo?.profile?.NextOfKinName}
+                    content={accountInfo?.customerDetails?.NextOfKinName}
                   />
                   <Record
                     header="Next of Kin Phon Number"
-                    content={accountInfo?.profile?.NextOfKinPhoneNo}
-                  />
-                  <Record
-                    header="Account Officer"
-                    content={accountInfo?.AccountOfficerCode}
+                    content={accountInfo?.customerDetails?.NextOfKinPhoneNo}
                   />
                 </div>
               </article>
@@ -441,9 +466,9 @@ const RequestDetails = () => {
                 </h3>
                 <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
                   <h2 className="text-sm font-medium text-gray-400">NIN: </h2>
-                  {accountInfo?.profile?.IdentificationImage && (
+                  {accountInfo?.customerDetails?.IdentificationImage && (
                     <FileViewer
-                      url={accountInfo?.profile?.IdentificationImage}
+                      url={accountInfo?.customerDetails?.IdentificationImage}
                       maxWidth={400}
                     />
                   )}
@@ -452,9 +477,9 @@ const RequestDetails = () => {
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Work Identification:{" "}
                   </h2>
-                  {accountInfo?.profile?.workIdentification && (
+                  {accountInfo?.customerDetails?.workIdentification && (
                     <FileViewer
-                      url={accountInfo?.profile?.workIdentification}
+                      url={accountInfo?.customerDetails?.workIdentification}
                       maxWidth={250}
                     />
                   )}
@@ -463,34 +488,66 @@ const RequestDetails = () => {
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Signature:{" "}
                   </h2>
-                  {accountInfo?.profile?.CustomerSignature && (
+                  {accountInfo?.customerDetails?.CustomerSignature && (
                     <FileViewer
-                      url={accountInfo?.profile?.CustomerSignature}
+                      url={accountInfo?.customerDetails?.CustomerSignature}
                       maxWidth={250}
                     />
                   )}
                 </div>
                 <div
                   className={`mt-2 ${
-                    accountInfo?.profile?.otherDocuments &&
+                    accountInfo?.customerDetails?.otherDocuments &&
                     "border-b-[0.15px] border-b-gray-200 pb-2"
                   }`}
                 >
                   <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
                     Other Documents:{" "}
                   </h2>
-                  {accountInfo?.profile?.otherDocuments &&
-                    accountInfo?.profile?.otherDocuments?.length > 0 &&
-                    accountInfo?.profile.otherDocuments?.map((doc, index) => (
-                      <div key={doc.title}>
-                        <h3 className="mb-2 text-xs font-medium uppercase text-gray-400">
-                          <span className="text-black">{index + 1}</span>.{" "}
-                          {doc.title}
-                        </h3>
-                        <FileViewer url={doc.otherDocument} />
-                      </div>
-                    ))}
+                  {accountInfo?.customerDetails?.otherDocuments &&
+                    accountInfo?.customerDetails?.otherDocuments?.length > 0 &&
+                    accountInfo?.customerDetails.otherDocuments?.map(
+                      (doc, index) => (
+                        <div key={doc.title}>
+                          <h3 className="mb-2 text-xs font-medium uppercase text-gray-400">
+                            <span className="text-black">{index + 1}</span>.{" "}
+                            {doc.title}
+                          </h3>
+                          <FileViewer url={doc.otherDocument} maxWidth={250} />
+                        </div>
+                      ),
+                    )}
                 </div>
+                <div className="my-2 flex flex-col gap-2">
+                  {accountInfo?.stage?.toUpperCase() ===
+                    VALID_STAGES.REVIEWER &&
+                    accountInfo?.authorizerUserId && (
+                      <>
+                        <Record
+                          header="Reviewer Recommendation"
+                          content={accountInfo?.authorizerRecommendation ?? ""}
+                        />
+                        <Record
+                          header="Reviewer Note"
+                          content={accountInfo?.authorizerNote ?? ""}
+                        />
+                      </>
+                    )}
+                  {accountInfo?.stage?.toUpperCase() ===
+                    VALID_STAGES.AUTHORIZER && (
+                    <>
+                      <Record
+                        header="Reviewer Recommendation"
+                        content={accountInfo?.reviewerRecommendation ?? ""}
+                      />
+                      <Record
+                        header="Reviewer Note"
+                        content={accountInfo?.reviewerNote ?? ""}
+                      />
+                    </>
+                  )}
+                </div>
+
                 {stage?.trim()?.toUpperCase() ===
                   accountInfo?.stage?.trim()?.toUpperCase() &&
                   (accountInfo?.stage?.toUpperCase() ===
@@ -501,6 +558,7 @@ const RequestDetails = () => {
                       <h2 className="border-b border-b-gray-400 py-1 text-sm font-medium text-gray-400">
                         ACTION:
                       </h2>
+
                       <form
                         className="mt-3 flex max-w-[700px] flex-col gap-2.5"
                         onSubmit={handleSubmit(onSubmit)}
@@ -551,18 +609,34 @@ const RequestDetails = () => {
                                 ?.message ?? (error as any)?.message)
                             : errors?.root?.message}
                         </p>
-                        <Button
-                          className="mt-3 max-w-[250px] rounded-sm"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <ClipLoader color="#fff" size={10} /> Loading
-                            </>
-                          ) : (
-                            <>Submit</>
-                          )}
-                        </Button>
+                        <div className="flex items-center justify-between gap-2">
+                          {/* <Button
+                            className="mt-3 max-w-[250px] rounded-sm bg-black flex-1"
+                            disabled={isSubmitting}
+                            type="button"
+                          >
+                            Edit
+                          </Button> */}
+                          <Link
+                            to={`/loan/requests/rejected/edit/${requestId}`}
+                            className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
+                          >
+                            Edit
+                            <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+                          </Link>
+                          <Button
+                            className="mt-3 max-w-[250px] flex-1 rounded-sm"
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <ClipLoader color="#fff" size={10} /> Loading
+                              </>
+                            ) : (
+                              <>Submit</>
+                            )}
+                          </Button>
+                        </div>
                       </form>
                     </div>
                   )}
@@ -581,7 +655,7 @@ const RequestDetails = () => {
               <IoMdClose className="cursor-pointer transition-all hover:scale-150" />
             </button>
           </div>
-          <h3 className="mt-5 text-center text-lg font-bold">Confirm</h3>'
+          <h3 className="mt-5 text-center text-lg font-bold">Confirm</h3>
           <div>
             <Label>OTP</Label>
             <p className="my-3 text-sm font-light">

@@ -215,7 +215,7 @@ export class LoanService {
 
   async getLoanRequestById(requestId: string) {
     const response = await axios.get<
-      APIResponseType<{ accountRecords: LoanRequestType }>
+      APIResponseType<{ accountRecords: UnCompletedLoanRequestType }>
     >(`${baseUrl}/account/view/single/${requestId}`, {
       headers: {
         Authorization: `Bearer ${this._token}`,

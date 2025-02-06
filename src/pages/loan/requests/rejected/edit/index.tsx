@@ -1,5 +1,7 @@
 import {
+  AddDocumentForm,
   Container,
+  NonPaginatedTable,
   PageTitle,
   ReactSelectCustomized,
 } from "@/components/shared";
@@ -19,15 +21,15 @@ import {
 } from "@/constants";
 import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
 import { AccountService, LoanService } from "@/services";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { isValid } from "date-fns";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LoanRequestType } from "@/types/shared";
+import { UnCompletedLoanRequestType } from "@/types/shared";
 import {
   calculateEligibleAmountByOrganizationUsingIppisPrefix,
   calculateLoanForOrganizationForIppisPrefix,
@@ -36,7 +38,9 @@ import {
   shouldAllowEligibilityByPass,
 } from "@/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import { IoMdCheckmarkCircleOutline, IoMdClose } from "react-icons/io";
+import { ColumnDef } from "@tanstack/react-table";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const getLoanSchema = (maxLoanAmount: number) => {
   return z
@@ -184,6 +188,13 @@ const getLoanSchema = (maxLoanAmount: number) => {
         .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
           message: "Loan amount must be a valid number",
         }),
+      approvedAmount: z
+        .string({
+          required_error: "Loan amount is required",
+        })
+        .regex(/^\d{1,3}(,\d{3})*(\.\d+)?$/, {
+          message: "Loan amount must be a valid number",
+        }),
       loanTenor: z
         .string({
           required_error: "Loan Tenure is required",
@@ -243,60 +254,106 @@ const TENURE_OPTIONS = Array.from({ length: 22 }, (_v, i) => i + 3)?.map(
   (n) => ({ id: n, value: n.toString(), label: n.toString() }),
 );
 
+type DocumentType = {
+  id: number;
+  title: string;
+  path: string;
+};
+
+const MODAL_TYPES = {
+  ADD_ADDITIONAL_DOCUMENT: "ADD_ADDITIONAL_DOCUMENT",
+  ADD_OTHER_DOCUMENT: "ADD_OTHER_DOCUMENT",
+};
+
 const EditInformation: React.FC = () => {
   const { accountId } = useParams<{ id: string; accountId: string }>();
   // const [customerLoans, setCustomerLoans] = useState<AccountLoanType[]>([]);
   const [loanRepayment, setLoanRepayment] = useState(INITIAL_LOAN_PAYMENT);
+  const [additionalFile, setAdditionalFile] = useState<DocumentType[]>([]);
+  const [otherDocuments, setOtherDocuments] = useState<DocumentType[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<string>("");
   const [isDone, setIsDone] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
   const accountService = new AccountService();
 
-  const populateFieldsWithCustomInfo = (data: LoanRequestType) => {
-    setValue("FirstName", data?.profile?.FirstName ?? "");
-    setValue("LastName", data?.profile?.LastName ?? "");
-    setValue("OtherNames", data?.profile?.OtherNames ?? "");
-    setValue("Gender", GENDER_ENUM[data?.profile?.Gender] ?? "");
-    setValue("NationalIdentityNo", data?.profile?.NationalIdentityNo ?? "");
-    setValue("title", data?.profile?.title ?? "");
-    setValue("DateOfBirth", data?.profile?.DateOfBirth ?? "");
-    setValue("state", data?.profile?.state ?? "");
-    setValue("BVN", data?.profile?.BVN ?? "");
-    setValue("NationalIdentityNo", data?.profile?.NationalIdentityNo ?? "");
-    setValue("PhoneNo", data?.profile?.PhoneNo ?? "");
-    setValue("alternatePhoneNo", data?.profile?.alternatePhoneNo ?? "");
-    setValue("Email", data?.profile?.Email ?? "");
-    setValue("NotificationPreference", data?.NotificationPreference ?? "");
-    setValue("Address", data?.profile?.Address ?? "");
-    setValue("ippisNumber", data?.profile?.ippisNumber ?? "");
-    setValue("organizationEmployer", data?.profile?.organizationEmployer ?? "");
+  const populateFieldsWithCustomInfo = useCallback((data: UnCompletedLoanRequestType) => {
+    setValue("FirstName", data?.customerDetails?.FirstName ?? "");
+    setValue("LastName", data?.customerDetails?.LastName ?? "");
+    setValue("OtherNames", data?.customerDetails?.OtherName ?? "");
+    setValue("Gender", GENDER_ENUM[data?.customerDetails?.Gender] ?? "");
+    setValue(
+      "NationalIdentityNo",
+      data?.customerDetails?.NationalIdentityNo ?? "",
+    );
+    setValue("title", data?.customerDetails?.title ?? "");
+    setValue("DateOfBirth", data?.customerDetails?.DateOfBirth ?? "");
+    setValue("state", data?.customerDetails?.state ?? "");
+    setValue("BVN", data?.customerDetails?.BVN ?? "");
+    setValue(
+      "NationalIdentityNo",
+      data?.customerDetails?.NationalIdentityNo ?? "",
+    );
+    setValue("PhoneNo", data?.customerDetails?.PhoneNo ?? "");
+    setValue("alternatePhoneNo", data?.customerDetails?.alternatePhoneNo ?? "");
+    setValue("Email", data?.customerDetails?.Email ?? "");
+    setValue(
+      "NotificationPreference",
+      data?.customerDetails?.NotificationPreference ?? "",
+    );
+    setValue("Address", data?.customerDetails?.Address ?? "");
+    setValue("ippisNumber", data?.customerDetails?.ippisNumber ?? "");
+    setValue(
+      "organizationEmployer",
+      data?.customerDetails?.organizationEmployer ?? "",
+    );
     setValue(
       "NextOfKinFirstName",
-      data?.profile?.NextOfKinName?.split(" ")[0] ?? "",
+      data?.customerDetails?.NextOfKinName?.split(" ")[0] ?? "",
     );
     setValue(
       "NextOfKinLastName",
-      data?.profile?.NextOfKinName?.split(" ")[1] ?? "",
+      data?.customerDetails?.NextOfKinName?.split(" ")[1] ?? "",
     );
-    setValue("NextOfKinPhoneNo", data?.profile?.NextOfKinPhoneNo ?? "");
-    setValue("AccountOfficerCode", data?.AccountOfficerCode ?? "");
-    setValue("AccountOfficerEmail", data?.AccountOfficerEmail ?? "");
+    setValue("NextOfKinPhoneNo", data?.customerDetails?.NextOfKinPhoneNo ?? "");
+    setValue("AccountOfficerCode", data?.accountDetails?.AccountOfficerCode ?? "");
+    setValue("AccountOfficerEmail", data?.accountDetails?.AccountOfficerEmail ?? "");
     setValue(
       "loanAmount",
       formatNumberWithCommasWithOptionPeriodSign(
-        data?.profile?.loanAmount ?? "",
+        data?.loanAccountDetails?.Amount ?? "",
       ),
     );
-    setValue("loanTenor", data?.profile?.loanTenor ?? "");
-    setValue("bankName", data?.profile?.bankName ?? "");
-    setValue("salaryAccountNumber", data?.profile?.salaryAccountNumber ?? "");
-    handleTenorFieldBlur(data?.profile?.loanTenor);
-    handleAmountFieldBlur(data?.profile?.loanAmount ?? "");
-    validateBVN({ id: data?.profile?.BVN ?? "" });
-    validateIppisData(data?.profile?.ippisNumber ?? "");
-  };
+    setValue(
+      "approvedAmount",
+      formatNumberWithCommasWithOptionPeriodSign(
+        data?.loanAccountDetails?.Amount ?? "",
+      ),
+    );
+    setValue("loanTenor", data?.loanAccountDetails?.Tenure ?? "");
+    setValue("bankName", data?.customerDetails?.bankName ?? "");
+    setValue(
+      "salaryAccountNumber",
+      data?.customerDetails?.salaryAccountNumber ?? "",
+    );
+    if (data?.customerDetails?.CustomerSignature) {
+      setValue(
+        "CustomerSignature",
+        data?.customerDetails?.CustomerSignature ?? "",
+      );
+    }
+    if (data?.customerDetails?.CustomerImage) {
+      setValue("CustomerImage", data?.customerDetails?.CustomerImage ?? "");
+    }
+    handleTenorFieldBlur(data?.loanAccountDetails?.Tenure);
+    handleAmountFieldBlur(data?.loanAccountDetails?.Amount ?? "");
+    validateBVN({ id: data?.customerDetails?.BVN ?? "" });
+    validateIppisData(data?.customerDetails?.ippisNumber ?? "");
+  }, []);
 
   const schema = useMemo(
     () => getLoanSchema(Number(loanRepayment.eligibleAmount) ?? 0),
@@ -325,8 +382,9 @@ const EditInformation: React.FC = () => {
     ippisNumber,
     customerSignature,
     loanTenor,
-    loanAmount,
+    approvedAmount,
     bankName,
+    customerImage,
   ] = watch([
     "Gender",
     "state",
@@ -334,8 +392,9 @@ const EditInformation: React.FC = () => {
     "ippisNumber",
     "CustomerSignature",
     "loanTenor",
-    "loanAmount",
+    "approvedAmount",
     "bankName",
+    "CustomerImage",
   ]);
 
   const today = new Date();
@@ -400,8 +459,8 @@ const EditInformation: React.FC = () => {
       if (accountInfo) {
         const repaymentInfo = calculateLoanForOrganizationForIppisPrefix(
           ippisNumber ?? "",
-          Number(accountInfo.profile.loanAmount),
-          Number(accountInfo.profile.loanTenor),
+          Number(accountInfo?.loanAccountDetails?.Amount),
+          Number(accountInfo?.loanAccountDetails?.Tenure),
           Number(ippisData?.netPay) ?? 0,
         );
         setLoanRepayment({
@@ -415,10 +474,10 @@ const EditInformation: React.FC = () => {
   });
 
   useEffect(() => {
-    if (loanTenor && ippisData && loanAmount) {
-      trigger("loanAmount");
+    if (loanTenor && ippisData && approvedAmount) {
+      trigger("approvedAmount");
     }
-  }, [loanTenor, trigger, loanRepayment, ippisData, loanAmount]);
+  }, [loanTenor, trigger, loanRepayment, ippisData, approvedAmount]);
 
   const handleValidateIppisData = async (
     event: React.FocusEvent<HTMLInputElement>,
@@ -442,23 +501,124 @@ const EditInformation: React.FC = () => {
         return;
       }
       const accountData = await loanService.getLoanRequestById(accountId);
-      populateFieldsWithCustomInfo(accountData?.accountRecords);
+    
       return accountData?.accountRecords;
     },
   });
+
+  useEffect(() => {
+    if (accountInfo) {
+    populateFieldsWithCustomInfo(accountInfo);
+    }
+  }, [accountInfo])
+
+  const handleToggleModal = (modalType?: string) => {
+    if (!modalType) {
+      setShowModal(false);
+      setModalType("");
+      return;
+    }
+    setModalType(modalType);
+    setShowModal(true);
+  };
+
+  const additionalFileTableColumns: ColumnDef<DocumentType>[] = [
+    {
+      header: "Title",
+      accessorKey: "title",
+    },
+    {
+      header: "Action",
+      accessorKey: "id",
+      cell: ({ getValue }) => {
+        const id = getValue<number>();
+        return (
+          <div>
+            <button
+              className="text-xs font-semibold text-red-700 active:scale-75"
+              type="button"
+              onClick={() => handleRemoveAdditionalFile(id)}
+            >
+              Remove
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+  const otherTableColumns: ColumnDef<DocumentType>[] = [
+    {
+      header: "Title",
+      accessorKey: "title",
+    },
+    {
+      header: "Action",
+      accessorKey: "id",
+      cell: ({ getValue }) => {
+        const id = getValue<number>();
+        return (
+          <div>
+            <button
+              className="text-xs font-semibold text-red-700 active:scale-75"
+              type="button"
+              onClick={() => handleRemoveOtherDocument(id)}
+            >
+              Remove
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const handleAddAdditionalFile = (data: { title: string; path: string }) => {
+    setAdditionalFile((docs) => [
+      ...docs,
+      { ...data, id: new Date().getTime() },
+    ]);
+    handleToggleModal();
+  };
+
+  const handleRemoveAdditionalFile = (id: number) => {
+    setAdditionalFile((docs) => docs.filter((d) => d.id !== id));
+  };
+  const handleAddOtherDocument = (data: { title: string; path: string }) => {
+    setOtherDocuments((docs) => [
+      ...docs,
+      { ...data, id: new Date().getTime() },
+    ]);
+    handleToggleModal();
+  };
+
+  const handleRemoveOtherDocument = (id: number) => {
+    setOtherDocuments((docs) => docs.filter((d) => d.id !== id));
+  };
 
   const onSubmit: SubmitHandler<FormFields> = async (values) => {
     try {
       const payload = {
         ...values,
         loanAmount: values.loanAmount.replace(/,/g, ""),
+        oldAmount: values.loanAmount.replace(/,/g, ""),
+        approvedAmount: values.approvedAmount.replace(/,/g, ""),
         monthlyPayment: loanRepayment.monthlyRepayment.replace(/,/g, ""),
         totalPayment: loanRepayment.totalPayment.replace(/,/g, ""),
-        AccountOpeningTrackingRef: accountInfo?.AccountOpeningTrackingRef ?? "",
+        // AccountOpeningTrackingRef: accountInfo?.AccountOpeningTrackingRef ?? "",
+        additionalFile: additionalFile?.map((doc) => ({
+          title: doc.title,
+          path: doc.path,
+        })),
+        // otherDocument: otherDocuments?.map((doc) => ({
+        //   title: doc.title,
+        //   path: doc.path,
+        // })),
+        loanAccountId: accountInfo?.loanAccountId,
       };
       const response = await accountService.editLoanRequest(payload);
       toast.success(response?.message ?? "Loan request edited successfully");
       setIsDone(true);
+      queryClient.removeQueries({ queryKey: [FETCH_ACCOUNT_DETAILS_BY_ID] });
+      queryClient.clear();
     } catch (error: any) {
       setError("root", {
         type: "deps",
@@ -530,9 +690,13 @@ const EditInformation: React.FC = () => {
   };
 
   const handleTenorFieldBlur = async (loanTenor: string) => {
-    if (!ippisData && shouldAllowEligibilityByPass(ippisNumber) && loanAmount) {
+    if (
+      !ippisData &&
+      shouldAllowEligibilityByPass(ippisNumber) &&
+      approvedAmount
+    ) {
       const paymentInfo = getLoanRepaymentInfo(
-        Number(loanAmount.replace(/,/g, "")),
+        Number(approvedAmount.replace(/,/g, "")),
         Number(loanTenor),
         "",
       );
@@ -561,7 +725,7 @@ const EditInformation: React.FC = () => {
       eligibleAmount: eligibleAmount.toString(),
     }));
 
-    const amount = loanAmount.replace(/[^0-9.]/g, "");
+    const amount = approvedAmount.replace(/[^0-9.]/g, "");
 
     const paymentInfo = getLoanRepaymentInfo(
       Number(amount),
@@ -579,11 +743,11 @@ const EditInformation: React.FC = () => {
     if (
       (!ippisData || isIppisError) &&
       shouldAllowEligibilityByPass(ippisNumber) &&
-      loanAmount &&
+      approvedAmount &&
       loanTenor
     ) {
       const paymentInfo = getLoanRepaymentInfo(
-        Number(loanAmount?.replace(/,/g, "")),
+        Number(approvedAmount?.replace(/,/g, "")),
         Number(loanTenor),
         "",
       );
@@ -594,8 +758,8 @@ const EditInformation: React.FC = () => {
       }));
       return;
     }
-    if (ippisData && loanAmount && loanTenor) {
-      const amount = loanAmount.replace(/[^0-9.]/g, "");
+    if (ippisData && approvedAmount && loanTenor) {
+      const amount = approvedAmount.replace(/[^0-9.]/g, "");
       const repaymentInfo = calculateLoanForOrganizationForIppisPrefix(
         ippisNumber ?? "",
         Number(amount) ?? 0,
@@ -609,7 +773,7 @@ const EditInformation: React.FC = () => {
         eligibleAmount: repaymentInfo.eligibleAmount ?? 0,
       });
     }
-  }, [loanAmount, loanTenor, ippisData, isIppisError, ippisNumber]);
+  }, [approvedAmount, loanTenor, ippisData, isIppisError, ippisNumber]);
 
   const selectedLoanTenor = TENURE_OPTIONS.find(
     (opt) => Number(opt.value) === Number(loanTenor),
@@ -657,7 +821,7 @@ const EditInformation: React.FC = () => {
                   <Button
                     className="min-w-[200px] rounded-sm"
                     onClick={() => {
-                      navigate("/loan/requests/rejected");
+                      navigate(-1);
                     }}
                   >
                     Close
@@ -845,7 +1009,7 @@ const EditInformation: React.FC = () => {
                       }}
                       value={ippisNumber}
                       error={errors?.ippisNumber?.message}
-                      disabled={isLoadingIppisInfo}
+                      disabled={true}
                       onBlur={handleValidateIppisData}
                     />
                     {isLoadingIppisInfo ? (
@@ -934,11 +1098,31 @@ const EditInformation: React.FC = () => {
                     <Input
                       label="Loan Amount"
                       {...register("loanAmount")}
-                      error={errors?.loanAmount?.message}
+                      // error={errors?.loanAmount?.message}
+                      // onChange={async (e) => {
+                      //   const value = e.target.value.replace(/[^0-9.]/g, "");
+                      //   setValue(
+                      //     "loanAmount",
+                      //     formatNumberWithCommasWithOptionPeriodSign(value),
+                      //     {
+                      //       shouldValidate:
+                      //         loanTenor !== undefined &&
+                      //         !Number.isNaN(loanTenor),
+                      //     },
+                      //   );
+                      // }}
+                      disabled={true}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Approved Amount"
+                      {...register("approvedAmount")}
+                      error={errors?.approvedAmount?.message}
                       onChange={async (e) => {
                         const value = e.target.value.replace(/[^0-9.]/g, "");
                         setValue(
-                          "loanAmount",
+                          "approvedAmount",
                           formatNumberWithCommasWithOptionPeriodSign(value),
                           {
                             shouldValidate:
@@ -1051,7 +1235,7 @@ const EditInformation: React.FC = () => {
                       accept="image/*, application/pdf"
                     />
                   </div>
-                  <div>
+                  <div className="rounded-md border border-gray-200 p-2 lg:col-span-full">
                     <Input
                       label={
                         <>
@@ -1072,33 +1256,41 @@ const EditInformation: React.FC = () => {
                       disabled={isSubmitting}
                       accept="image/*"
                     />
-                  </div>
-                  <div>
-                    <Input
-                      label={
-                        <>
-                          Other Supporting Document{" "}
-                          <i className="text-[10px] font-normal">
-                            Optional Image or PDF file
-                          </i>
-                        </>
-                      }
-                      onChange={async (event) => {
-                        const file = event?.target?.files?.[0];
-                        if (file) {
-                          const base64File = await convertToBase64(file);
-                          setValue("otherDocument", base64File);
-                        }
-                      }}
-                      type="file"
-                      className="file:rounded-sm file:bg-black file:text-sm file:text-white"
-                      disabled={isSubmitting}
-                      accept="image/*, application/pdf"
-                    />
+                    {customerImage && (
+                      <img
+                        src={customerImage as string}
+                        alt="Signature"
+                        className="max-h-[250px]"
+                      />
+                    )}
                   </div>
                   <div className="lg:col-span-full">
-                    <hr />
-                    <h4 className="my-3 text-sm font-semibold">SIGNATURE: </h4>
+                    <div>
+                      <h3 className="text-sm font-semibold">Other Documents</h3>
+                      <Button
+                        className="mt-1 border-0 bg-transparent text-xs text-primary ring-0"
+                        type="button"
+                        onClick={() =>
+                          handleToggleModal(MODAL_TYPES.ADD_OTHER_DOCUMENT)
+                        }
+                      >
+                        Click to Add Other Document
+                      </Button>
+                    </div>
+                    {otherDocuments.length > 0 && (
+                      <div className="col-span-full">
+                        <h2 className="my-2 text-sm font-medium">Documents</h2>
+                        <NonPaginatedTable
+                          columns={otherTableColumns}
+                          data={otherDocuments}
+                          isSearchable={false}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <hr />
+                  <div className="my-3 rounded-md border border-gray-200 p-2 lg:col-span-full">
+                    <h4 className="mb-2 text-sm font-semibold">SIGNATURE: </h4>
                     <div className="flex flex-col items-center gap-2 lg:flex-row">
                       <div>
                         <Input
@@ -1117,6 +1309,32 @@ const EditInformation: React.FC = () => {
                         alt="Signature"
                         className="max-h-[250px]"
                       />
+                    )}
+                  </div>
+                  <div className="lg:col-span-full">
+                    <div>
+                      <h3 className="text-sm font-semibold">
+                        Additional Documents
+                      </h3>
+                      <Button
+                        className="mt-1 border-0 bg-transparent text-xs text-primary ring-0"
+                        type="button"
+                        onClick={() =>
+                          handleToggleModal(MODAL_TYPES.ADD_ADDITIONAL_DOCUMENT)
+                        }
+                      >
+                        Click to Add Additional Document
+                      </Button>
+                    </div>
+                    {additionalFile.length > 0 && (
+                      <div className="col-span-full">
+                        <h2 className="my-2 text-sm font-medium">Documents</h2>
+                        <NonPaginatedTable
+                          columns={additionalFileTableColumns}
+                          data={additionalFile}
+                          isSearchable={false}
+                        />
+                      </div>
                     )}
                   </div>
                   <div className="col-span-full">
@@ -1145,6 +1363,29 @@ const EditInformation: React.FC = () => {
           ) : null}
         </Card>
       </Container>
+      <Dialog open={showModal}>
+        <DialogContent className="w-[90vw] gap-0 md:max-w-[600px]">
+          <div className="flex justify-end">
+            <button disabled={isSubmitting}>
+              <IoMdClose
+                className="cursor-pointer transition-all hover:scale-150"
+                onClick={() => handleToggleModal()}
+              />
+            </button>
+          </div>
+
+          {modalType === MODAL_TYPES.ADD_ADDITIONAL_DOCUMENT && (
+            <>
+              <AddDocumentForm handleAddDocument={handleAddAdditionalFile} />
+            </>
+          )}
+          {modalType === MODAL_TYPES.ADD_OTHER_DOCUMENT && (
+            <>
+              <AddDocumentForm handleAddDocument={handleAddOtherDocument} />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

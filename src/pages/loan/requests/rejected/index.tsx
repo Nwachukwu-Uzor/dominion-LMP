@@ -27,7 +27,7 @@ const initialPageConfig = {
 
 const RejectedRequests = () => {
   const [pageConfig, setPageConfig] = useState(initialPageConfig);
-  const { user } = useUser()
+  const { user } = useUser();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const loanService = new LoanService(token);
@@ -91,9 +91,33 @@ const RejectedRequests = () => {
       accessorFn: (row) => formatDate(row?.createdAt, "dd-MM-yyy hh:mm:ss a"),
     },
     {
-      header: "Loan Amount",
-      accessorKey: "customerDetails.loanAmount",
-      cell: ({ getValue }) => <>{formatCurrency(getValue() as string)}</>,
+      header: "Requested Amount",
+      accessorKey: "loanAccountDetails.loanAmount",
+      cell: ({ row }) => {
+        const { loanAccountDetails } = row.original;
+        const  oldAmount = loanAccountDetails?.oldAmount;
+        const Amount  = loanAccountDetails?.Amount;
+
+        return (
+          <>{oldAmount ? formatCurrency(oldAmount) : formatCurrency(Amount)}</>
+        );
+      },
+    },
+    {
+      header: "Approved Amount",
+      accessorKey: "loanAccountDetails.approvedAmount",
+      cell: ({ row }) => {
+        const { loanAccountDetails } = row.original;
+        const approvedAmount  = loanAccountDetails?.approvedAmount;
+
+        return (
+          <>
+            {approvedAmount
+              ? formatCurrency(approvedAmount)
+              : "N/A"}
+          </>
+        );
+      },
     },
     {
       header: "Loan Tenor",

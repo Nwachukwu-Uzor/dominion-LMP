@@ -1,16 +1,55 @@
 import { AccountType } from "./account-type";
 import { ProfileType } from "./profile-type";
 
+type AccountLoanRequestType = {
+  id: string;
+  loanAccountId: string;
+  BVN: string;
+  TransactionTrackingRef: string;
+  createAccountTrackingReference: string;
+  LoanProductCode: string;
+  CustomerID?: string;
+  LinkedAccountNumber?: string;
+  CollateralDetails: string;
+  CollateralType: string;
+  ComputationMode: string;
+  Tenure: string;
+  Moratorium: string;
+  InterestAccrualCommencementDate: string;
+  monthlyPayment: string;
+  totalPayment: string;
+  oldAmount: string;
+  Amount: string;
+  approvedAmount: string;
+  rePaymentAmount: string;
+  paidAmount?: string;
+  totalRepaymentAmount?: string;
+  totalLoanAmountPaidPercent?: string;
+  outStandingLoanAmount?: string;
+  InterestRate: string;
+  PrincipalPaymentFrequency: string;
+  InterestPaymentFrequency: string;
+  loanAccountStatus: string;
+  accountMessage: string;
+  stageStatus: string;
+  stage: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type CustomerDetailsType = {
   id: string;
   profileId: string;
   LastName: string;
   FirstName: string;
+  OtherName?: string;
   BVN: string;
+  ProductCode?: string;
   PhoneNo: string;
   alternatePhoneNo: string;
   title: string;
   Gender: string;
+  PlaceOfBirth?: any;
   DateOfBirth: string;
   Address: string;
   NationalIdentityNo: string;
@@ -19,13 +58,23 @@ type CustomerDetailsType = {
   ReferralPhoneNo: string | null;
   ReferralName: string | null;
   Email: string;
+  NotificationPreference?: string;
+  CustomerImage?: string;
+  CustomerSignature?: string;
+  IdentificationImage?: any;
+  workIdentification?: string;
+  otherDocument?: any;
+  otherDocuments?: any[];
   loanAgreement: string;
   organizationEmployer: string;
   ippisNumber: string;
   loanTenor: string;
   loanAmount: string;
   state: string;
+  loanType?: string;
   language: string | null;
+  salaryAccountNumber: string;
+  bankName: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -55,6 +104,7 @@ export type LoanRequestType = {
   createdAt: string;
   updatedAt: string;
   profile: ProfileType;
+  accountLoansRequest: AccountLoanRequestType[];
 };
 
 export type UnCompletedLoanRequestType = {
@@ -74,4 +124,9 @@ export type UnCompletedLoanRequestType = {
   updatedAt: string;
   customerDetails: CustomerDetailsType;
   accountDetails: AccountType;
+  loanAccountDetails: AccountLoanRequestType;
+  loanAccountId: string;
+  supervisorUserId?: string;
+  supervisorRecommendation?: string;
+  supervisorNote?: string;
 };

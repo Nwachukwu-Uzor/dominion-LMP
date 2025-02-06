@@ -110,7 +110,7 @@ const Customers = () => {
     },
     {
       header: "Date of Birth",
-      accessorFn: (row) => isValid(row?.DateOfBirth) ? formatDate(row?.DateOfBirth, "dd-MM-yyyy") : "",
+      accessorFn: (row) => isValid(row?.DateOfBirth) ? formatDate(row?.DateOfBirth, "dd-MM-yyyy") : row?.DateOfBirth ?? "",
     },
     {
       header: "Opened Date",
@@ -121,7 +121,7 @@ const Customers = () => {
       accessorKey: "id",
       cell: ({ row }) => (
         <Link
-          to={`/accounts/${row?.original?.customerNumber}`}
+          to={`${row?.original?.profileId}`}
           className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
         >
           View Account

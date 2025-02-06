@@ -1,166 +1,63 @@
-import {
-  Container,
-  DataTable,
-  FileViewer,
-  PageTitle,
-} from "@/components/shared";
-import { AccountLoanType } from "@/types/shared";
+import { Container, FileViewer, PageTitle, Record } from "@/components/shared";
 import { Card } from "@/components/ui/card";
-// import { IoEye } from "react-icons/io5";
 import { formatDate, isValid } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { SESSION_STORAGE_KEY } from "@/constants";
+import { SESSION_STORAGE_KEY, USER_ROLES } from "@/constants";
 
 import { ClipLoader } from "react-spinners";
 
 import { Link, useParams } from "react-router-dom";
-import { ColumnDef } from "@tanstack/react-table";
 import { AccountService } from "@/services";
-import { FaEdit } from "react-icons/fa";
-import { formatCurrency } from "@/utils";
-import { FETCH_ACCOUNT_DETAILS_BY_ID } from "@/constants/query-keys";
+
+import { useUser } from "@/hooks";
+import { FETCH_CUSTOMER_DETAILS } from "@/constants/query-keys";
 
 const GENDER_ENUM: Record<string, string> = {
   "0": "Male",
   "1": "Female",
 };
 
-const Record = ({
-  header,
-  content,
-}: {
-  header: string;
-  content?: string | number;
-}) => (
-  <div>
-    <h3 className="text-xs font-medium text-gray-400">
-      {header.toUpperCase()}:
-    </h3>
-    <h6 className="mt-1 text-sm">{content}</h6>
-  </div>
-);
+const CustomerDetails = () => {
+  const { requestId, customerId } = useParams<{
+    requestId: string;
+    stage: string;
+    customerId: string;
+  }>();
 
-const AccountDetails = () => {
-  const { customerId } = useParams<{ customerId: string }>();
+  const { user } = useUser();
 
   const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
   const accountService = new AccountService(token);
-
   const {
     data: accountInfo,
     isLoading,
     error,
     isError,
   } = useQuery({
-    queryKey: [FETCH_ACCOUNT_DETAILS_BY_ID, customerId],
+    queryKey: [FETCH_CUSTOMER_DETAILS, customerId],
     queryFn: async ({ queryKey }) => {
-      const customerId = queryKey[1];
+      const [_, customerId] = queryKey;
+      console.log({_});
+      
+
       if (!customerId) {
-        return;
+        return null;
       }
+
       const accountData =
         await accountService.getAccountByCustomerId(customerId);
       return accountData?.accountRecords;
     },
   });
 
-  const columns: ColumnDef<AccountLoanType>[] = [
-    {
-      header: "Amount",
-      accessorKey: "Amount",
-      cell: ({ getValue }) => {
-        const amount = getValue<string>();
-        return amount ? formatCurrency(amount) : 0;
-      },
-    },
-    {
-      header: "Paid Amount",
-      accessorKey: "paidAmount",
-      cell: ({ getValue }) => {
-        const amount = getValue<string>();
-        return amount ? formatCurrency(amount) : 0;
-      },
-    },
-    {
-      header: "Product Code",
-      accessorKey: "LoanProductCode",
-    },
-    {
-      header: "Tenure",
-      accessorKey: "Tenure",
-    },
-    {
-      header: "Interest Rate (%)",
-      accessorKey: "InterestRate",
-    },
-    {
-      header: "Moratorium",
-      accessorKey: "Moratorium",
-    },
-    {
-      header: "Created Date",
-      accessorKey: "createdAt",
-      cell: ({ getValue }) =>
-        formatDate(getValue() as string, "dd-MM-yyyy HH:mm:ss") ?? "",
-    },
-    {
-      header: "Interest Accrual Commencement Date",
-      accessorKey: "InterestAccrualCommencementDate",
-    },
-    {
-      header: "Collateral Type",
-      accessorKey: "CollateralType",
-    },
-    {
-      header: "Collateral Details",
-      accessorKey: "CollateralDetails",
-    },
-    {
-      header: "Loan Status",
-      accessorKey: "loanAccountStatus",
-    },
-    {
-      header: "Linked Account Number",
-      accessorKey: "LinkedAccountNumber",
-    },
-    {
-      header: "Principal Payment Frequency",
-      accessorKey: "PrincipalPayloadFrequency",
-    },
-    {
-      header: "Interest Payment Frequency",
-      accessorKey: "InterestPaymentFrequency",
-    },
-    {
-      header: "Computation Mode",
-      accessorKey: "ComputationMode",
-    },
-    {
-      header: "Transaction Tracking Ref",
-      accessorKey: "TransactionTrackingRef",
-    },
-    {
-      header: "View Repayments",
-      accessorKey: "loanloanId",
-      cell: ({ getValue }) => (
-        <Link
-          to={`/accounts/loan/${getValue()}`}
-          className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
-        >
-          View
-          <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
-        </Link>
-      ),
-    },
-  ];
-
-  // const token = sessionStorage.getItem(SESSION_STORAGE_KEY);
-  // const accountsService = new AccountService(token);
+  const shouldShowEditOption = user?.role
+    ?.map((role) => role.toUpperCase())
+    ?.includes(USER_ROLES.EDITOR);
 
   return (
     <>
       <Container>
-        <PageTitle title="Loan Account Details" />
+        <PageTitle title="Customer Details" />
         <Card className="my-2 rounded-sm">
           {isLoading ? (
             <div className="flex min-h-[25vh] items-center justify-center">
@@ -171,9 +68,6 @@ const AccountDetails = () => {
           ) : accountInfo ? (
             <>
               <div>
-                <h2 className="mb-2 text-sm font-medium uppercase text-gray-400">
-                  Customer Passport Image:
-                </h2>
                 <img
                   src={accountInfo?.profile?.CustomerImage}
                   alt="Customer Photo"
@@ -190,7 +84,7 @@ const AccountDetails = () => {
                     content={accountInfo?.profile?.title}
                   />
                   <Record
-                    header="First Name"
+                    header="First Names"
                     content={accountInfo?.profile?.FirstName}
                   />
                   <Record
@@ -198,13 +92,10 @@ const AccountDetails = () => {
                     content={accountInfo?.profile?.LastName}
                   />
                   <Record
-                    header="Account Number"
-                    content={accountInfo?.accountNumber}
+                    header="Other Names"
+                    content={accountInfo?.profile?.OtherName}
                   />
-                  <Record
-                    header="Customer Number"
-                    content={accountInfo?.customerNumber}
-                  />
+
                   <Record header="BVN" content={accountInfo?.profile?.BVN} />
                   <Record
                     header="Salary Account Number"
@@ -215,20 +106,22 @@ const AccountDetails = () => {
                     content={accountInfo?.profile?.bankName}
                   />
                   <Record
-                    header="Product Code"
-                    content={accountInfo?.ProductCode}
+                    header="Account Officer Code"
+                    content={accountInfo?.AccountOfficerCode}
                   />
                   <Record
-                    header="Account Officer"
-                    content={accountInfo?.AccountOfficerCode}
+                    header="Account Officer Email"
+                    content={accountInfo?.AccountOfficerEmail}
                   />
                   <Record
                     header="Opened Date"
                     content={
-                      formatDate(
-                        accountInfo.createdAt,
-                        "dd-MM-yyyy hh:mm:ss a",
-                      ) ?? ""
+                      isValid(accountInfo?.createdAt)
+                        ? formatDate(
+                            accountInfo.createdAt,
+                            "dd-MM-yyyy hh:mm:ss a",
+                          )
+                        : accountInfo?.createdAt
                     }
                   />
                 </div>
@@ -241,14 +134,12 @@ const AccountDetails = () => {
                   <Record
                     header="Date of Birth"
                     content={
-                      accountInfo?.profile?.DateOfBirth
-                        ? isValid(accountInfo?.profile?.DateOfBirth)
-                          ? formatDate(
-                              accountInfo?.profile?.DateOfBirth,
-                              "dd-MM-yy",
-                            )
-                          : accountInfo?.profile?.DateOfBirth
-                        : ""
+                      isValid(accountInfo?.profile?.DateOfBirth)
+                        ? formatDate(
+                            accountInfo?.profile?.DateOfBirth,
+                            "dd-MM-yy",
+                          )
+                        : accountInfo?.profile?.DateOfBirth
                     }
                   />
                   <Record
@@ -269,13 +160,23 @@ const AccountDetails = () => {
                     content={accountInfo?.profile?.Email}
                   />
                   <Record
+                    header="Phone Number"
+                    content={accountInfo?.profile?.PhoneNo}
+                  />
+                  <Record
                     header="State of Origin"
                     content={accountInfo?.profile?.state}
+                  />
+                  <Record header="BVN" content={accountInfo?.profile?.BVN} />
+                  <Record
+                    header="IPPIS Number"
+                    content={accountInfo?.profile?.ippisNumber}
                   />
                   <Record
                     header="NIN"
                     content={accountInfo?.profile?.NationalIdentityNo}
                   />
+
                   <Record
                     header="Next of Kin"
                     content={accountInfo?.profile?.NextOfKinName}
@@ -287,8 +188,8 @@ const AccountDetails = () => {
                 </div>
               </article>
               <article className="mt-4">
-                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold uppercase text-gray-400">
-                  Documents
+                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold text-gray-400">
+                  DOCUMENTS
                 </h3>
                 <div className="mt-2 border-b-[0.15px] border-b-gray-200 pb-2">
                   <h2 className="text-sm font-medium text-gray-400">NIN: </h2>
@@ -338,35 +239,22 @@ const AccountDetails = () => {
                           <span className="text-black">{index + 1}</span>.{" "}
                           {doc.title}
                         </h3>
-                        <FileViewer url={doc.otherDocument} />
+                        <FileViewer url={doc.otherDocument} maxWidth={250} />
                       </div>
                     ))}
                 </div>
-              </article>
-              <article className="mt-10">
-                <h3 className="border-b border-b-gray-400 py-1 text-sm font-semibold text-gray-400">
-                  LOAN ACCOUNTS:
-                </h3>
-                {accountInfo?.accountLoans &&
-                accountInfo?.accountLoans?.length > 0 ? (
-                  <DataTable
-                    columns={columns}
-                    data={accountInfo.accountLoans}
-                  />
-                ) : (
-                  <p className="my-2 text-center">No Loan Found</p>
+                {shouldShowEditOption && (
+                  <div className="my-2 flex flex-col gap-2">
+                    <Link
+                      to={`/loan/requests/rejected/edit/${requestId}`}
+                      className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
+                    >
+                      Edit
+                      <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
+                    </Link>
+                  </div>
                 )}
               </article>
-              {/* <div> */}
-              <Link
-                to={`edit/`}
-                className="group relative mt-6 flex w-fit items-center gap-2 text-center text-sm font-medium text-primary duration-200"
-              >
-                <FaEdit /> Edit Customer Information
-                <span className="absolute -bottom-0.5 left-0 h-0.5 w-0 bg-primary duration-200 group-hover:w-full"></span>
-              </Link>
-              {/* </div>
-               */}
             </>
           ) : null}
         </Card>
@@ -375,4 +263,4 @@ const AccountDetails = () => {
   );
 };
 
-export default AccountDetails;
+export default CustomerDetails;

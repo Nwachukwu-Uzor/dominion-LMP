@@ -99,6 +99,13 @@ export const CustomersPage = () => (
   </Suspense>
 );
 
+const CustomerDetailsComponent = lazy(() => import("./customers/customerId"));
+export const CustomerDetailsPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <CustomerDetailsComponent />
+  </Suspense>
+);
+
 // Loan Requests
 const LoanRequestsComponent = lazy(() => import("./loan/requests"));
 

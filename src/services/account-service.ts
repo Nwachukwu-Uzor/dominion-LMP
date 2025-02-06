@@ -1,8 +1,8 @@
 import { baseUrl } from "@/config";
 import {
-  AccountType,
   APIResponseType,
   BVNValidationType,
+  CustomerDetailsType,
   CustomerType,
   IPPISResponseType,
   PaginatedAccountResponseType,
@@ -68,7 +68,7 @@ export class AccountService {
 
   async getAccountByCustomerId(customerId: string) {
     const response = await axios.get<
-      APIResponseType<{ accountRecords: AccountType }>
+      APIResponseType<{ accountRecords: CustomerDetailsType }>
     >(`${baseUrl}/account/view/single/${customerId}`, {
       headers: {
         Authorization: `Bearer ${this._token}`,
@@ -123,6 +123,17 @@ export class AccountService {
     if (!response?.data?.payload?.fullName) {
       throw new Error(response?.data?.message);
     }
+    return response?.data;
+  }
+
+  async clearIPPISRecord() {
+    const response = await axios<APIResponseType<string>>({
+      method: 'DELETE',
+      url: `${baseUrl}/IPPIS/remove`,
+      headers: {
+        Authorization: `Bearer ${this._token}`,
+      },
+    })
     return response?.data;
   }
 
