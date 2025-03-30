@@ -22,7 +22,7 @@ export class AccountService {
       const response = await axios.get<
         APIResponseType<PaginatedAccountResponseType>
       >(
-        `${baseUrl}/account/view/all?size=${size}&page=${page}&provider=dominion&option=stage&gSearch=COMPLETED&location=dashboard`,
+        `${baseUrl}/account/view/all?size=${size}&page=${page}&provider=lms&option=stage&gSearch=COMPLETED&location=dashboard`,
         {
           headers: {
             Authorization: `Bearer ${this._token}`,
