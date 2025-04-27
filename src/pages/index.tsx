@@ -218,3 +218,11 @@ export const IPPISUploadPage = () => (
     <IPPISUploadComponent />
   </Suspense>
 );
+
+// Not Found 
+const NotFoundComponent = lazy(() => import("./not-found"));
+export const NotFoundPage = () => (
+  <Suspense fallback={<PageLoader />}>
+    <NotFoundComponent />
+  </Suspense>
+);

@@ -25,6 +25,7 @@ import {
   RejectedRequestsPage,
   EditRejectedRequestsPage,
   CustomerDetailsPage,
+  NotFoundPage,
 } from "./pages";
 import { AuthLayout, LoanRequestLayout, MainLayout } from "./layout";
 
@@ -161,6 +162,10 @@ const router = createHashRouter([
           },
         ],
       },
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
   {
@@ -186,6 +191,10 @@ const router = createHashRouter([
         element: <LoanRequestPage />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 const App = () => {

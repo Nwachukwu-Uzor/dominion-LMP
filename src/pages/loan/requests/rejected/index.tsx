@@ -95,8 +95,8 @@ const RejectedRequests = () => {
       accessorKey: "loanAccountDetails.loanAmount",
       cell: ({ row }) => {
         const { loanAccountDetails } = row.original;
-        const  oldAmount = loanAccountDetails?.oldAmount;
-        const Amount  = loanAccountDetails?.Amount;
+        const oldAmount = loanAccountDetails?.oldAmount;
+        const Amount = loanAccountDetails?.Amount;
 
         return (
           <>{oldAmount ? formatCurrency(oldAmount) : formatCurrency(Amount)}</>
@@ -108,15 +108,9 @@ const RejectedRequests = () => {
       accessorKey: "loanAccountDetails.approvedAmount",
       cell: ({ row }) => {
         const { loanAccountDetails } = row.original;
-        const approvedAmount  = loanAccountDetails?.approvedAmount;
+        const approvedAmount = loanAccountDetails?.approvedAmount;
 
-        return (
-          <>
-            {approvedAmount
-              ? formatCurrency(approvedAmount)
-              : "N/A"}
-          </>
-        );
+        return <>{approvedAmount ? formatCurrency(approvedAmount) : "N/A"}</>;
       },
     },
     {
@@ -136,7 +130,7 @@ const RejectedRequests = () => {
       cell: ({ row }) => (
         <div className="flex items-center gap-0.5">
           <Link
-            to={`${row?.original?.accountDetails?.id}/${row?.original?.id}`}
+            to={`${row?.original?.id}`}
             className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
           >
             View Details
@@ -144,7 +138,7 @@ const RejectedRequests = () => {
           </Link>
           |
           <Link
-            to={`edit/${row?.original?.accountDetails?.id}`}
+            to={`edit/${row?.original?.id}`}
             className="group relative mt-2 w-fit text-center text-xs font-medium text-primary duration-200"
           >
             Edit
